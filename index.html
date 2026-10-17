@@ -7194,3 +7194,51 @@ body.temo-android-app #bottomNav > button .navLogo{
   font-size:28px !important;
 }
 </style>
+
+
+<style id="temo-bottom-buttons-smaller-final">
+/* Only shrink the seven bottom navigation buttons; leave the rest of the page unchanged. */
+@media (max-width:700px){
+  html body > .app{
+    zoom:1 !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin-left:0 !important;
+  }
+  html body #bottomNav{
+    left:0 !important;
+    right:0 !important;
+    width:100% !important;
+    height:46px !important;
+    min-height:46px !important;
+    transform:none !important;
+    padding:2px 5px env(safe-area-inset-bottom, 2px) !important;
+    gap:0 !important;
+    box-sizing:border-box !important;
+  }
+  html body #bottomNav > button{
+    height:42px !important;
+    min-height:42px !important;
+    max-height:42px !important;
+    min-width:0 !important;
+    padding:0 2px !important;
+    flex:1 1 0 !important;
+    font-size:16px !important;
+    box-sizing:border-box !important;
+  }
+  html body #bottomNav > button .navLogo,
+  html body #bottomNav > button.active .navLogo{
+    width:28px !important;
+    height:28px !important;
+    min-width:28px !important;
+    min-height:28px !important;
+    max-width:28px !important;
+    max-height:28px !important;
+    flex:0 0 28px !important;
+    font-size:27px !important;
+    line-height:1 !important;
+    margin:auto !important;
+    box-sizing:border-box !important;
+  }
+}
+</style>
