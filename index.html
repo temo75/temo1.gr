@@ -1981,6 +1981,44 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   -webkit-text-fill-color:#111 !important;
 }
 </style>
+
+<style id="temo-bottom-nav-icons-compact">
+/* მხოლოდ ქვედა მენიუს 7 ღილაკის ხატულების დაპატარავება */
+#bottomNav > button .navLogo{
+  width:28px !important;
+  height:28px !important;
+  font-size:21px !important;
+  line-height:1 !important;
+}
+#bottomNav > button.active .navLogo{
+  width:32px !important;
+  height:32px !important;
+  font-size:22px !important;
+}
+#bottomNav > button#temoAdminMenuToggle,
+#bottomNav #temoAdminMenuToggle{
+  font-size:20px !important;
+  min-height:0 !important;
+  padding:1px !important;
+}
+@media(max-width:390px){
+  #bottomNav > button .navLogo{
+    width:26px !important;
+    height:26px !important;
+    font-size:19px !important;
+  }
+  #bottomNav > button.active .navLogo{
+    width:30px !important;
+    height:30px !important;
+    font-size:20px !important;
+  }
+  #bottomNav > button#temoAdminMenuToggle,
+  #bottomNav #temoAdminMenuToggle{
+    font-size:18px !important;
+  }
+}
+</style>
+
 </head>
 <body>
 <nav id="bottomNav" aria-label="მთავარი მენიუ">
