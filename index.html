@@ -6429,3 +6429,55 @@ body.temo-android-app #bottomNav > button .navLogo{
 
 
 
+
+<style id="temo-version-01-bottom-nav-sizing">
+/* Version 01 candidate: compact bottom navigation on Chrome and installed app */
+html body #bottomNav{
+  height:58px !important;
+  padding:3px 5px env(safe-area-inset-bottom, 0px) !important;
+  gap:2px !important;
+  align-items:stretch !important;
+}
+html body #bottomNav > button{
+  height:52px !important;
+  min-height:0 !important;
+  min-width:0 !important;
+  padding:0 !important;
+  flex:1 1 0 !important;
+  font-size:20px !important;
+  line-height:1 !important;
+}
+html body #bottomNav > button .navLogo{
+  display:flex !important;
+  width:28px !important;
+  height:28px !important;
+  min-width:28px !important;
+  min-height:28px !important;
+  max-width:28px !important;
+  max-height:28px !important;
+  font-size:22px !important;
+  line-height:1 !important;
+  flex:0 0 28px !important;
+  margin:auto !important;
+}
+html body #bottomNav > button.active .navLogo{
+  width:30px !important;
+  height:30px !important;
+  min-width:30px !important;
+  min-height:30px !important;
+  max-width:30px !important;
+  max-height:30px !important;
+  font-size:22px !important;
+  flex-basis:30px !important;
+}
+html body{padding-bottom:70px !important}
+@media(max-width:390px){
+  html body #bottomNav{height:54px !important;padding:2px 3px env(safe-area-inset-bottom, 0px) !important;gap:0 !important}
+  html body #bottomNav > button{height:49px !important;font-size:18px !important}
+  html body #bottomNav > button .navLogo{width:25px !important;height:25px !important;min-width:25px !important;min-height:25px !important;max-width:25px !important;max-height:25px !important;font-size:20px !important;flex-basis:25px !important}
+  html body #bottomNav > button.active .navLogo{width:27px !important;height:27px !important;min-width:27px !important;min-height:27px !important;max-width:27px !important;max-height:27px !important;font-size:20px !important;flex-basis:27px !important}
+  html body{padding-bottom:64px !important}
+}
+body.temo-android-app #bottomNav{height:58px !important}
+body.temo-android-app #bottomNav > button .navLogo{font-size:22px !important}
+</style>
