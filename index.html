@@ -6431,22 +6431,21 @@ body.temo-android-app #bottomNav > button .navLogo{
 
 
 <style id="temo-version-01-bottom-nav-sizing">
-/* Version 01 candidate: scale down the whole site content on mobile, not only nav icons */
+/* Version 01 candidate: global mobile visual scale. Keep page content and bottom navigation in sync. */
 @media(max-width:700px){
-  body > .app{
-    zoom:.90 !important;
-    width:111.1111% !important;
+  html body > .app{
+    zoom:.80 !important;
+    width:125% !important;
     max-width:none !important;
-    margin-left:-5.5555% !important;
+    margin-left:-12.5% !important;
   }
-  /* Keep fixed bottom navigation aligned to the physical screen */
   html body #bottomNav{
     height:58px !important;
     left:0 !important;
     right:auto !important;
     bottom:0 !important;
-    width:111.1111vw !important;
-    transform:scale(.90) !important;
+    width:125vw !important;
+    transform:scale(.80) !important;
     transform-origin:bottom left !important;
     padding:2px 7px env(safe-area-inset-bottom, 2px) !important;
     gap:1px !important;
@@ -6483,7 +6482,6 @@ body.temo-android-app #bottomNav > button .navLogo{
     font-size:22px !important;
     flex-basis:32px !important;
   }
-  html body{padding-bottom:78px !important}
-  body.temo-android-app > .app{zoom:.90 !important}
+  html body{padding-bottom:90px !important}
 }
 </style>
