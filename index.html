@@ -7333,3 +7333,61 @@ body.temo-android-app #bottomNav > button .navLogo{
   #calendarGrid .dayCell .jobCount{font-size:8px !important;margin-top:1px !important}
 }
 </style>
+
+
+<style id="temo-version-002-four-dashboard-cards-compact">
+/* Version 002: shorten the four dashboard summary cards shown on the home page. */
+html body .stats{
+  gap:8px !important;
+}
+html body .stats > .mini{
+  min-height:0 !important;
+  height:auto !important;
+  padding:12px !important;
+  border-radius:16px !important;
+  display:flex !important;
+  flex-direction:column !important;
+  justify-content:flex-start !important;
+  gap:4px !important;
+  box-sizing:border-box !important;
+}
+html body .stats > .mini > span{
+  font-size:15px !important;
+  line-height:1.25 !important;
+  margin:0 !important;
+}
+html body .stats > .mini > b{
+  font-size:28px !important;
+  line-height:1.15 !important;
+  margin:3px 0 0 !important;
+}
+html body .stats > .mini > small{
+  font-size:11px !important;
+  line-height:1.2 !important;
+  margin:2px 0 0 !important;
+}
+html body .stats > .mini .miniActionIcon{
+  width:34px !important;
+  height:34px !important;
+  min-width:34px !important;
+  min-height:34px !important;
+  font-size:20px !important;
+}
+@media(max-width:700px){
+  html body .stats{gap:7px !important}
+  html body .stats > .mini{
+    padding:9px !important;
+    border-radius:13px !important;
+  }
+  html body .stats > .mini > span{font-size:13px !important}
+  html body .stats > .mini > b{font-size:24px !important}
+  html body .stats > .mini > small{font-size:10px !important}
+  html body .stats > .mini .miniActionIcon{
+    width:28px !important;
+    height:28px !important;
+    min-width:28px !important;
+    min-height:28px !important;
+    font-size:17px !important;
+  }
+}
+</style>
