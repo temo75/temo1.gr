@@ -7242,3 +7242,94 @@ body.temo-android-app #bottomNav > button .navLogo{
   }
 }
 </style>
+
+
+<style id="temo-version-001-compact-calendar-blocks">
+/* Version 001: compact calendar and block heights without changing page behavior. */
+.card,
+.section,
+.toolbox,
+.expenseQuickCard,
+.monthTotalHero,
+.mini,
+.monthRow,
+.miniReceivable{
+  padding:12px !important;
+  border-radius:14px !important;
+}
+.card .amount,
+.amount,
+.mini b{
+  margin-top:5px !important;
+}
+.grid .card.red,
+.grid .monthTotalHero{
+  padding:16px !important;
+}
+.grid .card.red .amount,
+.grid .monthTotalHero .amount{
+  margin-top:6px !important;
+}
+.calendarHead{
+  margin-bottom:7px !important;
+  gap:6px !important;
+}
+.calendarNav{gap:4px !important}
+.calendarNav button{
+  padding:5px 8px !important;
+  border-radius:8px !important;
+}
+.calendarTitle{font-size:15px !important}
+.calendarWeek{
+  gap:3px !important;
+  margin-bottom:3px !important;
+}
+.calendarWeek div{
+  padding:3px 0 !important;
+  font-size:11px !important;
+}
+.calendarGrid{gap:3px !important}
+.calendarGrid .dayCell,
+#calendarGrid .dayCell,
+#expensesPage .calendarGrid .dayCell{
+  min-height:42px !important;
+  height:auto !important;
+  padding:4px 2px !important;
+  border-radius:8px !important;
+  line-height:1.15 !important;
+}
+.calendarGrid .dayCell .num,
+#calendarGrid .dayCell .num{
+  font-size:14px !important;
+  line-height:1.15 !important;
+}
+.calendarGrid .dayCell .jobCount,
+#calendarGrid .dayCell .jobCount{
+  font-size:9px !important;
+  margin-top:2px !important;
+  line-height:1.1 !important;
+}
+.dayJobsTitle{gap:6px !important}
+.monthRow{padding:9px !important;gap:7px !important}
+.miniReceivable{padding:9px !important}
+@media(max-width:700px){
+  .card,.section,.toolbox,.expenseQuickCard,.monthTotalHero,.mini,.monthRow,.miniReceivable{
+    padding:10px !important;
+  }
+  .grid .card.red,.grid .monthTotalHero{padding:12px !important}
+  .calendarNav button{padding:4px 7px !important;font-size:12px !important}
+  .calendarTitle{font-size:14px !important}
+  .calendarWeek,.calendarGrid{gap:2px !important}
+  .calendarGrid .dayCell,
+  #calendarGrid .dayCell,
+  #expensesPage .calendarGrid .dayCell{
+    min-height:36px !important;
+    padding:3px 1px !important;
+    border-radius:6px !important;
+  }
+  .calendarGrid .dayCell .num,
+  #calendarGrid .dayCell .num{font-size:13px !important}
+  .calendarGrid .dayCell .jobCount,
+  #calendarGrid .dayCell .jobCount{font-size:8px !important;margin-top:1px !important}
+}
+</style>
