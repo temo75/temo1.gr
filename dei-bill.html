@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ka"><head>
+<script id="temo-domain-redirect">
+(function(){
+  if (window.location.hostname === "temo75.github.io" && /^\/t1(?:\/|$)/.test(window.location.pathname)) {
+    var targetPath = window.location.pathname.replace(/^\/t1(?=\/|$)/, "") || "/";
+    window.location.replace("https://temo1.gr" + targetPath + window.location.search + window.location.hash);
+  }
+})();
+</script><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#f3f7fb"><title>TEMO — DEI ელექტროენერგიის გადასახადი</title>
+<style>
+:root{color-scheme:light;--blue:#0878d1;--text:#17212b;--muted:#637383;--line:#dbe5ef;--panel:#fff}
+*{box-sizing:border-box}body{margin:0;background:#f3f7fb;color:var(--text);font:16px system-ui,Arial,sans-serif;padding:20px}main{max-width:700px;margin:28px auto;background:var(--panel);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 8px 28px #13283a12}
+h1{font-size:24px;margin:0 0 8px;color:var(--blue)}p{line-height:1.5}.muted{color:var(--muted);font-size:14px}
+.dei-sync-widget{background:#f5faff;border:1px solid #dceaf7;border-radius:12px;padding:16px;margin-top:18px}.dei-sync-header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.dei-sync-header h2{font-size:19px;margin:0;color:#17547e}.dei-sync-badge{font-size:12px;padding:6px 9px;border-radius:20px;background:#e9edf2;color:#44515d}
+.dei-sync-badge.is-connected{background:#e0f5e8;color:#137547}.dei-sync-badge.is-error{background:#fde8e7;color:#a11a16}.dei-sync-message{color:var(--muted);margin:12px 0}
+.dei-sync-details{display:grid;grid-template-columns:minmax(130px,1fr) 2fr;gap:8px 14px;margin:16px 0}.dei-sync-details dt{color:var(--muted);font-size:14px}.dei-sync-details dd{margin:0;font-weight:650;overflow-wrap:anywhere}
+.dei-sync-actions{display:flex;gap:8px;flex-wrap:wrap}button,.back{display:inline-block;margin-top:8px;padding:11px 14px;border:0;border-radius:9px;background:var(--blue);color:white;font:inherit;font-weight:700;cursor:pointer;text-decoration:none}
+button:disabled{opacity:.6;cursor:wait}.dei-sync-actions button:not(.dei-sync-primary){background:#e6eef5;color:#243847}
+@media(max-width:520px){body{padding:12px}main{padding:17px}.dei-sync-details{grid-template-columns:1fr}.dei-sync-details dd{margin-bottom:8px}}
+</style></head>
+<body><main><h1>ΔΕΗ — ელექტროენერგიის გადასახადი</h1>
+<p class="muted">ბოლო ქვითარი Gmail-იდან იტვირთება დაცული Worker-ის მეშვეობით. Gmail-ის პაროლი და API გასაღები ამ გვერდზე არ შეგყავს.</p>
+<div id="deiCloudBill"></div>
+<p class="muted">პირველ დაკავშირებაზე Google-ის OAuth თანხმობის გვერდი მოგთხოვს მხოლოდ Gmail-ის წაკითხვის ნებართვას. ამ ბრაუზერის სესია 8 საათში იწურება.</p>
+<a class="back" href="./bills.html">← ჩემს გადასახადებზე დაბრუნება</a>
+</main><script src="./dei-bill-sync.js"></script><script>window.DEIBillSync&&window.DEIBillSync.mount(document.getElementById("deiCloudBill"));</script></body></html>
