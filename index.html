@@ -6431,53 +6431,59 @@ body.temo-android-app #bottomNav > button .navLogo{
 
 
 <style id="temo-version-01-bottom-nav-sizing">
-/* Version 01: make mobile Chrome navigation match Android WebView sizing */
-html body #bottomNav{
-  height:58px !important;
-  padding:2px 7px env(safe-area-inset-bottom, 2px) !important;
-  gap:1px !important;
-  align-items:stretch !important;
+/* Version 01 candidate: scale down the whole site content on mobile, not only nav icons */
+@media(max-width:700px){
+  body > .app{
+    zoom:.90 !important;
+    width:111.1111% !important;
+    max-width:none !important;
+    margin-left:-5.5555% !important;
+  }
+  /* Keep fixed bottom navigation aligned to the physical screen */
+  html body #bottomNav{
+    height:58px !important;
+    left:0 !important;
+    right:auto !important;
+    bottom:0 !important;
+    width:111.1111vw !important;
+    transform:scale(.90) !important;
+    transform-origin:bottom left !important;
+    padding:2px 7px env(safe-area-inset-bottom, 2px) !important;
+    gap:1px !important;
+    align-items:stretch !important;
+  }
+  html body #bottomNav > button{
+    height:56px !important;
+    min-height:0 !important;
+    min-width:0 !important;
+    padding:0 !important;
+    flex:1 1 0 !important;
+    font-size:22px !important;
+  }
+  html body #bottomNav > button .navLogo{
+    display:flex !important;
+    width:30px !important;
+    height:30px !important;
+    min-width:30px !important;
+    min-height:30px !important;
+    max-width:30px !important;
+    max-height:30px !important;
+    font-size:22px !important;
+    line-height:1 !important;
+    flex:0 0 30px !important;
+    margin:auto !important;
+  }
+  html body #bottomNav > button.active .navLogo{
+    width:32px !important;
+    height:32px !important;
+    min-width:32px !important;
+    min-height:32px !important;
+    max-width:32px !important;
+    max-height:32px !important;
+    font-size:22px !important;
+    flex-basis:32px !important;
+  }
+  html body{padding-bottom:78px !important}
+  body.temo-android-app > .app{zoom:.90 !important}
 }
-html body #bottomNav > button{
-  height:56px !important;
-  min-height:0 !important;
-  min-width:0 !important;
-  padding:0 !important;
-  flex:1 1 0 !important;
-  font-size:22px !important;
-  line-height:1 !important;
-}
-html body #bottomNav > button .navLogo{
-  display:flex !important;
-  width:30px !important;
-  height:30px !important;
-  min-width:30px !important;
-  min-height:30px !important;
-  max-width:30px !important;
-  max-height:30px !important;
-  font-size:22px !important;
-  line-height:1 !important;
-  flex:0 0 30px !important;
-  margin:auto !important;
-}
-html body #bottomNav > button.active .navLogo{
-  width:32px !important;
-  height:32px !important;
-  min-width:32px !important;
-  min-height:32px !important;
-  max-width:32px !important;
-  max-height:32px !important;
-  font-size:22px !important;
-  flex-basis:32px !important;
-}
-html body{padding-bottom:72px !important}
-@media(max-width:390px){
-  html body #bottomNav{height:58px !important;padding:2px 4px env(safe-area-inset-bottom, 2px) !important;gap:0 !important}
-  html body #bottomNav > button{height:54px !important;font-size:20px !important}
-  html body #bottomNav > button .navLogo{width:28px !important;height:28px !important;min-width:28px !important;min-height:28px !important;max-width:28px !important;max-height:28px !important;font-size:20px !important;flex-basis:28px !important}
-  html body #bottomNav > button.active .navLogo{width:30px !important;height:30px !important;min-width:30px !important;min-height:30px !important;max-width:30px !important;max-height:30px !important;font-size:20px !important;flex-basis:30px !important}
-  html body{padding-bottom:70px !important}
-}
-body.temo-android-app #bottomNav{height:58px !important}
-body.temo-android-app #bottomNav > button .navLogo{font-size:22px !important}
 </style>
