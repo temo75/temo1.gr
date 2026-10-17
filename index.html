@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ka">
 <head>
+<meta name="google-site-verification" content="vPkaq57GkbGCufy6hasdsXrRhcvq6gQ_SXYJk8t7JG0" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <style id="temo-auth-boot-style">
@@ -27,6 +28,8 @@ html.auth-booting.site-white-boot{background:#fff!important}
 <link rel="apple-touch-icon" sizes="180x180" href="./icon.png">
 <link rel="apple-touch-icon-precomposed" sizes="180x180" href="./icon.png">
 <link rel="icon" type="image/png" sizes="180x180" href="./icon.png">
+<link rel="manifest" href="./manifest.json">
+
 <title>TEMO</title>
 <style>
 :root{--bg:#071117;--panel:#0d1b24;--panel2:#10232f;--text:#eef7f7;--muted:#9fb0b8;--red:#ef5b67;--blue:#2999df;--orange:#e6a24c;--line:#1e3542}
@@ -68,7 +71,7 @@ footer{text-align:center;color:#71838c;font-size:12px;margin:22px 0 5px}@media(m
 .loginBox input{width:100%;padding:15px;border-radius:11px;border:1px solid #29404c;background:#071117;color:#fff;font-size:17px;text-align:center;margin-bottom:12px}
 .loginBox button{width:100%;padding:15px;border:1px solid var(--neon-control,#2999ff);border-radius:11px;background:#102b3b;color:#fff;font-weight:bold;font-size:17px;cursor:pointer;box-shadow:0 0 7px var(--neon-control,#2999ff),0 0 16px rgba(var(--neon-control-rgb,41,153,255),.75)}
 .loginSelect{width:100%;padding:15px;border-radius:11px;border:1px solid #29404c;background:#071117;color:#fff;font-size:17px;text-align:center;margin-bottom:12px}
-.userManage{margin-top:14px}.userManage input{margin-bottom:8px!important}.userRow{display:grid;grid-template-columns:minmax(0,1fr) 1fr 1fr;gap:7px;margin:7px 0;width:100%}.userRow button{padding:9px;font-size:14px;min-width:0;width:100%}.userRow .userNameBtn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.userRow .lockBtn{background:#183445;border-color:#2999df}.userRow .lockBtn.locked{background:#4a2228;border-color:#74333d;color:#ff8c8c}.adminOnly{display:block}@media(max-width:700px){.userRow{grid-template-columns:minmax(0,1fr) 1fr 1fr;gap:5px}.userRow button{font-size:12px;padding:9px 5px}}
+.userManage{margin-top:10px}.userManage input{margin-bottom:6px!important}.userRow{display:grid;grid-template-columns:minmax(0,1.45fr) minmax(82px,.9fr) minmax(68px,.7fr);gap:5px;margin:4px 0;width:100%;align-items:center}.userRow button{padding:7px 6px;font-size:13px;min-width:0;width:100%;min-height:38px;line-height:1.15;white-space:nowrap}.userRow .userNameBtn{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.userRow .lockBtn{background:#183445;border-color:#2999df}.userRow .lockBtn.locked{background:#4a2228;border-color:#74333d;color:#ff8c8c}.adminOnly{display:block}@media(max-width:700px){.userRow{grid-template-columns:minmax(0,1.45fr) minmax(78px,.9fr) minmax(66px,.7fr);gap:4px;margin:3px 0}.userRow button{font-size:11px;padding:6px 4px;min-height:36px}}
 .loginBox .languageBtn{border-color:var(--neon-control,#2999df)!important;box-shadow:0 0 7px rgba(var(--neon-control-rgb,41,153,223),.65)!important}
 #loginError{min-height:20px;color:#ff7c84;font-size:14px;margin-top:10px}
 
@@ -554,6 +557,7 @@ html body.site-white-theme .expenseDayPopup{background:#fff;color:#111;border-co
 <style id="temo-notes-page-switch">
 #notesPage .notesPageSwitch{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
 #notesPage .notesPageBtn{border:1px solid #29404c;background:#111f29;color:#fff;border-radius:10px;padding:10px 12px;font-weight:700;cursor:pointer;box-shadow:none;pointer-events:auto;position:relative;z-index:20}
+#notesPage .notesPushEnableBtn{border:1px solid #7ec8ff;background:#f7fbff;color:#111;border-radius:8px;padding:5px 9px;font-size:12px;font-weight:700;cursor:pointer;box-shadow:0 0 8px rgba(126,200,255,.35);margin-top:7px;display:inline-block}
 #notesPage .notesPageBtn.active{border-color:#49d86a;background:#123a21;color:#a8ffb8;box-shadow:0 0 10px rgba(73,216,106,.18)}
 #notesPage.notes-modal-open > :not(#noteModal){display:none !important;}
 #notesPage .notesToolsRow{display:flex;justify-content:flex-end;margin-bottom:12px}
@@ -995,9 +999,9 @@ body.neon-global #notesPage .notesEmpty,
 body.neon-global #notesPage .notesModalBox,
 body.neon-global #notesPage .notesField input,
 body.neon-global #notesPage .notesField textarea,
-body.neon-global #notesPage .notesModalActions button{
-  border-color:var(--neon-control) !important;
-}body.neon-global #notesPage .dailyCard{
+body.neon-global #notesPage .notesModalActions button{  border-color:var(--neon-control) !important;
+}
+body.neon-global #notesPage .dailyCard{
   border-top-color:var(--neon-control) !important;
 }
 body.neon-global #notesPage .notesPageBtn.active,
@@ -1062,6 +1066,27 @@ body.neon-global #notesPage .noteClose{
 .chatError{color:#ff7c84;font-size:13px;margin-top:8px}
 @media(max-width:600px){.chatBottomRow{align-items:flex-end}.chatSendBtn{padding:9px 12px}.chatText{min-height:95px}}
 </style>
+
+<style id="temo-neon-preset-colors-fix">
+/* Keep each preset swatch visibly colored on the white theme. */
+.neonPickerBox .neonPreset[data-color="#ff0000"]{background:#ff0000 !important}
+.neonPickerBox .neonPreset[data-color="#00ffff"]{background:#00ffff !important}
+.neonPickerBox .neonPreset[data-color="#0000ff"]{background:#0000ff !important}
+.neonPickerBox .neonPreset[data-color="#00ff00"]{background:#00ff00 !important}
+.neonPickerBox .neonPreset[data-color="#ff00ff"]{background:#ff00ff !important}
+.neonPickerBox .neonPreset[data-color="#ffff00"]{background:#ffff00 !important}
+.neonPickerBox .neonPreset[data-color="#000000"]{background:#000000 !important}
+.neonPickerBox .neonPreset[data-color="#ffffff"]{background:#ffffff !important}
+.neonPickerBox .neonPreset[data-color="#ff7a00"]{background:#ff7a00 !important}
+.neonPickerBox .neonPreset[data-color="#ffd700"]{background:#ffd700 !important}
+.neonPickerBox .neonPreset[data-color="#b6ff00"]{background:#b6ff00 !important}
+.neonPickerBox .neonPreset[data-color="#00bfa6"]{background:#00bfa6 !important}
+.neonPickerBox .neonPreset[data-color="#00aaff"]{background:#00aaff !important}
+.neonPickerBox .neonPreset[data-color="#7a00ff"]{background:#7a00ff !important}
+.neonPickerBox .neonPreset[data-color="#ff1493"]{background:#ff1493 !important}
+.neonPickerBox .neonPreset[data-color="#ff4d4d"]{background:#ff4d4d !important}
+</style>
+
 <style id="temo-index3-requested-fixes">
 /* მხოლოდ მოთხოვნილი: ფერების არჩევის ფანჯარა ყოველთვის წინა ფენაზე */
 .neonPickerModal{z-index:2147483647 !important;}
@@ -1788,8 +1813,94 @@ html body.site-white-theme .backgroundColorBtn.black:active {
 #aiChatModal .aiChatInput::placeholder{color:#555!important;-webkit-text-fill-color:#555!important;opacity:1;}
 #aiChatModal .aiChatInput:focus{background:#fff!important;color:#000!important;-webkit-text-fill-color:#000!important;box-shadow:0 0 8px rgba(0,229,255,.82),0 0 16px rgba(0,229,255,.28),inset 0 0 10px rgba(0,0,0,.08);}
 #aiChatModal .aiChatSend{width:54px;min-width:54px;border:2px solid #00e5ff;border-radius:13px;background:#00e5ff;color:#001014!important;font-size:23px;font-weight:900;cursor:pointer;box-shadow:0 0 8px rgba(0,229,255,.82),0 0 18px rgba(0,229,255,.35);}
+#aiChatModal .aiChatMic{width:54px;min-width:54px;border:2px solid #00e5ff;border-radius:13px;background:#fff;color:#001014!important;font-size:22px;cursor:pointer;box-shadow:0 0 8px rgba(0,229,255,.55),0 0 14px rgba(0,229,255,.22);}
+#aiChatModal .aiChatMic.listening{background:#00e5ff;box-shadow:0 0 10px rgba(0,229,255,.9),0 0 20px rgba(0,229,255,.45);}
 .aiChatSend:disabled{opacity:.55;cursor:default;}
 @media(max-width:700px){.aiHeaderBtn{width:38px;height:38px;font-size:18px}.aiChatModal{padding:8px}.aiChatBox{width:calc(100% - 28px);height:72vh;max-height:620px;border-radius:18px}.aiChatHeader{padding:10px 11px}.aiChatMessages{padding:10px}#aiChatModal .aiMsg{max-width:94%;font-size:15px}.aiChatInputRow{padding:8px}#aiChatModal .aiChatSend{width:52px;min-width:52px}}
+
+<style id="temo-ai-floating-fixed-position">
+/* TEMO AI — მუდმივად ეკრანის მარჯვენა მხარეს, ქვედა მენიუს ზემოთ */
+#aiHeaderBtn{display:none !important;}
+#aiFloatingBtn{
+  position:fixed !important;
+  right:8px !important;
+  bottom:calc(76px + 100px) !important;
+  width:54px !important;
+  height:54px !important;
+  display:flex !important;
+  align-items:center !important;
+  justify-content:center !important;
+  z-index:2147483646 !important;
+  border:2px solid #00e5ff !important;
+  border-radius:14px !important;
+  background:#ff8c00 !important;
+  color:#111 !important;
+  font-size:28px !important;
+  line-height:1 !important;
+  box-shadow:0 0 8px rgba(0,229,255,.95),0 0 22px rgba(0,229,255,.55),0 0 36px rgba(0,229,255,.25) !important;
+  text-shadow:none !important;
+  overflow:visible !important;
+  background:transparent !important;
+  border:none !important;
+  box-shadow:none !important;
+  padding:0 !important;
+}
+#aiFloatingBtn img{
+  width:100% !important;
+  height:100% !important;
+  object-fit:contain !important;
+  display:block !important;
+  background:transparent !important;
+}
+body:has(#loginScreen:not(.hidden)) #aiFloatingBtn{display:none !important;}
+#aiFloatingBtn:active{transform:scale(.94) !important;}
+body.temo-android-app #aiFloatingBtn{
+  bottom:calc(64px + 100px) !important;
+}
+</style>
+<style id="temo-ai-android-keyboard-fix">
+@media(max-width:700px){
+  html body.temo-ai-android-keyboard #aiChatModal{
+    align-items:flex-start !important;
+    justify-content:center !important;
+    padding:8px !important;
+  }
+  html body.temo-ai-android-keyboard #aiChatModal .aiChatBox{
+    height:min(72vh,calc(var(--temo-ai-visible-height,100vh) - 16px)) !important;
+    max-height:calc(var(--temo-ai-visible-height,100vh) - 16px) !important;
+    margin:0 !important;
+  }
+}
+</style>
+<script id="temo-ai-android-keyboard-fix-js">
+(function(){
+  const modal=document.getElementById('aiChatModal');
+  const input=document.getElementById('aiChatInput');
+  if(!modal||!input||!/Android/i.test(navigator.userAgent))return;
+
+  const vv=window.visualViewport;
+
+  function sync(){
+    if(document.activeElement!==input)return;
+    const visibleHeight=vv?vv.height:window.innerHeight;
+    document.documentElement.style.setProperty(
+      '--temo-ai-visible-height',
+      Math.max(320,visibleHeight)+'px'
+    );
+    document.body.classList.add('temo-ai-android-keyboard');
+  }
+
+  function hide(){
+    document.body.classList.remove('temo-ai-android-keyboard');
+    document.documentElement.style.removeProperty('--temo-ai-visible-height');
+  }
+
+  input.addEventListener('focus',()=>setTimeout(sync,60));
+  input.addEventListener('blur',()=>setTimeout(hide,120));
+  if(vv)vv.addEventListener('resize',sync);
+  window.addEventListener('resize',sync);
+})();
+</script>
 
 <style id="temo-ai-final-text-fix">
 /* TEMO AI FINAL: AI text must stay white even when the site's global theme forces dark text. */
@@ -1981,25 +2092,76 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   -webkit-text-fill-color:#111 !important;
 }
 </style>
-
-
-
+<style id="temo-exit-confirm-style">
+#temoExitConfirm{
+  position:fixed;inset:0;z-index:100000;display:none;align-items:center;justify-content:center;
+  background:rgba(0,0,0,.52);padding:16px;box-sizing:border-box;
+}
+#temoExitConfirm.show{display:flex}
+#temoExitConfirm .temoExitBox{
+  width:min(330px,calc(100vw - 32px));box-sizing:border-box;padding:18px 18px 10px;
+  border:0;border-radius:22px;background:#fff;color:#111;
+  box-shadow:0 8px 28px rgba(0,0,0,.25);text-align:left;
+}
+#temoExitConfirm .temoExitText{margin:0 0 14px;font-size:19px;line-height:1.35;font-weight:400;color:#111}
+#temoExitConfirm .temoExitActions{display:flex;justify-content:flex-end;gap:4px}
+#temoExitConfirm .temoExitActions button{
+  border:0!important;background:transparent!important;color:#111!important;
+  box-shadow:none!important;border-radius:0!important;font-size:16px!important;font-weight:500!important;
+  padding:8px 10px!important;min-width:0!important;width:auto!important;cursor:pointer;
+}
+@media(max-width:420px){
+  #temoExitConfirm .temoExitBox{width:min(330px,calc(100vw - 32px));padding:18px 18px 10px}
+  #temoExitConfirm .temoExitText{font-size:19px;margin-bottom:12px}
+}
+</style>
+<style id="temo-expense-category-position-fix">
+#expenseModal{align-items:flex-start;padding-top:8px;padding-bottom:8px}
+#expenseModal .form{max-height:calc(100vh - 16px);overflow:visible}
+#expenseModal .expenseCategoryMenu{
+  max-height:calc(100vh - 330px);
+  overflow-y:auto;
+  padding-bottom:70px;
+  box-sizing:border-box;
+}
+</style>
+<style id="temo-expense-category-text-size">
+#expenseModal .expenseCategoryOption{font-size:16px;line-height:1.15;padding:7px 9px}
+#expenseModal .expenseCategoryOption .catIcon{font-size:18px}
+#expenseModal .expenseCategoryOption .catText{font-size:16px;line-height:1.15}
+</style>
+<style id="temo-date-input-size-fix">
+#expenseModal #expenseDate,
+#workModal #date{
+  width:100% !important;
+  box-sizing:border-box !important;
+}
+</style>
+<style id="temo-message-nav-status">
+#bottomNav button{position:relative}
+#bottomNav .messagesNavDot{position:absolute;top:4px;right:calc(50% - 18px);width:7px;height:7px;border-radius:50%;border:0;box-shadow:0 0 4px currentColor;z-index:5}
+#bottomNav .messagesNavDot.unread{background:#18c964;color:#18c964}
+#bottomNav .messagesNavDot.read{background:#ef4444;color:#ef4444}
+#bottomNav .messagesNavDot[hidden]{display:none!important}
+</style>
 </head>
 <body>
 <nav id="bottomNav" aria-label="მთავარი მენიუ">
   <button type="button" onclick="goHome()" aria-label="მთავარი" title="მთავარი"><span class="navLogo">🏠</span></button>
   <button type="button" onclick="goSettings()" aria-label="პარამეტრები" title="პარამეტრები"><span class="navLogo">⚙️</span></button>
-  <button type="button" onclick="goUsers()" aria-label="მომხმარებლები" title="მომხმარებლები"><span class="navLogo">👥</span></button>
+  <button type="button" onclick="goUsers()" aria-label="მომხმარებლები" title="მომხმარებლები"><span class="navLogo">👥</span><span id="messagesNavDot" class="messagesNavDot" aria-label="მესიჯის სტატუსი" hidden></span></button>
   <button type="button" onclick="goWallet()" aria-label="ფული" title="ფული"><span class="navLogo">💰</span></button>
   <button id="notesNavButton" type="button" onclick="goNotes()" aria-label="ჩანაწერები" title="ჩანაწერები"><span class="navLogo">📖</span></button>
   <button type="button" onclick="logout()" class="logoutNav" aria-label="გამოსვლა" title="გამოსვლა"><span class="navLogo">🚪</span></button>
 </nav>
 
+<button type="button" id="aiFloatingBtn" onclick="openAIChat()" aria-label="TEMO AI" title="TEMO AI"><img src="temo_ai_robot_64.png" alt="TEMO AI"></button>
+
 <div id="uploadOverlay"><div class="uploadBox"><div class="uploadSpinner" id="uploadSpinner"></div><div class="uploadCheck" id="uploadCheck">✓</div><div class="uploadBurst" id="uploadBurst"></div></div></div>
 
-
 <div id="loginScreen"><div class="loginBox">
-<div class="languageBox loginLanguageBox"><button type="button" id="languageBtnLogin" class="languageBtn" aria-label="ენები" title="ენები">🌐 KA</button><div id="languageMenuLogin" class="languageMenu"><button type="button" class="languageOption" data-lang="en">🇬🇧 English</button><button type="button" class="languageOption" data-lang="el">🇬🇷 Ελληνικά</button><button type="button" class="languageOption" data-lang="ka">🇬🇪 ქართული</button></div></div><h2>🔐 </h2>
+<div class="languageBox loginLanguageBox"><button type="button" id="languageBtnLogin" class="languageBtn" aria-label="ენები" title="ენები">🌐 KA</button><div id="languageMenuLogin" class="languageMenu"><button type="button" class="languageOption" data-lang="en">🇬🇧 English</button><button type="button" class="languageOption" data-lang="el">🇬🇷 Ελληνικά</button><button type="button" class="languageOption" data-lang="ka">🇬🇪 ქართული</button></div></div>
+<h2>🔐 </h2>
 <p id="loginHint">შეიყვანე პაროლი</p>
 
 <input id="loginName" class="loginSelect" type="text" placeholder="სახელი" autocomplete="username">
@@ -2099,6 +2261,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
     <div class="notesPageSwitch">
       <button type="button" class="notesPageBtn" id="notesNewBtn" onclick="openNoteModal()">🔔 შეტყობინების დაყენება</button>
       <button type="button" class="notesPageBtn" id="notesSecondBtn" onclick="showNotesSubPage('daily')">📖 დღიური ჩანაწერები</button>
+      <button type="button" class="notesPushEnableBtn" id="notesPushEnableBtn" onclick="enableTEMOPush()">🔔 შეტყობინებების ჩართვა</button>
     </div>
   </div>
 
@@ -2184,7 +2347,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 
 <div id="settingsPage" class="pageHidden">
-<header><div><h1>⚙️ სეთინგები</h1><small>მონაცემების მართვა</small></div></header>
+<header><div><h1>⚙️ პარამეტრები</h1></div></header>
 
 
 <div class="section" id="neonControlSection">
@@ -2267,22 +2430,22 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   <div class="neonPickerBox" role="dialog" aria-modal="true" aria-labelledby="neonPickerTitle">
     <h2 id="neonPickerTitle">აირჩიეთ ფერი</h2>
     <div class="neonPresetGrid">
-      <button class="neonPreset" type="button" data-color="#ff0000" style="background:#ff0000" aria-label="წითელი"></button>
-      <button class="neonPreset" type="button" data-color="#00ffff" style="background:#00ffff" aria-label="ცისფერი"></button>
-      <button class="neonPreset" type="button" data-color="#0000ff" style="background:#0000ff" aria-label="ლურჯი"></button>
-      <button class="neonPreset" type="button" data-color="#00ff00" style="background:#00ff00" aria-label="მწვანე"></button>
-      <button class="neonPreset" type="button" data-color="#ff00ff" style="background:#ff00ff" aria-label="ვარდისფერი"></button>
-      <button class="neonPreset" type="button" data-color="#ffff00" style="background:#ffff00" aria-label="ყვითელი"></button>
-      <button class="neonPreset" type="button" data-color="#000000" style="background:#000000" aria-label="შავი"></button>
-      <button class="neonPreset" type="button" data-color="#ffffff" style="background:#ffffff" aria-label="თეთრი"></button>
-      <button class="neonPreset" type="button" data-color="#ff7a00" style="background:#ff7a00" aria-label="ნარინჯისფერი"></button>
-      <button class="neonPreset" type="button" data-color="#ffd700" style="background:#ffd700" aria-label="ოქროსფერი"></button>
-      <button class="neonPreset" type="button" data-color="#b6ff00" style="background:#b6ff00" aria-label="ლაიმი"></button>
-      <button class="neonPreset" type="button" data-color="#00bfa6" style="background:#00bfa6" aria-label="ტურქიზი"></button>
-      <button class="neonPreset" type="button" data-color="#00aaff" style="background:#00aaff" aria-label="ცისფერი ლურჯი"></button>
-      <button class="neonPreset" type="button" data-color="#7a00ff" style="background:#7a00ff" aria-label="იისფერი"></button>
-      <button class="neonPreset" type="button" data-color="#ff1493" style="background:#ff1493" aria-label="ვარდისფერი"></button>
-      <button class="neonPreset" type="button" data-color="#ff4d4d" style="background:#ff4d4d" aria-label="კორალისფერი"></button>
+      <button class="neonPreset" type="button" data-color="#ff0000" onclick="setTEMOPresetNeonColor('#ff0000')" style="background:#ff0000" aria-label="წითელი"></button>
+      <button class="neonPreset" type="button" data-color="#00ffff" onclick="setTEMOPresetNeonColor('#00ffff')" style="background:#00ffff" aria-label="ცისფერი"></button>
+      <button class="neonPreset" type="button" data-color="#0000ff" onclick="setTEMOPresetNeonColor('#0000ff')" style="background:#0000ff" aria-label="ლურჯი"></button>
+      <button class="neonPreset" type="button" data-color="#00ff00" onclick="setTEMOPresetNeonColor('#00ff00')" style="background:#00ff00" aria-label="მწვანე"></button>
+      <button class="neonPreset" type="button" data-color="#ff00ff" onclick="setTEMOPresetNeonColor('#ff00ff')" style="background:#ff00ff" aria-label="ვარდისფერი"></button>
+      <button class="neonPreset" type="button" data-color="#ffff00" onclick="setTEMOPresetNeonColor('#ffff00')" style="background:#ffff00" aria-label="ყვითელი"></button>
+      <button class="neonPreset" type="button" data-color="#000000" onclick="setTEMOPresetNeonColor('#000000')" style="background:#000000" aria-label="შავი"></button>
+      <button class="neonPreset" type="button" data-color="#ffffff" onclick="setTEMOPresetNeonColor('#ffffff')" style="background:#ffffff" aria-label="თეთრი"></button>
+      <button class="neonPreset" type="button" data-color="#ff7a00" onclick="setTEMOPresetNeonColor('#ff7a00')" style="background:#ff7a00" aria-label="ნარინჯისფერი"></button>
+      <button class="neonPreset" type="button" data-color="#ffd700" onclick="setTEMOPresetNeonColor('#ffd700')" style="background:#ffd700" aria-label="ოქროსფერი"></button>
+      <button class="neonPreset" type="button" data-color="#b6ff00" onclick="setTEMOPresetNeonColor('#b6ff00')" style="background:#b6ff00" aria-label="ლაიმი"></button>
+      <button class="neonPreset" type="button" data-color="#00bfa6" onclick="setTEMOPresetNeonColor('#00bfa6')" style="background:#00bfa6" aria-label="ტურქიზი"></button>
+      <button class="neonPreset" type="button" data-color="#00aaff" onclick="setTEMOPresetNeonColor('#00aaff')" style="background:#00aaff" aria-label="ცისფერი ლურჯი"></button>
+      <button class="neonPreset" type="button" data-color="#7a00ff" onclick="setTEMOPresetNeonColor('#7a00ff')" style="background:#7a00ff" aria-label="იისფერი"></button>
+      <button class="neonPreset" type="button" data-color="#ff1493" onclick="setTEMOPresetNeonColor('#ff1493')" style="background:#ff1493" aria-label="ვარდისფერი"></button>
+      <button class="neonPreset" type="button" data-color="#ff4d4d" onclick="setTEMOPresetNeonColor('#ff4d4d')" style="background:#ff4d4d" aria-label="კორალისფერი"></button>
     </div>
     <div class="neonWheelWrap">
       <div class="neonWheel" id="neonWheel" aria-label="ფერის ბორბალი">
@@ -2333,11 +2496,20 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 
 
+<div id="temoExitConfirm" aria-hidden="true">
+  <div class="temoExitBox" role="dialog" aria-modal="true">
+    <p class="temoExitText" id="temoExitText">ნამდვილად გსურთ საიტის დატოვება?</p>
+    <div class="temoExitActions">
+      <button type="button" id="temoExitCancel" onclick="closeTEMOExitConfirm()">გაუქმება</button>
+      <button type="button" id="temoExitOk" onclick="confirmTEMOExit()">კარგი</button>
+    </div>
+  </div>
+</div>
 <div class="aiChatModal" id="aiChatModal" onclick="if(event.target===this)closeAIChat()">
   <div class="aiChatBox" role="dialog" aria-modal="true" aria-labelledby="aiChatTitle">
     <div class="aiChatHeader"><h2 id="aiChatTitle">🤖 TEMO AI</h2><button type="button" class="aiChatClose" onclick="closeAIChat()" aria-label="დახურვა">✕</button></div>
     <div class="aiChatMessages" id="aiChatMessages"></div>
-    <div class="aiChatInputRow"><textarea id="aiChatInput" class="aiChatInput" rows="1" placeholder="ჰკითხე"></textarea><button type="button" id="aiChatSend" class="aiChatSend" onclick="sendAIMessage()" aria-label="გაგზავნა">➤</button></div>
+    <div class="aiChatInputRow"><textarea id="aiChatInput" class="aiChatInput" rows="1" placeholder="ჰკითხე"></textarea><button type="button" id="aiChatMic" class="aiChatMic" onclick="toggleTEMOAIListening()" aria-label="მიკროფონი">🎤</button><button type="button" id="aiChatSend" class="aiChatSend" onclick="sendAIMessage()" aria-label="გაგზავნა">➤</button></div>
   </div>
 </div>
 <div class="modal" id="modal"><div class="form">
@@ -2363,6 +2535,7 @@ const REMOVED_USER_NAMES=['TEMOADMIN'];
 const FIREBASE_DB_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app';
 let currentUser=localStorage.getItem(SESSION_USER_KEY)||'';
 let currentUserId=localStorage.getItem(SESSION_USER_ID_KEY)||'';
+let temoLoggingOut=false;
 let firebaseSyncBusy=false;
 let firebaseWriteQueue=Promise.resolve();
 function makeUserId(){return window.crypto&&crypto.randomUUID?crypto.randomUUID():'u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);}
@@ -2372,7 +2545,7 @@ async function loadUsersFromFirebase(){try{const r=await fetch(FIREBASE_DB_URL+'
 function normalizeUser(raw){const u=(raw&&typeof raw==='object')?raw:{};const name=String(u.name||'').trim(),email=String(u.email||'').trim(),password=String(u.password??'');const admin=(name.toUpperCase()===ADMIN_USER)||u.admin===true;const blocked=admin?false:(typeof u.blocked==='boolean'?u.blocked:u.authorized===false);const id=String(u.id||'').trim()||makeLegacyUserId(name,password);return {id,name,email,password,admin,authorized:admin?true:!blocked,blocked,_firebaseKey:u._firebaseKey||''};}
 function isRemovedUser(u){return REMOVED_USER_NAMES.includes(String(u?.name||'').trim().toUpperCase());}
 async function saveUsersToFirebase(users){const snapshot=users.filter(u=>u&&u.name&&!isRemovedUser(u)).map(normalizeUser);firebaseWriteQueue=firebaseWriteQueue.then(async()=>{try{const r=await fetch(FIREBASE_DB_URL+'/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase users write failed:',e);return false}});return firebaseWriteQueue;}
-async function syncUsersFromFirebase(){if(firebaseSyncBusy)return;firebaseSyncBusy=true;try{await firebaseWriteQueue;const remote=await loadUsersFromFirebase();if(remote!==null){let clean=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!clean.some(u=>u.name.toUpperCase()===ADMIN_USER))clean.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(clean));return clean;}const local=getUsers().filter(u=>!isRemovedUser(u));await saveUsersToFirebase(local);return local;}finally{firebaseSyncBusy=false}}
+async function syncUsersFromFirebase(){if(firebaseSyncBusy)return;firebaseSyncBusy=true;try{await firebaseWriteQueue;const remote=await loadUsersFromFirebase();if(remote!==null){let clean=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!clean.some(u=>u.name.toUpperCase()===ADMIN_USER))clean.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(clean));return clean;}console.warn('Firebase users could not be read; local users were preserved and no cloud write was attempted.');return getUsers().filter(u=>!isRemovedUser(u));}finally{firebaseSyncBusy=false}}
 function getUsers(){let users;try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'null')}catch(e){users=null}if(!Array.isArray(users)||!users.length)users=[normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false})];const normalized=users.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));localStorage.setItem(USERS_KEY,JSON.stringify(normalized));return normalized;}
 function findUserById(id){return getUsers().find(u=>String(u.id)===String(id));}
 
@@ -2385,8 +2558,8 @@ function enablePasswordOnlyLogin(){
   $('loginName').focus();
 }
 function enableNameLogin(){enablePasswordOnlyLogin()}
-function completeLogin(u){const user=normalizeUser(u);if(user.blocked===true||user.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;localStorage.setItem(USERS_KEY,JSON.stringify(getUsers()));localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();startDailySyncWatcher();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
-function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value,users=getUsers(),u=users.find(x=>x.name===name&&x.password===pass);if(!u){$('loginError').textContent='სახელი ან პაროლი არასწორია';$('loginPassword').value='';$('loginPassword').focus();return;}if(u.blocked===true||u.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';$('loginPassword').focus();return;}completeLogin(u);}
+async function completeLogin(u){const user=normalizeUser(u);if(user.blocked===true||user.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;localStorage.setItem(USERS_KEY,JSON.stringify(getUsers()));localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
+async function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value;let users=getUsers();$('loginError').textContent='';try{const remote=await loadUsersFromFirebase();if(remote!==null){users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!users.some(u=>u.name.toUpperCase()===ADMIN_USER))users.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(users));}}catch(e){console.warn('Login user refresh failed:',e);}const u=users.find(x=>x.name.toLowerCase()===name.toLowerCase()&&x.password===pass);if(!u){$('loginError').textContent='სახელი ან პაროლი არასწორია. თუ ეს მონაცემები სწორია, მომხმარებლების სია Firebase-ში შესამოწმებელია.';$('loginPassword').value='';$('loginPassword').focus();return;}if(u.blocked===true||u.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';$('loginPassword').focus();return;}await completeLogin(u);}
 function renderLoginUsers(){}
 window.addEventListener('DOMContentLoaded',async()=>{
   const aiInput=document.getElementById('aiChatInput');
@@ -2409,9 +2582,9 @@ window.addEventListener('DOMContentLoaded',async()=>{
     try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}
     localStorage.setItem(SESSION_USER_KEY,currentUser);
     localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);
+    if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();
     $('loginScreen').classList.add('hidden');
     if($('bottomNav'))$('bottomNav').style.display='grid';
-    if(typeof window.loadNeonSettings==='function')window.loadNeonSettings();
     jobs=loadUserJobs();loadAIMemory();updateUserUI();render();
     startJobsSyncWatcher();
     syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));
@@ -2438,8 +2611,8 @@ window.addEventListener('DOMContentLoaded',async()=>{
     }
   },1000);
   setInterval(async()=>{
-    if(currentUser===ADMIN_USER)await renderAdminMessages();
-    else if(currentUser)await loadAndRenderUserChat();
+    if(currentUser===ADMIN_USER){await renderAdminMessages();await updateMessagesNavDot();}
+    else if(currentUser){await loadAndRenderUserChat();await updateMessagesNavDot();}
   },3000);
 });
 
@@ -2911,7 +3084,7 @@ function temoNavigatePage(pageId){
   window.scrollTo(0,0);
 
   const navIndex={mainPage:0,settingsPage:1,userManagementPage:2,walletPage:3,expensesPage:3,notesPage:4};
-  const buttons=[...document.querySelectorAll('#bottomNav > button')];
+  const buttons=[...document.querySelectorAll('#bottomNav > button:not(#temoAdminMenuToggle)')];
   buttons.forEach((b,i)=>{
     const active=navIndex[pageId]===i;
     b.classList.toggle('active',active);
@@ -2996,9 +3169,9 @@ function exportMyDataPdf(){
       expenseData:'გასავლის მონაცემები',
       date:'თარიღი',
       workplace:'სამუშაო ადგილი',
-      amount:'თანხა',
-      status:'სტატუსი',
-      note:'შენიშვნა',      category:'კატეგორია',
+      amount:'თანხა',      status:'სტატუსი',
+      note:'შენიშვნა',
+      category:'კატეგორია',
       where:'სად',
       paid:'გადახდილი',
       unpaid:'გადაუხდელი',
@@ -3109,7 +3282,62 @@ function exportMyDataPdf(){
   <tbody>${rowsExp||`<tr><td colspan="4">${esc(t.noData)}</td></tr>`}</tbody></table>
   <button type="button" class="noPrint" id="temoPdfPrintBtn" style="margin-top:20px;padding:10px 16px">${esc(t.print)}</button>
   <script>document.getElementById("temoPdfPrintBtn").addEventListener("click",function(){setTimeout(function(){window.focus();window.print();},50);});<\/script>
-  </body></html>`);
+  <style id="temo-version-01-bottom-nav-sizing">
+/* Version 01 candidate: global mobile visual scale. Keep page content and bottom navigation in sync. */
+@media(max-width:700px){
+  html body > .app{
+    zoom:.80 !important;
+    width:125% !important;
+    max-width:none !important;
+    margin-left:-12.5% !important;
+  }
+  html body #bottomNav{
+    height:58px !important;
+    left:0 !important;
+    right:auto !important;
+    bottom:0 !important;
+    width:125vw !important;
+    transform:scale(.80) !important;
+    transform-origin:bottom left !important;
+    padding:2px 7px env(safe-area-inset-bottom, 2px) !important;
+    gap:1px !important;
+    align-items:stretch !important;
+  }
+  html body #bottomNav > button{
+    height:56px !important;
+    min-height:0 !important;
+    min-width:0 !important;
+    padding:0 !important;
+    flex:1 1 0 !important;
+    font-size:22px !important;
+  }
+  html body #bottomNav > button .navLogo{
+    display:flex !important;
+    width:30px !important;
+    height:30px !important;
+    min-width:30px !important;
+    min-height:30px !important;
+    max-width:30px !important;
+    max-height:30px !important;
+    font-size:22px !important;
+    line-height:1 !important;
+    flex:0 0 30px !important;
+    margin:auto !important;
+  }
+  html body #bottomNav > button.active .navLogo{
+    width:32px !important;
+    height:32px !important;
+    min-width:32px !important;
+    min-height:32px !important;
+    max-width:32px !important;
+    max-height:32px !important;
+    font-size:22px !important;
+    flex-basis:32px !important;
+  }
+  html body{padding-bottom:90px !important}
+}
+</style>
+</body></html>`);
   w.document.close();
   w.focus();
 }
@@ -3714,6 +3942,217 @@ function aiAddMessage(role,text){
   box.appendChild(div);
   box.scrollTop=box.scrollHeight;
 }
+let temoAIRecognition=null;
+let temoAIListening=false;
+let temoAIMediaRecorder=null;
+let temoAIMediaStream=null;
+let temoAIAudioChunks=[];
+let temoAISilenceTimer=null;
+let temoAIMaxTimer=null;
+let temoAIHasSpeech=false;
+let temoAIAudioContext=null;
+let temoAIAudioSource=null;
+let temoAIAnalyser=null;
+let temoAIVoiceFrame=null;
+
+function temoAIIsIOS(){
+  return /iPhone|iPad|iPod/i.test(navigator.userAgent||'') ||
+    (navigator.platform==='MacIntel' && navigator.maxTouchPoints>1);
+}
+
+function temoAIResetMicUI(){
+  temoAIListening=false;
+  const b=document.getElementById('aiChatMic');
+  if(b){b.classList.remove('listening');b.textContent='🎤';}
+}
+
+function temoAIStopIOSResources(){
+  if(temoAISilenceTimer)clearTimeout(temoAISilenceTimer);
+  if(temoAIMaxTimer)clearTimeout(temoAIMaxTimer);
+  temoAISilenceTimer=null;
+  temoAIMaxTimer=null;
+  if(temoAIVoiceFrame)cancelAnimationFrame(temoAIVoiceFrame);
+  temoAIVoiceFrame=null;
+  try{temoAIAudioSource?.disconnect();}catch(e){}
+  try{temoAIAnalyser?.disconnect();}catch(e){}
+  try{temoAIAudioContext?.close();}catch(e){}
+  temoAIAudioSource=null;
+  temoAIAnalyser=null;
+  temoAIAudioContext=null;
+  if(temoAIMediaStream){
+    temoAIMediaStream.getTracks().forEach(t=>{try{t.stop();}catch(e){}});
+  }
+  temoAIMediaStream=null;
+}
+
+function temoAIAppendTranscript(text){
+  const input=document.getElementById('aiChatInput');
+  const value=String(text||'').trim();
+  if(!value||!input)return;
+  const old=String(input.value||'').trim();
+  input.value=old?(old+' '+value):value;
+  input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.focus();
+}
+
+async function temoAITranscribeIOS(blob){
+  try{
+    const fd=new FormData();
+    const lang=aiCurrentLanguage()==='el'?'el':aiCurrentLanguage()==='en'?'en':'ka';
+    const ext=blob.type.includes('mp4')?'m4a':blob.type.includes('ogg')?'ogg':'webm';
+    fd.append('file',blob,'temo-ai-'+Date.now()+'.'+ext);
+    fd.append('language',lang);
+    fd.append('action','transcribe');
+    const r=await fetch(TEMO_AI_WORKER_URL,{method:'POST',body:fd});
+    const data=await r.json().catch(()=>null);
+    if(!r.ok||!data?.ok)throw new Error(data?.error||'transcription failed');
+    temoAIAppendTranscript(data.text||'');
+  }catch(e){
+    aiAddMessage('system','🎤 ხმის ტექსტად გადაყვანა ვერ მოხერხდა. კიდევ სცადე.');
+  }
+}
+
+function temoAIStopIOSRecording(){
+  if(temoAIMediaRecorder && temoAIMediaRecorder.state!=='inactive'){
+    try{temoAIMediaRecorder.stop();}catch(e){}
+  }else{
+    temoAIStopIOSResources();
+    temoAIResetMicUI();
+  }
+}
+
+async function temoAIStartIOSRecording(){
+  if(!navigator.mediaDevices?.getUserMedia||typeof MediaRecorder==='undefined'){
+    aiAddMessage('system','🎤 ამ iPhone ბრაუზერში ხმის ჩაწერა ხელმისაწვდომი არ არის.');
+    return;
+  }
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    temoAIMediaStream=stream;
+    temoAIAudioChunks=[];
+    temoAIHasSpeech=false;
+    const types=['audio/mp4','audio/webm;codecs=opus','audio/webm'];
+    const mime=types.find(t=>MediaRecorder.isTypeSupported?.(t))||'';
+    const recorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
+    temoAIMediaRecorder=recorder;
+    temoAIListening=true;
+    const mic=document.getElementById('aiChatMic');
+    if(mic){mic.classList.add('listening');mic.textContent='⏹️';}
+    recorder.ondataavailable=e=>{
+      if(e.data&&e.data.size)temoAIAudioChunks.push(e.data);
+    };
+    recorder.onerror=()=>{
+      temoAIStopIOSResources();
+      temoAIMediaRecorder=null;
+      temoAIResetMicUI();
+      aiAddMessage('system','🎤 მიკროფონის შეცდომა.');
+    };
+    recorder.onstop=async()=>{
+      const type=recorder.mimeType||mime||'audio/mp4';
+      const blob=new Blob(temoAIAudioChunks,{type});
+      temoAIAudioChunks=[];
+      temoAIMediaRecorder=null;
+      temoAIStopIOSResources();
+      temoAIResetMicUI();
+      if(blob.size)await temoAITranscribeIOS(blob);
+    };
+
+    recorder.start(250);
+
+    if(window.AudioContext||window.webkitAudioContext){
+      const AC=window.AudioContext||window.webkitAudioContext;
+      temoAIAudioContext=new AC();
+      temoAIAudioSource=temoAIAudioContext.createMediaStreamSource(stream);
+      temoAIAnalyser=temoAIAudioContext.createAnalyser();
+      temoAIAnalyser.fftSize=2048;
+      temoAIAudioSource.connect(temoAIAnalyser);
+      const data=new Uint8Array(temoAIAnalyser.fftSize);
+      let quietSince=0;
+      const check=()=>{
+        if(!temoAIMediaRecorder||temoAIMediaRecorder.state==='inactive')return;
+        temoAIAnalyser.getByteTimeDomainData(data);
+        let sum=0;
+        for(let i=0;i<data.length;i++){
+          const v=(data[i]-128)/128;
+          sum+=v*v;
+        }
+        const rms=Math.sqrt(sum/data.length);
+        const now=Date.now();
+        if(rms>0.018){
+          temoAIHasSpeech=true;
+          quietSince=0;
+        }else if(temoAIHasSpeech){
+          if(!quietSince)quietSince=now;
+          if(now-quietSince>=1200){
+            temoAIStopIOSRecording();
+            return;
+          }
+        }
+        temoAIVoiceFrame=requestAnimationFrame(check);
+      };
+      temoAIVoiceFrame=requestAnimationFrame(check);
+    }
+
+    temoAIMaxTimer=setTimeout(()=>temoAIStopIOSRecording(),15000);
+  }catch(e){
+    temoAIStopIOSResources();
+    temoAIMediaRecorder=null;
+    temoAIResetMicUI();
+    const msg=e?.name==='NotAllowedError'?'🎤 მიკროფონზე წვდომა არ არის დაშვებული.':'🎤 მიკროფონის ჩართვა ვერ მოხერხდა.';
+    aiAddMessage('system',msg);
+  }
+}
+
+function toggleTEMOAIListening(){
+  if(temoAIIsIOS()){
+    if(temoAIListening){
+      temoAIStopIOSRecording();
+    }else{
+      temoAIStartIOSRecording();
+    }
+    return;
+  }
+
+  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+  if(!SR){
+    aiAddMessage('system','🎤 ამ მოწყობილობის ბრაუზერში ხმოვანი შეყვანა ხელმისაწვდომი არ არის.');
+    return;
+  }
+  const mic=document.getElementById('aiChatMic');
+  if(temoAIListening){
+    try{temoAIRecognition?.stop();}catch(e){}
+    return;
+  }
+  const recognition=new SR();
+  temoAIRecognition=recognition;
+  temoAIListening=true;
+  if(mic){mic.classList.add('listening');mic.textContent='⏹️';}
+  recognition.lang=aiCurrentLanguage()==='el'?'el-GR':aiCurrentLanguage()==='en'?'en-US':'ka-GE';
+  recognition.continuous=false;
+  recognition.interimResults=false;
+  recognition.onresult=e=>{
+    const text=Array.from(e.results||[]).map(x=>x[0]?.transcript||'').join(' ').trim();
+    temoAIAppendTranscript(text);
+  };
+  recognition.onerror=e=>{
+    if(e?.error!=='aborted'){
+      const msg=e?.error==='not-allowed'?'🎤 მიკროფონზე წვდომა არ არის დაშვებული.':e?.error==='no-speech'?'🎤 ხმა ვერ გავიგე. კიდევ სცადე.':'🎤 მიკროფონის შეცდომა.';
+      aiAddMessage('system',msg);
+    }
+  };
+  recognition.onend=()=>{
+    temoAIListening=false;
+    temoAIRecognition=null;
+    const b=document.getElementById('aiChatMic');
+    if(b){b.classList.remove('listening');b.textContent='🎤';}
+  };
+  try{recognition.start();}catch(e){
+    temoAIListening=false;
+    temoAIRecognition=null;
+    if(mic){mic.classList.remove('listening');mic.textContent='🎤';}
+  }
+}
+
 function aiCurrentLanguage(){
   return typeof window.getCurrentLanguage==='function'?String(window.getCurrentLanguage()||'ka'):'ka';
 }
@@ -3904,16 +4343,15 @@ async function createAIChatReminder(date,time,text){
   if('Notification' in window && Notification.permission==='default'){try{await Notification.requestPermission();}catch(e){}}
   const duplicate=notesCache.find(n=>n.reminder===true&&!n.done&&String(n.date)===d&&String(n.time)===t&&String(n.text||'').trim()===cleanText);
   if(duplicate){scheduleNativeNoteReminder(duplicate);renderNotes();return true;}
-  const note={id:makeNoteId(),text:cleanText,date:d,time:t,reminder:true,done:false,notifiedAt:0,updatedAt:Date.now()};
+  const note={id:makeNoteId(),text:cleanText,date:d,time:t,reminder:true,done:false,notifiedAt:0,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Athens',updatedAt:Date.now()};
   notesCache.push(note);
   try{await saveNotesRemote();scheduleNativeNoteReminder(note);renderNotes();return true;}catch(e){await loadNotes();return false;}
 }
 async function deleteAIChatReminderCommand(message){
   const raw=String(message||'').trim();
-  const isDelete=/(?:^|\s)(?:წაშალე|წავშალოთ|წაშალეე)(?=\s|$)/iu.test(raw);
-  const isCancel=/(?:^|\s)(?:გააუქმე|გაუქმება|გააუქმოს)(?=\s|$)/iu.test(raw);
+  const isDelete=/(?:^|\s)(?:წაშალე|წავშალოთ|წაშალეე|წაშალოს|წაშლის|წავშალოთ)(?=\s|$)/iu.test(raw);
+  const isCancel=/(?:^|\s)(?:გააუქმე|გაუქმება|გააუქმოს|გააუქმეთ|გააუქმო|გავაუქმებ|გააბათილე|გააბათილოს|გააბათილებ)(?=\s|$)/iu.test(raw);
   if(!isDelete&&!isCancel)return false;
-  if(!/(?:შეხსენებ|შეტყობინებ|რემინდერ|reminder|ეს|ის|ბოლო|ხვალ|დღეს|ზეგ|საათზე|ზე)/iu.test(raw))return false;
 
   try{await loadNotes();}catch(e){return false;}
   const active=notesCache.filter(n=>n && n.reminder===true && !n.done);
@@ -3933,7 +4371,7 @@ async function deleteAIChatReminderCommand(message){
       return text && lowered.includes(text.slice(0,80));
     })||null;
   }
-  if(!target && /(?:ბოლო|ეს|ის)/iu.test(raw)){
+  if(!target && /(?:ბოლო|ეს|ის|ახლა|მიმდინარე)/iu.test(raw)){
     target=[...active].sort((a,b)=>String(b.updatedAt||0).localeCompare(String(a.updatedAt||0)))[0]||null;
   }
   if(!target && active.length===1)target=active[0];
@@ -3995,9 +4433,9 @@ async function sendAIMessage(){
         date:String(n?.date??''),
         title:'',
         text:String(n?.text??''),
-        done:n?.done===true
-      })) : []
-    };    const response=await fetch(TEMO_AI_WORKER_URL,{
+        done:n?.done===true      })) : []
+    };
+    const response=await fetch(TEMO_AI_WORKER_URL,{
       method:'POST',
       headers:{'Content-Type':'application/json'},
       body:JSON.stringify({message,language,currentDate:aiToday(),currentTime:localTime(),currentDateTime:new Date().toISOString(),timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Athens',history,userContext})
@@ -4066,13 +4504,14 @@ function confirmAIWorkEntry(){
 
 function updateUserUI(){
  const isAdmin=currentUser===ADMIN_USER;
- const aiBtn=$('aiHeaderBtn'); if(aiBtn)aiBtn.style.display=currentUser?'inline-flex':'none';
+ const aiBtn=$('aiHeaderBtn'); if(aiBtn)aiBtn.style.display='none';
+ const aiFloatingBtn=$('aiFloatingBtn'); if(aiFloatingBtn)aiFloatingBtn.style.display=currentUser?'flex':'none';
  const site=$('websiteUpdateSection'); if(site)site.style.display=isAdmin?'':'none';
  const users=$('userManagementSection'); if(users)users.style.display=isAdmin?'':'none'; const neon=$('neonControlSection'); if(neon)neon.style.display=currentUser?'':'none';
  const chat=$('userChatSection'); if(chat)chat.style.display=currentUser&&!isAdmin?'':'none';
  const adminMessages=$('adminMessagesSection'); if(adminMessages)adminMessages.style.display=isAdmin?'':'none';
  const manageBtn=$('userManagementOpenBtn'); if(manageBtn)manageBtn.style.display=isAdmin?'block':'none';
- const label=$('currentUserLabel'); if(label){label.textContent=currentUser?'👤 შენ შეხვედი... '+currentUser:'';label.style.display=currentUser?'block':'none';}
+ const label=$('currentUserLabel'); if(label){label.textContent=currentUser?'👤 '+String(currentUser):'';label.style.display=currentUser?'block':'none';}
  if(isAdmin)renderManagedUsers();
  if(isAdmin)renderAdminMessages();
  else if(currentUser)loadAndRenderUserChat();
@@ -4115,7 +4554,7 @@ async function sendAdminMessage(){
   if(count>100){alert('შეტყობინება მაქსიმუმ 100 სიტყვა უნდა იყოს.');return;}
   const thread=await loadChatThread(currentUserId);
   if(thread===null){alert('შეტყობინება Firebase-ში ვერ ჩაიტვირთა.');return;}
-  thread.push({id:(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'m_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8),userId:String(currentUserId),userName:String(currentUser),text,createdAt:Date.now(),reply:'',replyAt:0});
+  thread.push({id:(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'m_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,8),userId:String(currentUserId),userName:String(currentUser),text,createdAt:Date.now(),reply:'',replyAt:0,readByAdmin:false,replyReadByUser:true});
   try{
     await saveChatThread(currentUserId,thread);
     ta.value='';updateUserChatCount();renderUserChatMessages(thread);
@@ -4125,14 +4564,64 @@ async function sendAdminMessage(){
 }
 function renderUserChatMessages(thread){
   const box=$('userChatMessages');if(!box)return;
-  if(!Array.isArray(thread)||!thread.length){box.innerHTML='<div class="chatEmpty">ჯერ შეტყობინება არ არის.</div>';return;}
+  if(!Array.isArray(thread)||!thread.length){userChatRenderKey='';box.innerHTML='<div class="chatEmpty">ჯერ შეტყობინება არ არის.</div>';return;}
   const key=JSON.stringify(thread.map(m=>[m.id,m.text,m.reply,m.createdAt,m.replyAt]));
   if(key===userChatRenderKey&&box.children.length)return;userChatRenderKey=key;
-  box.innerHTML=thread.map(m=>`<div class="chatMessage"><div class="chatMessageHead"><b>📨 შენ</b><span class="chatMessageTime">${chatEscape(chatFormatTime(m.createdAt))}</span></div><div class="chatMessageText">${chatEscape(m.text)}</div>${m.reply?`<div class="chatReplyBox"><div class="chatReplyLabel">↩️ ადმინისტრატორის პასუხი · ${chatEscape(chatFormatTime(m.replyAt))}</div><div class="chatAdminMessageText">${chatEscape(m.reply)}</div></div>`:''}</div>`).join('');
+  box.innerHTML=thread.map(m=>`<div class="chatMessage"><div class="chatMessageHead"><b>📨 შენ</b><span class="chatMessageTime">${chatEscape(chatFormatTime(m.createdAt))}</span></div><div class="chatMessageText">${chatEscape(m.text)}</div>${m.reply?`<div class="chatReplyBox"><div class="chatReplyLabel">↩️ ადმინისტრატორის პასუხი · ${chatEscape(chatFormatTime(m.replyAt))}</div><div class="chatAdminMessageText">${chatEscape(m.reply)}</div></div>`:''}<div class="chatDeleteRow userMessageDeleteRow"><button type="button" class="chatDeleteBtn" onclick="deleteOwnMessage('${chatEscape(m.id)}')">🗑️ მესიჯის წაშლა</button></div></div>`).join('');
+}
+async function deleteOwnMessage(messageId){
+  if(!currentUser||currentUser===ADMIN_USER)return;
+  if(!confirm('ეს მესიჯი წაიშალოს?'))return;
+  const thread=await loadChatThread(currentUserId);
+  if(thread===null){alert('მესიჯები ვერ ჩაიტვირთა.');return;}
+  const next=thread.filter(m=>String(m.id)!==String(messageId));
+  if(next.length===thread.length)return;
+  try{
+    await saveChatThread(currentUserId,next);
+    userChatRenderKey='';
+    await loadAndRenderUserChat();
+    await updateMessagesNavDot();
+  }catch(e){alert('მესიჯი ვერ წაიშალა.\\n\\n'+(e?.message||''));}
 }
 async function loadAndRenderUserChat(){
   if(!currentUser||currentUser===ADMIN_USER)return;
-  const thread=await loadChatThread(currentUserId);if(thread!==null)renderUserChatMessages(thread);
+  const thread=await loadChatThread(currentUserId);
+  if(thread!==null){
+    let changed=false;
+    thread.forEach(m=>{if(m.reply && m.replyReadByUser!==true){m.replyReadByUser=true;changed=true;}});
+    if(changed){try{await saveChatThread(currentUserId,thread);}catch(e){}}
+    renderUserChatMessages(thread);
+  }
+}
+async function updateMessagesNavDot(){
+  const dot=document.getElementById('messagesNavDot');if(!dot||!currentUser)return;
+  let unread=false,hasMessages=false;
+  if(currentUser===ADMIN_USER){
+    const all=await loadAllAdminChats();if(all===null)return;
+    Object.entries(all).forEach(([key,thread])=>{
+      const arr=Array.isArray(thread)?thread.filter(Boolean):Object.entries(thread||{}).map(([id,m])=>({...m,id:String(m?.id||id)}));
+      arr.forEach(m=>{if(m&&m.text){hasMessages=true;if(m.readByAdmin!==true)unread=true;}});
+    });
+  }else{
+    const thread=await loadChatThread(currentUserId);if(thread===null)return;
+    thread.forEach(m=>{if(m.reply){hasMessages=true;if(m.replyReadByUser!==true)unread=true;}});
+  }
+  dot.hidden=!hasMessages;
+  dot.classList.toggle('unread',hasMessages&&unread);
+  dot.classList.toggle('read',hasMessages&&!unread);
+}
+async function markAdminMessagesRead(){
+  if(currentUser!==ADMIN_USER)return;
+  const page=document.getElementById('userManagementPage');
+  if(page&&page.classList.contains('pageHidden'))return;
+  const all=await loadAllAdminChats();if(!all)return;
+  for(const [key,threadData] of Object.entries(all)){
+    const arr=Array.isArray(threadData)?threadData.filter(Boolean):Object.entries(threadData||{}).map(([id,m])=>({...m,id:String(m?.id||id)}));
+    let changed=false;
+    arr.forEach(m=>{if(m.text&&m.readByAdmin!==true){m.readByAdmin=true;changed=true;}});
+    if(changed){try{await saveChatThread(String(arr[0]?.userId||key),arr);}catch(e){}}
+  }
+  await updateMessagesNavDot();
 }
 async function loadAllAdminChats(){
   try{
@@ -4145,6 +4634,8 @@ async function renderAdminMessages(){
   if(currentUser!==ADMIN_USER)return;
   const box=$('adminMessagesList');if(!box)return;
   const all=await loadAllAdminChats();if(all===null)return;
+  const usersPage=document.getElementById('userManagementPage');
+  if(usersPage&&!usersPage.classList.contains('pageHidden'))await markAdminMessagesRead();
   const groups=[];
   Object.entries(all).forEach(([key,thread])=>{
     const arr=(Array.isArray(thread)?thread.filter(Boolean):Object.entries(thread||{}).map(([id,m])=>({...m,id:String(m?.id||id)})))
@@ -4185,7 +4676,7 @@ async function replyToUser(userId,messageId){
   if(chatWordCount(reply)>100){alert('პასუხი მაქსიმუმ 100 სიტყვა უნდა იყოს.');return;}
   const thread=await loadChatThread(userId);if(thread===null){alert('მესიჯი Firebase-ში ვერ ჩაიტვირთა.');return;}
   const m=thread.find(x=>String(x.id)===String(messageId));if(!m){alert('მესიჯი ვერ მოიძებნა.');return;}
-  m.reply=reply;m.replyAt=Date.now();
+  m.reply=reply;m.replyAt=Date.now();m.replyReadByUser=false;
   try{await saveChatThread(userId,thread);adminChatRenderKey='';await renderAdminMessages();}catch(e){alert('პასუხი ვერ შეინახა.\
 \
 '+(e?.message||''));}
@@ -4208,7 +4699,6 @@ async function renderManagedUsers(){
     }
   }
 
-  // ადმინის ანგარიში სიის თავში ჩანს; მისი დაბლოკვა/წაშლა არ შეიძლება.
   const adminUser=users.find(u=>u.admin||u.name.toUpperCase()===ADMIN_USER);
   const list=[...(adminUser?[adminUser]:[]),...users.filter(u=>!u.admin&&u.name.toUpperCase()!==ADMIN_USER&&!isRemovedUser(u))];
   const key=JSON.stringify(list.map(u=>[u.id,u.name,u.password,u.email,u.blocked===true,u.admin===true]));
@@ -4351,7 +4841,24 @@ function closeCredentials(){
 function showSettings(){updateUserUI();if(typeof window.loadNeonSettings==='function')window.loadNeonSettings();document.getElementById('mainPage').classList.add('pageHidden');document.getElementById('userManagementPage').classList.add('pageHidden');document.getElementById('settingsPage').classList.remove('pageHidden');window.scrollTo(0,0)}
 function showUserManagement(){if(currentUser!==ADMIN_USER)return;updateUserUI();document.getElementById('mainPage').classList.add('pageHidden');document.getElementById('settingsPage').classList.add('pageHidden');document.getElementById('userManagementPage').classList.remove('pageHidden');window.scrollTo(0,0)}
 function showMain(){document.getElementById('settingsPage').classList.add('pageHidden');document.getElementById('userManagementPage').classList.add('pageHidden');document.getElementById('mainPage').classList.remove('pageHidden');window.scrollTo(0,0)}
-function logout(){localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);window.location.reload()}
+function openTEMOExitConfirm(){
+  const m=document.getElementById('temoExitConfirm');if(!m)return;
+  const text=document.getElementById('temoExitText'),cancel=document.getElementById('temoExitCancel'),ok=document.getElementById('temoExitOk');
+  if(text)text.textContent=window.t?window.t('ნამდვილად გსურთ საიტის დატოვება?'):'ნამდვილად გსურთ საიტის დატოვება?';
+  if(cancel)cancel.textContent=window.t?window.t('გაუქმება'):'გაუქმება';
+  if(ok)ok.textContent=window.t?window.t('კარგი'):'კარგი';
+  m.classList.add('show');m.setAttribute('aria-hidden','false');
+}
+function closeTEMOExitConfirm(){
+  const m=document.getElementById('temoExitConfirm');if(!m)return;
+  m.classList.remove('show');m.setAttribute('aria-hidden','true');
+}
+function confirmTEMOExit(){
+  temoLoggingOut=true;
+  localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);
+  window.location.reload();
+}
+function logout(){openTEMOExitConfirm()}
 function exportData(){const blob=new Blob([JSON.stringify({version:1,exported:new Date().toISOString(),jobs},null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='TEMO_WORK_TRACKER_BACKUP.json';a.click();URL.revokeObjectURL(a.href)}
 function importData(e){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result),arr=Array.isArray(d)?d:d.jobs;if(!Array.isArray(arr))throw 0;if(confirm('არსებული მონაცემები შეიცვალოს ამ სარეზერვო ასლით?')){jobs=arr;save();render();alert('მონაცემები აღდგენილია')}}catch(x){alert('ეს სარეზერვო ფაილი არასწორია')}e.target.value=''};r.readAsText(f)}
 function clearAll(){
@@ -4835,9 +5342,16 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
 }
 @media(max-width:600px){
   #userManagementSection{padding:14px !important}
+  #userManagementList{
+    gap:0 !important;
+  }
   #userManagementList .userRow{
     grid-template-columns:minmax(0,60%) minmax(0,25%) minmax(0,15%) !important;
     gap:3px !important;
+    height:38px !important;
+    min-height:38px !important;
+    max-height:38px !important;
+    margin-bottom:0 !important;
   }
   #userManagementList .userRow .userNameBtn{
     width:88% !important;
@@ -4859,10 +5373,24 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
     padding:5px 2px !important;
   }
 }
+#userManagementList .userRow{
+  margin-bottom:1px !important;
+}
+#userManagementList .userRow .userNameBtn{
+  font-size:16px !important;
+}
+@media(max-width:380px){
+  #userManagementList .userRow .userNameBtn{
+    font-size:15px !important;
+  }
+}
 @media(max-width:380px){
   #userManagementList .userRow{
     grid-template-columns:minmax(0,60%) minmax(0,25%) minmax(0,15%) !important;
     gap:2px !important;
+    height:36px !important;
+    min-height:36px !important;
+    max-height:36px !important;
   }
   #userManagementList .userRow .userNameBtn{
     width:88% !important;
@@ -4928,6 +5456,7 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
     let h=(Math.atan2(dy,dx)*180/Math.PI+90+360)%360;let sat=clamp((dist-minR)/(maxR-minR),0,1);sat=.25+.75*sat;
     setDraftColor(hslToHex(h,sat,.5));
   }
+  window.setTEMOPresetNeonColor=function(color){setDraftColor(color);};
   window.openNeonPicker=function(){
     const c=document.getElementById('neonColor'),r=document.getElementById('neonStrength'),m=document.getElementById('neonPickerModal');if(!c||!r||!m)return;
     originalColor=c.value||'#49d86a';originalStrength=Number(r.value)||65;draftColor=originalColor;draftStrength=originalStrength;
@@ -5004,8 +5533,8 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
     document.documentElement.style.setProperty('--neon-outer-a',String(.04+.12*p));
     document.documentElement.style.setProperty('--neon-outer-b',String(.02+.06*p));
     document.body.classList.add('neon-global');
-
     document.querySelectorAll(BASE_SELECTORS.join(',')).forEach(el=>el.classList.add('neonAll'));
+
     const v=document.getElementById('neonStrengthValue');
     if(v)v.textContent=Math.round(strength)+'%';
 
@@ -5061,7 +5590,7 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
 
   window.applyNeonSettings=applyGlobalNeon;
 
-  window.loadNeonSettings=function(){
+  window.loadNeonSettings=async function(){
     const c=document.getElementById('neonColor');
     const r=document.getElementById('neonStrength');
     if(!c||!r)return;
@@ -5075,12 +5604,9 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
     applyGlobalNeon(false);
     if(typeof window.loadSiteBackgroundSettings==='function')window.loadSiteBackgroundSettings();
 
-    if(currentUser)loadRemoteNeon();
+    if(currentUser)await loadRemoteNeon();
 
     if(remoteSyncTimer)clearInterval(remoteSyncTimer);
-    remoteSyncTimer=setInterval(()=>{
-      if(currentUser)loadRemoteNeon();
-    },3000);
   };
 
   window.refreshUserNeonSettings=async function(){
@@ -5200,8 +5726,8 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
   let sx=0,sy=0,dx=0,tracking=false,locked=false;
   let current=null,next=null,currentIndex=-1;
 
-  const LOCK=4;
-  const THRESHOLD=8;
+  const LOCK=8;
+  const THRESHOLD=60;
 
   function pages(){
     return NAV.map(id=>document.getElementById(id)).filter(Boolean);
@@ -5213,13 +5739,23 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
   }
 
   function syncButtons(i){
-    document.querySelectorAll('#bottomNav > button').forEach((b,n)=>{
-      b.classList.toggle('active',n===i);
-      b.setAttribute('aria-current',n===i?'page':'false');
+    /* Swipe-ის დასრულებისას გამოიყენე დასრულებული სამიზნის ინდექსი.
+       გადასვლის დროს ძველი გვერდიც ჩანს და მისი არჩევა ნეონს უკან ტოვებს. */
+    document.querySelectorAll('#bottomNav > button:not(#temoAdminMenuToggle)').forEach((b,n)=>{
+      const active=n===i;
+      b.classList.toggle('active',active);
+      b.setAttribute('aria-current',active?'page':'false');
+    });
+  }
+
+  function setSwipeButtonsLocked(value){
+    document.querySelectorAll('button').forEach(b=>{
+      b.style.pointerEvents=value?'none':'';
     });
   }
 
   function reset(){
+    setSwipeButtonsLocked(false);
     current=next=null;
     currentIndex=-1;
     tracking=false;
@@ -5238,11 +5774,11 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
     if(!current){reset();return;}
     const c=current,n=next;
 
-    c.style.transition='transform 520ms cubic-bezier(.22,.85,.25,1)';
+    c.style.transition='transform 420ms cubic-bezier(.22,.85,.25,1)';
     c.style.transform='translate3d(0,0,0)';
 
     if(n){
-      n.style.transition='transform 520ms cubic-bezier(.22,.85,.25,1)';
+      n.style.transition='transform 420ms cubic-bezier(.22,.85,.25,1)';
       n.style.transform='translate3d('+
         (dx<0?innerWidth:-innerWidth)+'px,0,0)';
     }
@@ -5299,6 +5835,7 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
         return;
       }
       locked=true;
+      setSwipeButtonsLocked(true);
     }
 
     e.preventDefault();
@@ -5308,7 +5845,7 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
 
     if(targetIndex<0||targetIndex>=p.length){
       current.style.transform=
-        'translate3d('+Math.round(dx*.08)+'px,0,0)';
+        'translate3d('+dx*.08+'px,0,0)';
       return;
     }
 
@@ -5324,7 +5861,7 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
 
     next.style.transform=
       'translate3d('+
-      Math.round((dx<0?w:-w)+dx)+
+      ((dx<0?w:-w)+dx)+
       'px,0,0)';
   },{passive:false});
 
@@ -5341,6 +5878,7 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
     }
 
     tracking=false;
+    setSwipeButtonsLocked(false);
 
     if(
       Math.abs(dx)<THRESHOLD ||
@@ -5356,9 +5894,9 @@ html body.site-white-theme .small.edit { border-color:#2999df !important; }
     const w=innerWidth;
 
     old.style.transition=
-      'transform 520ms cubic-bezier(.22,.85,.25,1)';
+      'transform 420ms cubic-bezier(.22,.85,.25,1)';
     target.style.transition=
-      'transform 520ms cubic-bezier(.22,.85,.25,1)';
+      'transform 420ms cubic-bezier(.22,.85,.25,1)';
 
     old.style.transform=
       'translate3d('+(dx<0?-w:w)+'px,0,0)';
@@ -5549,7 +6087,7 @@ async function loadNotes(){
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();
     notesCache=Array.isArray(data)?data.filter(Boolean):Object.entries(data||{}).map(([id,n])=>({...n,id}));
-    notesCache=notesCache.map(n=>({id:String(n.id||makeNoteId()),text:String(n.text||''),date:String(n.date||''),time:String(n.time||''),reminder:n.reminder!==false,done:n.done===true,notifiedAt:Number(n.notifiedAt||0),updatedAt:Number(n.updatedAt||0)}));
+    notesCache=notesCache.map(n=>({id:String(n.id||makeNoteId()),text:String(n.text||''),date:String(n.date||''),time:String(n.time||''),reminder:n.reminder!==false,done:n.done===true,notifiedAt:Number(n.notifiedAt||0),pushNotifiedAt:Number(n.pushNotifiedAt||0),timezone:String(n.timezone||'Europe/Athens'),updatedAt:Number(n.updatedAt||0)}));
     notesCache.sort((a,b)=>{
       const ak=(a.date||'9999-99-99')+' '+(a.time||'99:99');
       const bk=(b.date||'9999-99-99')+' '+(b.time||'99:99');
@@ -5585,6 +6123,118 @@ function renderNotes(){
     </div>`;
   }).join('');
 }
+const TEMO_PUSH_WORKER_URL='https://temo-ai.temo75elia.workers.dev';
+let TEMO_VAPID_PUBLIC_KEY='';
+function temoB64UrlToBytes(value){
+  const s=String(value||'').replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(s+'='.repeat((4-s.length%4)%4));
+  const out=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)out[i]=raw.charCodeAt(i);return out;
+}
+function temoPushDeviceId(){
+  const key='temoPushDeviceId';
+  let id=localStorage.getItem(key);
+  if(!id){id=(window.crypto&&crypto.randomUUID)?crypto.randomUUID():'d_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,12);localStorage.setItem(key,id);}
+  return id;
+}
+function temoPushKeysMatch(a,b){
+  if(!a||!b)return false;
+  const x=new Uint8Array(a),y=new Uint8Array(b);
+  if(x.length!==y.length)return false;
+  for(let i=0;i<x.length;i++)if(x[i]!==y[i])return false;
+  return true;
+}
+function isTEMOiOSDevice(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+async function loadTEMOVapidPublicKey(){
+  if(TEMO_VAPID_PUBLIC_KEY)return TEMO_VAPID_PUBLIC_KEY;
+  const r=await fetch(TEMO_PUSH_WORKER_URL+'?action=push-config',{cache:'no-store'});
+  if(!r.ok)throw new Error('Push config HTTP '+r.status);
+  const data=await r.json();
+  if(!data?.ok||!data.publicKey)throw new Error(data?.error||'Push public key unavailable');
+  TEMO_VAPID_PUBLIC_KEY=String(data.publicKey);
+  return TEMO_VAPID_PUBLIC_KEY;
+}
+async function ensureTEMOPushSubscription(){
+  try{
+    if(!currentUserId)throw new Error('მომხმარებელი არ არის შესული');
+    if(!('Notification' in window))throw new Error('Notification API მიუწვდომელია');
+    if(Notification.permission!=='granted')throw new Error('Notification permission: '+Notification.permission);
+    if(!('serviceWorker' in navigator))throw new Error('Service Worker მიუწვდომელია');
+    if(!('PushManager' in window))throw new Error('PushManager მიუწვდომელია');
+    await loadTEMOVapidPublicKey();
+    const applicationServerKey=temoB64UrlToBytes(TEMO_VAPID_PUBLIC_KEY);
+    await navigator.serviceWorker.register('./temo-notes-sw.js',{scope:'./'});
+    const reg=await navigator.serviceWorker.ready;
+    let sub=await reg.pushManager.getSubscription();
+    if(sub&&!temoPushKeysMatch(sub.options?.applicationServerKey,applicationServerKey)){
+      await sub.unsubscribe();
+      sub=null;
+    }
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey});
+    const payload=sub.toJSON();
+    if(!payload?.endpoint||!payload?.keys?.p256dh||!payload?.keys?.auth)throw new Error('Push subscription მონაცემები არასრულია');
+    const r=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-subscribe',userId:String(currentUserId),deviceId:temoPushDeviceId(),subscription:payload})});
+    if(!r.ok){
+      let detail='';
+      try{detail=(await r.text()).slice(0,300);}catch(_){}
+      throw new Error('Worker HTTP '+r.status+(detail?' — '+detail:''));
+    }
+    const b=document.getElementById('notesPushEnableBtn');if(b)b.textContent='✅ შეტყობინებები ჩართულია';
+    return true;
+  }catch(e){
+    console.warn('TEMO Push subscription failed:',e);
+    return false;
+  }
+}
+async function enableTEMOPush(){
+  try{
+    if(!currentUserId){alert('შეტყობინებების ჩასართავად ჯერ შედი ანგარიშში.');return false;}
+    if(!('Notification' in window)){alert('ამ მოწყობილობაზე Push შეტყობინებები ხელმისაწვდომი არ არის.');return false;}
+    const isHomeScreenApp=navigator.standalone===true||window.matchMedia('(display-mode: standalone)').matches;
+    if(isTEMOiOSDevice()&&!isHomeScreenApp){alert('iPhone-ზე Push შეტყობინებებისთვის დაამატე TEMO Home Screen-ზე და გახსენი მისი ხატულიდან.');return false;}
+    if(Notification.permission==='denied'){alert('შეტყობინებები გამორთულია. ჩართე ისინი iPhone-ის Settings-ში TEMO-სთვის.');return false;}
+    if(Notification.permission==='default'){const permission=await Notification.requestPermission();if(permission!=='granted')return false;}
+    return await ensureTEMOPushSubscription();
+  }catch(e){
+    console.warn('TEMO Push permission failed:',e);
+    alert('Push შეცდომა:\n'+(e?.message||String(e)));
+    return false;
+  }
+}
+
+async function requestTEMOPushOnFirstUserGesture(){
+  try{
+    if(!currentUserId || !('Notification' in window))return;
+    if(Notification.permission==='granted'){
+      await ensureTEMOPushSubscription();
+      return;
+    }
+    if(Notification.permission!=='default' && Notification.permission!=='denied')return;
+    const permission=await Notification.requestPermission();
+    if(permission==='granted')await ensureTEMOPushSubscription();
+  }catch(e){console.warn('TEMO Push first-gesture request failed:',e);}
+}
+
+function setupTEMOPushFirstGesture(){
+  const handler=()=>{
+    if(!currentUserId||isTEMOiOSDevice())return;
+    requestTEMOPushOnFirstUserGesture();
+    window.removeEventListener('touchend',handler,true);
+    window.removeEventListener('click',handler,true);
+  };
+  window.addEventListener('touchend',handler,true);
+  window.addEventListener('click',handler,true);
+}
+
+function autoTEMOPushOnEntry(){
+  try{
+    if('Notification' in window && Notification.permission==='granted'){
+      ensureTEMOPushSubscription();
+    }
+  }catch(e){console.warn('TEMO Push entry check failed:',e);}
+}
+
+window.addEventListener('load',autoTEMOPushOnEntry,{once:true});
+window.addEventListener('DOMContentLoaded',setupTEMOPushFirstGesture,{once:true});
 function scheduleNativeNoteReminder(note){
   try{
     if(typeof window.AndroidReminder==='undefined'||!window.AndroidReminder||typeof window.AndroidReminder.scheduleReminder!=='function')return;
@@ -5620,11 +6270,18 @@ async function saveNote(){
   if(reminder && new Date(date+'T'+time).getTime()<=Date.now()){
     alert('შეხსენების დრო მომავალში უნდა იყოს');return;
   }
-  if(reminder && 'Notification' in window && Notification.permission==='default'){
-    try{await Notification.requestPermission();}catch(e){console.warn('Notification permission failed:',e);}
+  if(reminder && 'Notification' in window){
+    try{
+      if(Notification.permission==='default'){
+        const permission=await Notification.requestPermission();
+        if(permission==='granted') await ensureTEMOPushSubscription();
+      }else if(Notification.permission==='granted'){
+        await ensureTEMOPushSubscription();
+      }
+    }catch(e){console.warn('Notification permission/push subscription failed:',e);}
   }
   const now=Date.now();
-  const base={text,date,time,reminder,done:false,notifiedAt:0,updatedAt:now};
+  const base={text,date,time,reminder,done:false,notifiedAt:0,pushNotifiedAt:0,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Athens',updatedAt:now};
   let savedNoteId=editingNoteId;
   if(editingNoteId){
     const i=notesCache.findIndex(n=>n.id===editingNoteId);
@@ -5725,6 +6382,10 @@ startNotesReminderWatcher();
   function apply(mode,saveRemote){
     mode=mode==='white'?'white':'black';
     document.body.classList.toggle('site-white-theme',mode==='white');
+    document.documentElement.style.background = mode==='white' ? '#ffffff' : '#000000';
+    document.body.style.background = mode==='white' ? '#ffffff' : '#000000';
+    document.documentElement.style.setProperty('background-color', mode==='white' ? '#ffffff' : '#000000', 'important');
+    document.body.style.setProperty('background-color', mode==='white' ? '#ffffff' : '#000000', 'important');
     if(mode==='white' && typeof window.forceWhiteThemeText==='function') window.forceWhiteThemeText();
     if(mode==='black'){
       // თეთრი რეჟიმიდან შავზე გადასვლისას მოვაშოროთ თეთრი რეჟიმის მიერ
@@ -5797,7 +6458,7 @@ startNotesReminderWatcher();
    */
   const D={
     'მთავარი':['Home','Αρχική'],
-    'სეთინგები':['Settings','Ρυθμίσεις'],
+    'პარამეტრები':['Settings','Ρυθμίσεις'],
     'მომხმარებლები':['Users','Χρήστες'],
     'მომხმარებლების მართვა':['User management','Διαχείριση χρηστών'],
     'მომხმარებლების დამატება და მართვა':['Add and manage users','Προσθήκη και διαχείριση χρηστών'],
@@ -5811,6 +6472,7 @@ startNotesReminderWatcher();
     'ყველა თვე':['All months','Όλοι οι μήνες'],
     'ქართული':['Georgian','Γεωργιανά'],
     'ენები':['Languages','Γλώσσες'],
+    'ნამდვილად გსურთ საიტის დატოვება?':['Are you sure you want to leave the site?','Θέλετε πραγματικά να φύγετε από τον ιστότοπο;'],
     'ინგლისური':['English','Αγγλικά'],
     'ბერძნული':['Greek','Ελληνικά'],
     'ჩემი სამუშაო':['My Work','Η εργασία μου'],
@@ -5921,8 +6583,7 @@ startNotesReminderWatcher();
     'კატეგორია':['Category','Κατηγορία'],
     'აირჩიეთ კატეგორია':['Select category','Επίλεξε κατηγορία'],
     'სად':['Where','Πού'],
-    'მაგ: Lidl':['e.g. Lidl','π.χ. Lidl'],
-    'თანხა (€)':['Amount (€)','Ποσό (€)'],
+    'მაგ: Lidl':['e.g. Lidl','π.χ. Lidl'],    'თანხა (€)':['Amount (€)','Ποσό (€)'],
     'მაგ: 120':['e.g. 120','π.χ. 120'],
     'თარიღი':['Date','Ημερομηνία'],
     'ახალი გასავალი':['New expense','Νέα έξοδο'],
@@ -6002,10 +6663,12 @@ startNotesReminderWatcher();
     'შენიშვნა:':['Note:','Σημείωση:'],
     'სურვილის შემთხვევაში':['Optional','Προαιρετικό'],
     'მაგ: გიორგი - ვილა':['e.g. Giorgi - Villa','π.χ. Giorgi - Villa'],
+    'მაგ: გიორგი ':['e.g. Giorgi','π.χ. Giorgi'],
     'მაგ: 100':['e.g. 100','π.χ. 100'],
     'ჩაწერე რაც გინდა...':['Write anything you want...','Γράψε ό,τι θέλεις...'],
     'შეხსენება':['Reminder','Υπενθύμιση'],
-    'შეხსენება ჩაირთვება მითითებულ თარიღსა და დროს.':['The reminder will be enabled for the specified date and time.','Η υπενθύμιση θα ενεργοποιηθεί για την καθορισμένη ημερομηνία και ώρα.'],    'ჩანაწერი ცარიელი არ უნდა იყოს':['The note cannot be empty','Η σημείωση δεν μπορεί να είναι κενή'],
+    'შეხსენება ჩაირთვება მითითებულ თარიღსა და დროს.':['The reminder will be enabled for the specified date and time.','Η υπενθύμιση θα ενεργοποιηθεί για την καθορισμένη ημερομηνία και ώρα.'],
+    'ჩანაწერი ცარიელი არ უნდა იყოს':['The note cannot be empty','Η σημείωση δεν μπορεί να είναι κενή'],
     'შეხსენებისთვის თარიღი და საათი ორივე უნდა მიუთითო':['Enter both date and time for the reminder','Πρέπει να ορίσεις ημερομηνία και ώρα για την υπενθύμιση'],
     'შეხსენების დრო მომავალში უნდა იყოს':['The reminder time must be in the future','Η ώρα της υπενθύμισης πρέπει να είναι στο μέλλον'],
     'ჩანაწერი Firebase-ში ვერ შეინახა.\n\n':['The note could not be saved to Firebase.\n\n','Η σημείωση δεν αποθηκεύτηκε στο Firebase.\n\n'],
@@ -6360,7 +7023,115 @@ startNotesReminderWatcher();
 }
 </style>
 
+
+<script id="temo-personal-bills-nav">
+/* გადასახადების ღილაკი მთავარ გვერდზე აღარ გამოისახება; ღილაკი გადატანილია ადმინის გვერდითა მენიუში. */
+</script>
+
+
+<style id="temo-admin-slide-menu-v1">
+#temoAdminMenuToggle{display:none;position:static;flex:1 1 0;min-width:0;height:100%;margin:0;padding:5px 2px;border:1px solid #285269;border-radius:10px;background:#10232f;color:#eef7f7;font-size:30px;line-height:1;cursor:pointer;box-shadow:0 0 8px rgba(41,153,255,.28);align-items:center;justify-content:center}#bottomNav #temoAdminMenuToggle{flex:1 1 0;width:auto;max-width:none;min-height:46px;z-index:auto}
+#temoAdminMenuOverlay{position:fixed;inset:0;z-index:2147483646;background:rgba(0,0,0,.52);opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s ease}
+#temoAdminMenuDrawer{position:absolute;top:0;left:0;bottom:0;width:min(82vw,320px);padding:calc(18px + env(safe-area-inset-top,0px)) 14px calc(18px + env(safe-area-inset-bottom,0px));background:var(--panel,#0d1b24);border-right:1px solid var(--line,#1e3542);box-shadow:12px 0 35px #0005;transform:translateX(-102%);transition:transform .28s ease;overflow-y:auto}
+#temoAdminMenuOverlay.open{opacity:1;visibility:visible}
+#temoAdminMenuOverlay.open #temoAdminMenuDrawer{transform:translateX(0)}
+#temoAdminMenuDrawer .temoAdminMenuHead{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--line,#1e3542);font-size:18px;font-weight:700}
+#temoAdminMenuDrawer .temoAdminMenuClose{width:38px;height:38px;border:1px solid #285269;border-radius:10px;background:#183445;color:#fff;font-size:22px;cursor:pointer}
+#temoAdminMenuDrawer .temoAdminMenuItem{display:block;width:100%;margin:8px 0;padding:14px 12px;text-align:left;border:1px solid var(--line,#1e3542);border-radius:12px;background:var(--panel2,#10232f);color:var(--text,#eef7f7);font-size:16px;cursor:pointer}
+body.temo-admin-slide-menu-open{overflow:hidden}
+</style>
+<script id="temo-admin-slide-menu-v1">
+(function(){
+  var initialized=false;
+  function isAdmin(){
+    try{return String(localStorage.getItem('temoWorkTrackerUser')||'').trim().toUpperCase()==='TEMO';}
+    catch(e){return false;}
+  }
+  function closeMenu(){
+    var overlay=document.getElementById('temoAdminMenuOverlay');
+    if(!overlay)return;
+    overlay.classList.remove('open');
+    document.body.classList.remove('temo-admin-slide-menu-open');
+    var toggle=document.getElementById('temoAdminMenuToggle');
+    if(toggle)toggle.setAttribute('aria-expanded','false');
+  }
+  function go(action){
+    closeMenu();
+    var fn=window[action];
+    if(typeof fn==='function')fn();
+  }
+  function setup(){
+    if(initialized||!document.body)return;
+    initialized=true;
+    var toggle=document.createElement('button');
+    toggle.id='temoAdminMenuToggle';toggle.type='button';toggle.textContent='☰';
+    toggle.setAttribute('aria-label','მენიუს გახსნა');toggle.setAttribute('aria-expanded','false');
+    var overlay=document.createElement('div');overlay.id='temoAdminMenuOverlay';
+    overlay.innerHTML='<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>მენიუ</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem" data-action="logout">🚪 გამოსვლა</button></aside>';
+    var bottomNav=document.getElementById("bottomNav");if(bottomNav){toggle.className="adminMenuNavButton";bottomNav.insertBefore(toggle,bottomNav.firstChild);}else{document.body.appendChild(toggle);}document.body.appendChild(overlay);
+    toggle.addEventListener('click',function(){
+      if(overlay.classList.contains('open')){
+        closeMenu();
+      }else{
+        overlay.classList.add('open');document.body.classList.add('temo-admin-slide-menu-open');
+        toggle.setAttribute('aria-expanded','true');
+      }
+    });
+    overlay.addEventListener('click',function(e){if(e.target===overlay||e.target.closest('.temoAdminMenuClose'))closeMenu();});
+    overlay.querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){var action=b.getAttribute('data-action');if(action==='openBills'){closeMenu();location.href='./bills.html';return;}go(action);});});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu();});
+    function sync(){
+      var admin=isAdmin();
+      toggle.style.display='flex';
+      var usersItem=overlay.querySelector('[data-action="goUsers"]');
+      if(usersItem)usersItem.style.display=admin?'block':'none';
+      /* Do not close the drawer during unrelated DOM updates: the page's text/localization observers mutate child nodes after opening. */
+    }
+    sync();
+    window.addEventListener('pageshow',sync);
+    window.addEventListener('storage',sync);
+    var observer=new MutationObserver(sync);
+    observer.observe(document.body,{childList:true,subtree:true});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
+})();
+</script>
+
+<footer style="max-width:1100px;margin:24px auto 90px;padding:12px 18px;text-align:center;font-size:13px;color:#9fb0b8"><a href="./privacy-policy.html" style="color:inherit;text-decoration:underline">Privacy Policy / კონფიდენციალურობის პოლიტიკა</a></footer>
+<script id="temo-bottom-neon-active-final-fix">(function(){const map={mainPage:0,settingsPage:1,userManagementPage:2,walletPage:3,expensesPage:3,notesPage:4};function sync(id){const i=map[id];if(i===undefined)return;document.querySelectorAll('#bottomNav > button:not(#temoAdminMenuToggle)').forEach((b,n)=>{b.classList.toggle('active',n===i);b.setAttribute('aria-current',n===i?'page':'false')})}function bind(){const old=window.temoNavigatePage;if(typeof old==='function'&&!old.__neonFixed){const fn=function(id){const r=old.apply(this,arguments);sync(id);requestAnimationFrame(()=>sync(id));setTimeout(()=>sync(id),550);return r};fn.__neonFixed=true;window.temoNavigatePage=fn}const ids=Object.keys(map);const obs=new MutationObserver(()=>{const visible=ids.map(id=>document.getElementById(id)).filter(p=>p&&!p.classList.contains('pageHidden'));if(visible.length===1)sync(visible[0].id)});ids.forEach(id=>{const p=document.getElementById(id);if(p)obs.observe(p,{attributes:true,attributeFilter:['class']})});const visible=ids.map(id=>document.getElementById(id)).find(p=>p&&!p.classList.contains('pageHidden'));if(visible)sync(visible.id)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind()})();</script>
 </body>
+<style id="temo-bottom-neon-css-final">
+/* ქვედა მენიუს ნეონი მხოლოდ აქტიურ ღილაკზეა; წინა ღილაკზე გადასული glow/transition არ რჩება. */
+#bottomNav > button,
+#bottomNav > button .navLogo{
+  transition:none !important;
+  animation:none !important;
+}
+#bottomNav > button:not(.active) .navLogo{
+  border:0 !important;
+  border-radius:0 !important;
+  box-shadow:none !important;
+  background:transparent !important;
+  filter:none !important;
+}
+#bottomNav > button.active{
+  outline:none !important;
+  box-shadow:none !important;
+}
+#bottomNav > button.active .navLogo{
+  border:2px solid var(--neon-control,#ff2020) !important;
+  border-radius:12px !important;
+  background:transparent !important;
+  box-shadow:
+    0 0 5px var(--neon-control,#ff2020),
+    0 0 12px rgba(var(--neon-control-rgb,255,32,32),.78),
+    0 0 22px rgba(var(--neon-control-rgb,255,32,32),.48),
+    inset 0 0 6px rgba(var(--neon-control-rgb,255,32,32),.62) !important;
+}
+#bottomNav > button.logoutNav.active .navLogo{
+  border-color:var(--neon-control,#ff2020) !important;
+}
+</style>
 </html>
 <style id="temo-calendar-number-neon">
 #calendarGrid .dayCell:not(.empty){box-shadow:none !important;text-shadow:none !important;}
@@ -6421,67 +7192,5 @@ startNotesReminderWatcher();
 }
 body.temo-android-app #bottomNav > button .navLogo{
   font-size:28px !important;
-}
-</style>
-
-
-
-
-
-
-
-<style id="temo-version-01-bottom-nav-sizing">
-/* Version 01 candidate: global mobile visual scale. Keep page content and bottom navigation in sync. */
-@media(max-width:700px){
-  html body > .app{
-    zoom:.80 !important;
-    width:125% !important;
-    max-width:none !important;
-    margin-left:-12.5% !important;
-  }
-  html body #bottomNav{
-    height:58px !important;
-    left:0 !important;
-    right:auto !important;
-    bottom:0 !important;
-    width:125vw !important;
-    transform:scale(.80) !important;
-    transform-origin:bottom left !important;
-    padding:2px 7px env(safe-area-inset-bottom, 2px) !important;
-    gap:1px !important;
-    align-items:stretch !important;
-  }
-  html body #bottomNav > button{
-    height:56px !important;
-    min-height:0 !important;
-    min-width:0 !important;
-    padding:0 !important;
-    flex:1 1 0 !important;
-    font-size:22px !important;
-  }
-  html body #bottomNav > button .navLogo{
-    display:flex !important;
-    width:30px !important;
-    height:30px !important;
-    min-width:30px !important;
-    min-height:30px !important;
-    max-width:30px !important;
-    max-height:30px !important;
-    font-size:22px !important;
-    line-height:1 !important;
-    flex:0 0 30px !important;
-    margin:auto !important;
-  }
-  html body #bottomNav > button.active .navLogo{
-    width:32px !important;
-    height:32px !important;
-    min-width:32px !important;
-    min-height:32px !important;
-    max-width:32px !important;
-    max-height:32px !important;
-    font-size:22px !important;
-    flex-basis:32px !important;
-  }
-  html body{padding-bottom:90px !important}
 }
 </style>
