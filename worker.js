@@ -179,8 +179,15 @@ async function runPushCron(env){
 export default {
   async scheduled(event, env, ctx) { ctx.waitUntil(runPushCron(env)); },
   async fetch(request, env) {
+    const allowedOrigins = new Set([
+      "https://temo75.github.io",
+      "https://temo1.gr",
+      "https://www.temo1.gr"
+    ]);
+    const requestOrigin = request.headers.get("Origin") || "";
     const corsHeaders = {
-      "Access-Control-Allow-Origin": "https://temo75.github.io",
+      "Access-Control-Allow-Origin": allowedOrigins.has(requestOrigin) ? requestOrigin : "https://temo75.github.io",
+      "Vary": "Origin",
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
       "Content-Type": "application/json; charset=UTF-8"
@@ -550,7 +557,7 @@ Timezone: ${timezone || "Europe/Athens"}
           "Authorization": `Bearer ${env.OPENAI_API_KEY}`
         },
         body: JSON.stringify({
-          model: "gpt-5-mini",
+          model: "gpt-5.6-luna",
             reasoning: {
               effort: "low"
             },
