@@ -123,52 +123,75 @@ html body .notice,html body .muted{font-size:13px}
 (function(){
   const dict={
     'ჩემი გადასახადები':['My Bills','Οι λογαριασμοί μου'],
-    'პირადი გადასახადები —':['Personal bills —','Προσωπικοί λογαριασμοί —'],
-    '← მთავარზე':['← Home','← Αρχική'],
-    '＋ გადასახადის დამატება':['＋ Add a bill','＋ Προσθήκη λογαριασμού'],
-    'სერვისი':['Service','Υπηρεσία'],
-    'თანხა (€)':['Amount (€)','Ποσό (€)'],
+    'პირადი გადასახადები':['Personal bills','Προσωπικοί λογαριασμοί'],
+    'მთავარზე':['Home','Αρχική'],'← მთავარზე':['← Home','← Αρχική'],
+    'გადასახადის დამატება':['Add a bill','Προσθήκη λογαριασμού'],
+    'სერვისი':['Service','Υπηρεσία'],'თანხა (€)':['Amount (€)','Ποσό (€)'],
     'გადახდის ვადა':['Due date','Ημερομηνία πληρωμής'],
-    'სტატუსი':['Status','Κατάσταση'],
-    'გადასახდელია':['Due','Προς πληρωμή'],
-    'გადახდილია':['Paid','Πληρωμένο'],
-    'შესამოწმებელია':['Needs checking','Χρειάζεται έλεγχος'],
-    'შენახვა':['Save','Αποθήκευση'],
-    'ყველა ჩანაწერი — ხელით დამატებული':['All entries — added manually','Όλες οι εγγραφές — χειροκίνητη προσθήκη'],
-    'შესვლა საჭიროა':['Sign-in required','Απαιτείται σύνδεση'],
-    'ჯერ გადასახადი არ დაგიმატებია.':['You have not added any bills yet.','Δεν έχετε προσθέσει λογαριασμούς ακόμη.'],
-    'მონიშნე გადასახდელად':['Mark as due','Σήμανση ως προς πληρωμή'],
-    'მონიშნე გადახდილად':['Mark as paid','Σήμανση ως πληρωμένο'],
-    'წაშლა':['Delete','Διαγραφή'],
+    'სტატუსი':['Status','Κατάσταση'],'გადასახდელია':['Due','Προς πληρωμή'],
+    'გადახდილია':['Paid','Πληρωμένο'],'შესამოწმებელია':['Needs checking','Χρειάζεται έλεγχος'],
+    'შენახვა':['Save','Αποθήκευση'],'ყველა ჩანაწერი — ხელით დამატებული':['All entries — added manually','Όλες οι εγγραφές — χειροκίνητη προσθήκη'],
+    'ეს სია ამ ბრაუზერის localStorage-ში ინახება. Gmail-იდან სინქრონიზებული DEI ქვითრები ცალკე, ზემოთ მოცემულ ისტორიაში ჩანს.':['This list is stored in this browser’s localStorage. DEI bills synced from Gmail appear separately in the history above.','Αυτή η λίστα αποθηκεύεται στο localStorage αυτού του προγράμματος περιήγησης. Οι λογαριασμοί ΔΕΗ που συγχρονίζονται από το Gmail εμφανίζονται ξεχωριστά στο ιστορικό παραπάνω.'],
+    'შენიშვნა: GitHub Pages სტატიკური საიტია. რეალური ადმინისტრატორის დაცვა უნდა გაკეთდეს სერვერზე/Firebase Security Rules-ით. მხოლოდ ბრაუზერში შემოწმება უსაფრთხოების სრულ დაცვას არ უზრუნველყოფს.':['Note: GitHub Pages is a static site. Real administrator protection must be implemented on the server/Firebase Security Rules. Browser-only checks do not provide full security.','Σημείωση: Το GitHub Pages είναι στατικός ιστότοπος. Η πραγματική προστασία διαχειριστή πρέπει να υλοποιείται στον server/Firebase Security Rules. Οι έλεγχοι μόνο στο πρόγραμμα περιήγησης δεν παρέχουν πλήρη ασφάλεια.'],
+    'შესვლა საჭიროა':['Sign-in required','Απαιτείται σύνδεση'],'გადასახადების სანახავად ჯერ შედი TEMO ანგარიშში.':['Sign in to your TEMO account to view bills.','Συνδέσου στον λογαριασμό TEMO για να δεις τους λογαριασμούς.'],
+    'შესვლაზე დაბრუნება':['Return to sign in','Επιστροφή στη σύνδεση'],
+    'ჯერ გადასახადი არ დაგიმატებია.':['You have not added any bills yet.','Δεν έχεις προσθέσει ακόμη λογαριασμούς.'],
+    'მონიშნე გადასახდელად':['Mark as due','Σήμανση ως πληρωτέο'],'მონიშნე გადახდილად':['Mark as paid','Σήμανση ως πληρωμένο'],
+    'წაშლა':['Delete','Διαγραφή'],'გადახდის ვადა მითითებული არ არის':['No due date specified','Δεν έχει οριστεί ημερομηνία πληρωμής'],
+    'მაგ. ΔΕΗ — დენი':['e.g. DEI — electricity','π.χ. ΔΕΗ — ρεύμα'],
+    'Gmail-ის უსაფრთხოდ დაკავშირება':['Connect Gmail securely','Ασφαλής σύνδεση Gmail'],
+    'ახლავე სინქრონიზაცია':['Sync now','Συγχρονισμός τώρα'],
+    'ამ ბრაუზერის სესიის დასრულება':['End this browser session','Τερματισμός συνεδρίας σε αυτό το πρόγραμμα περιήγησης'],
+    '⚡ ΔΕΗ — მიმდინარე ქვითარი':['⚡ DEI — Current bill','⚡ ΔΕΗ — Τρέχων λογαριασμός'],
+    'სტატუსის შემოწმება…':['Checking status…','Έλεγχος κατάστασης…'],
+    'ვამოწმებ Gmail კავშირს…':['Checking Gmail connection…','Έλεγχος σύνδεσης Gmail…'],
+    'თანხა წერილიდან ვერ ამოვიღე':['Could not read amount from email','Δεν ήταν δυνατή η ανάγνωση ποσού από το email'],
+    'ვადა წერილში ვერ მოიძებნა':['Due date not found in email','Δεν βρέθηκε ημερομηνία πληρωμής στο email'],
+    'ვადა გადაცილებულია':['Overdue','Ληξιπρόθεσμο'],
+    'წერილში გადახდის სტატუსი ვერ დადგინდა':['Payment status could not be determined from email','Δεν ήταν δυνατό να προσδιοριστεί η κατάσταση πληρωμής από το email'],
+    'თანხა':['Amount','Ποσό'],'გადახდის ბოლო ვადა':['Payment due date','Προθεσμία πληρωμής'],
+    'გადახდის სტატუსი':['Payment status','Κατάσταση πληρωμής'],'ქვითრის წერილი':['Bill email','Email λογαριασμού'],
+    'ბოლო სინქრონიზაცია':['Last sync','Τελευταίος συγχρονισμός'],
+    'შენახული ქვითრების ისტორია':['Saved bill history','Ιστορικό αποθηκευμένων λογαριασμών'],
+    'ისტორია ჯერ არ ჩატვირთულა.':['History has not loaded yet.','Το ιστορικό δεν έχει φορτωθεί ακόμη.'],
     'Gmail აქტორიზებულია ამ ბრაუზერში':['Gmail is authorized in this browser','Το Gmail έχει εξουσιοδοτηθεί σε αυτό το πρόγραμμα περιήγησης'],
-    'ბოლო კვიტარი უსაფრთოხოდ ჩაიტვირთა KV-დან.':['Latest bill loaded securely from KV.','Ο τελευταίος λογαριασμός φορτώθηκε με ασφάλεια από το KV.']
+    'ამ ბრაუზერში Gmail არ არის აქტორიზებული':['Gmail is not authorized in this browser','Το Gmail δεν έχει εξουσιοδοτηθεί σε αυτό το πρόγραμμα περιήγησης'],
+    'Google ანგარიშში OAuth-ის ოფიციალური თანხმობის გევრდით.':['Use the official OAuth consent flow in your Google account.','Χρησιμοποίησε την επίσημη διαδικασία συγκατάθεσης OAuth στον λογαριασμό Google.'],
+    'ჯერ ქვითარი არ არის':['No bills yet','Δεν υπάρχουν ακόμη λογαριασμοί'],
+    'შენახული ქვითრები':['Saved bills','Αποθηκευμένοι λογαριασμοί'],
+    'ყველა ქვითარი':['All bills','Όλοι οι λογαριασμοί'],
+    'შეცდომა':['Error','Σφάλμα'],'განახლება':['Refresh','Ανανέωση']
   };
-  function lang(){
-    try{return localStorage.getItem('temoLanguage')||'ka'}catch(e){return 'ka'}
-  }
+  const replacements=[
+    ['გადახდის ვადა მითითებული არ არის',['No due date specified','Δεν έχει οριστεί ημερομηνία πληρωμής']],
+    ['გადახდის ვადა:',['Due date:','Ημερομηνία πληρωμής:']],
+    ['შენახული ქვითრები',['Saved bills','Αποθηκευμένοι λογαριασμοί']]
+  ];
+  function getLang(){try{return localStorage.getItem('temoLanguage')||'ka'}catch(e){return 'ka'}}
   function translate(){
-    const l=lang(); if(!['ka','en','el'].includes(l))return;
-    const idx=l==='en'?0:l==='el'?1:-1;
+    const lang=getLang();if(!['ka','en','el'].includes(lang))return;
+    const idx=lang==='en'?0:lang==='el'?1:-1;
     if(idx<0)return;
     const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
     const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
     nodes.forEach(n=>{
-      const p=n.parentElement;if(!p||p.closest('script,style,textarea,input,select'))return;
-      const raw=n.nodeValue,trim=raw.trim();if(!trim)return;
-      if(dict[trim]){
-        const lead=raw.match(/^\s*/)?.[0]||'',trail=raw.match(/\s*$/)?.[0]||'';
-        n.nodeValue=lead+dict[trim][idx]+trail;
+      const p=n.parentElement;if(!p||p.closest('script,style,textarea,input,select,option'))return;
+      let v=n.nodeValue,trim=v.trim(),out=dict[trim]?.[idx];
+      if(!out){
+        for(const [needle,vals] of replacements){if(trim.includes(needle)){out=trim.replace(needle,vals[idx]);break}}
       }
+      if(out!==undefined){const lead=v.match(/^\s*/)?.[0]||'',trail=v.match(/\s*$/)?.[0]||'';n.nodeValue=lead+out+trail}
     });
-    document.querySelectorAll('input[placeholder],button[title]').forEach(el=>{
-      const attr=el.hasAttribute('placeholder')?'placeholder':'title';
-      const val=el.getAttribute(attr);if(dict[val])el.setAttribute(attr,dict[val][idx]);
-    });
-    document.documentElement.lang=l;
+    document.querySelectorAll('input[placeholder],button[title],button[aria-label]').forEach(el=>['placeholder','title','aria-label'].forEach(a=>{const val=el.getAttribute(a);if(val&&dict[val])el.setAttribute(a,dict[val][idx])}));
+    document.documentElement.lang=lang;
   }
-  window.addEventListener('storage',e=>{if(e.key==='temoLanguage'||e.key?.startsWith('temoLanguage_'))location.reload()});
-  document.addEventListener('DOMContentLoaded',translate);
-  window.addEventListener('pageshow',translate);
+  let scheduled=false;
+  const schedule=()=>{if(scheduled)return;scheduled=true;requestAnimationFrame(()=>{scheduled=false;translate()})};
+  document.addEventListener('DOMContentLoaded',schedule);
+  window.addEventListener('pageshow',schedule);
+  window.addEventListener('storage',e=>{if(e.key==='temoLanguage'||e.key?.startsWith('temoLanguage_'))schedule()});
+  new MutationObserver(schedule).observe(document.body,{childList:true,subtree:true,characterData:true});
+  window.addEventListener('temo-language-changed',schedule);
 })();
 </script>
 
