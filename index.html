@@ -3338,29 +3338,7 @@ function exportMyDataPdf(){
 }
 </style>
 
-<script id="temo-menu-language-extra">
-(function(){
- const words={
- 'მენიუ':['Menu','Μενού'],'მენიუს გახსნა':['Open menu','Άνοιγμα μενού'],'მენიუს დახურვა':['Close menu','Κλείσιμο μενού'],
- '🏠 მთავარი':['🏠 Home','🏠 Αρχική'],'💶 ჩემი გადასახადები':['💶 My Bills','💶 Οι λογαριασμοί μου'],
- '📖 ჩანაწერების წიგნი':['📖 Notes Book','📖 Βιβλίο σημειώσεων'],'🔔 შეტყობინებების დაყენება':['🔔 Set reminders','🔔 Ρύθμιση υπενθυμίσεων'],
- 'პარამეტრები':['Settings','Ρυθμίσεις'],'მთავარი':['Home','Αρχική'],'გადასახადები':['Bills','Λογαριασμοί']
- };
- function run(){
-  const l=window.getCurrentLanguage?.()||localStorage.getItem('temoLanguage')||'ka';
-  if(l==='ka')return;
-  const ix=l==='el'?1:0;
-  const root=document.getElementById('temoAdminMenuDrawer');
-  if(!root)return;
-  const w=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);const ns=[];while(w.nextNode())ns.push(w.currentNode);
-  ns.forEach(n=>{const v=n.nodeValue,t=v.trim();if(words[t])n.nodeValue=v.replace(t,words[t][ix]);});
-  root.querySelectorAll('[aria-label],[title]').forEach(e=>['aria-label','title'].forEach(a=>{const v=e.getAttribute(a);if(words[v])e.setAttribute(a,words[v][ix]);}));
- }
- document.addEventListener('DOMContentLoaded',run);
- window.addEventListener('temo-language-changed',()=>setTimeout(run,0));
- new MutationObserver(run).observe(document.documentElement,{childList:true,subtree:true});
-})();
-</script>
+
 
 </body></html>`);
   w.document.close();
