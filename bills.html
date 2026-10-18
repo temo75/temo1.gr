@@ -78,5 +78,72 @@
 })();
 </script>
 <script src="./dei-bill-sync.js"></script><script>if(window.DEIBillSync){const root=document.getElementById("deiCloudBill");if(root)window.DEIBillSync.mount(root)}</script>
+<script id="temo-bills-language-system">
+(function(){
+'use strict';
+const GLOBAL_KEY='temoLanguage';
+const uid=String(localStorage.getItem('temoWorkTrackerUserId')||'').trim();
+const USER_KEY=uid?'temoLanguage_'+uid:GLOBAL_KEY;
+const D={
+'💶 ჩემი გადასახადები':['💶 My Bills','💶 Οι λογαριασμοί μου'],
+'პირადი გადასახადები':['Personal bills','Προσωπικοί λογαριασμοί'],
+'← მთავარზე':['← Home','← Αρχική'],
+'＋ გადასახადის დამატება':['＋ Add a bill','＋ Προσθήκη λογαριασμού'],
+'სერვისი':['Service','Υπηρεσία'],'თანხა (€)':['Amount (€)','Ποσό (€)'],
+'გადახდის ვადა':['Due date','Ημερομηνία πληρωμής'],'სტატუსი':['Status','Κατάσταση'],
+'გადასახდელია':['Due','Προς πληρωμή'],'გადახდილია':['Paid','Πληρώθηκε'],
+'შესამოწმებელია':['Needs review','Χρειάζεται έλεγχος'],'შენახვა':['Save','Αποθήκευση'],
+'ყველა ჩანაწერი — ხელით დამატებული':['All entries — added manually','Όλες οι εγγραφές — χειροκίνητη προσθήκη'],
+'ეს სია ამ ბრაუზერის localStorage-ში ინახება. Gmail-იდან სინქრონიზებული DEI ქვითრები ცალკე, ზემოთ მოცემულ ისტორიაში ჩანს.':['This list is saved in this browser. DEI bills synced from Gmail appear separately in the history above.','Αυτή η λίστα αποθηκεύεται σε αυτό το πρόγραμμα περιήγησης. Οι λογαριασμοί ΔΕΗ που συγχρονίζονται από το Gmail εμφανίζονται ξεχωριστά στο παραπάνω ιστορικό.'],
+'ჯერ გადასახადი არ დაგიმატებია.':['You have not added any bills yet.','Δεν έχετε προσθέσει ακόμη λογαριασμούς.'],
+'გადახდის ვადა მითითებული არ არის':['No due date specified','Δεν έχει οριστεί ημερομηνία πληρωμής'],
+'მონიშნე გადასახდელად':['Mark as due','Σήμανση ως προς πληρωμή'],
+'მონიშნე გადახდილად':['Mark as paid','Σήμανση ως πληρωμένο'],'წაშლა':['Delete','Διαγραφή'],
+'შესვლა საჭიროა':['Sign-in required','Απαιτείται σύνδεση'],
+'გადასახადების სანახავად ჯერ შედი TEMO ანგარიშში.':['Sign in to your TEMO account to view bills.','Συνδεθείτε στον λογαριασμό TEMO για να δείτε τους λογαριασμούς.'],
+'შესვლაზე დაბრუნება':['Return to sign in','Επιστροφή στη σύνδεση'],
+'მაგ. ΔΕΗ — დენი':['e.g. ΔΕΗ — electricity','π.χ. ΔΕΗ — ρεύμα'],
+'მთავარი':['Home','Αρχική'],'თანხა':['Amount','Ποσό'],'თარიღი':['Date','Ημερομηνία'],
+'გაუქმება':['Cancel','Ακύρωση'],'დადასტურება':['Confirm','Επιβεβαίωση'],
+'განახლება':['Refresh','Ανανέωση'],'სინქრონიზაცია':['Sync','Συγχρονισμός'],
+'ისტორია':['History','Ιστορικό']
+};
+let lang='ka',applying=false,observer=null;
+function readLang(){const u=localStorage.getItem(USER_KEY),g=localStorage.getItem(GLOBAL_KEY);return (u==='ka'||u==='en'||u==='el')?u:((g==='ka'||g==='en'||g==='el')?g:'ka');}
+function translate(value){
+ let out=String(value??'');
+ const keys=Object.keys(D).sort((a,b)=>b.length-a.length);
+ for(const ka of keys){
+  const variants=[ka,D[ka][0],D[ka][1]].sort((a,b)=>b.length-a.length);
+  for(const from of variants){
+   if(!from)continue;
+   const target=lang==='ka'?ka:D[ka][lang==='en'?0:1];
+   if(out.trim()===from){const lead=out.match(/^\s*/)?.[0]||'',trail=out.match(/\s*$/)?.[0]||'';out=lead+target+trail;break;}
+   if(out.includes(from))out=out.split(from).join(target);
+  }
+ }
+ return out;
+}
+function apply(){
+ if(applying||!document.body)return;applying=true;
+ try{
+  document.documentElement.lang=lang;
+  const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT),nodes=[];
+  while(walker.nextNode())nodes.push(walker.currentNode);
+  nodes.forEach(n=>{const p=n.parentElement;if(!p||['SCRIPT','STYLE'].includes(p.tagName)||p.closest('input,textarea,select,#billUserName'))return;const v=n.nodeValue;if(v&&v.trim()){const t=translate(v);if(t!==v)n.nodeValue=t;}});
+  document.querySelectorAll('input[placeholder],button[title],[aria-label]').forEach(el=>['placeholder','title','aria-label'].forEach(a=>{if(el.hasAttribute(a)){const v=el.getAttribute(a),t=translate(v);if(v!==t)el.setAttribute(a,t);}}));
+  document.title=translate('💶 ჩემი გადასახადები')+' — TEMO';
+ }finally{applying=false;}
+}
+function init(){
+ lang=readLang();apply();
+ if(!observer){observer=new MutationObserver(ms=>{if(applying)return;if(ms.some(m=>m.addedNodes&&m.addedNodes.length))apply();});observer.observe(document.body,{childList:true,subtree:true});}
+ window.addEventListener('storage',e=>{if(e.key===GLOBAL_KEY||e.key===USER_KEY){lang=readLang();apply();}});
+ window.addEventListener('temo-language-changed',()=>{lang=readLang();apply();});
+}
+window.addEventListener('pageshow',()=>{lang=readLang();apply();});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script>
 </body>
 </html>
