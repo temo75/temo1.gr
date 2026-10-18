@@ -3893,6 +3893,17 @@ function aiAddMessage(role,text){
   div.className='aiMsg '+role;
   div.textContent=String(text||'');
   box.appendChild(div);
+  if(role==='assistant' && String(text||'').trim()){
+    const speak=document.createElement('button');
+    const lang=aiCurrentLanguage();
+    speak.type='button';
+    speak.className='aiSpeakButton';
+    speak.textContent=lang==='el'?'🔊 Ακρόαση':lang==='en'?'🔊 Listen':'🔊 მოსმენა';
+    speak.setAttribute('aria-label',speak.textContent);
+    speak.style.cssText='display:block;margin:5px 0 12px auto;padding:6px 11px;border:1px solid #168cff;border-radius:16px;background:transparent;color:inherit;font-size:13px;cursor:pointer;';
+    speak.addEventListener('click',()=>aiSpeakReply(String(text||'')));
+    box.appendChild(speak);
+  }
   box.scrollTop=box.scrollHeight;
 }
 let temoAIRecognition=null;
@@ -4110,21 +4121,27 @@ function aiSpeakReply(text){
   const clean=String(text||'').trim();
   if(!clean||!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined')return;
   try{
-    window.speechSynthesis.cancel();
+    const synth=window.speechSynthesis;
+    synth.cancel();
     const utterance=new SpeechSynthesisUtterance(clean);
     const lang=aiCurrentLanguage();
     utterance.lang=lang==='el'?'el-GR':lang==='en'?'en-US':'ka-GE';
     utterance.rate=0.96;
     utterance.pitch=1;
-    const speakWithAvailableVoice=()=>{
-      const voices=window.speechSynthesis.getVoices();
+    const chooseVoiceAndSpeak=()=>{
+      const voices=synth.getVoices()||[];
       const prefix=lang==='el'?'el':lang==='en'?'en':'ka';
       const match=voices.find(v=>String(v.lang||'').toLowerCase()===utterance.lang.toLowerCase())
         ||voices.find(v=>String(v.lang||'').toLowerCase().startsWith(prefix));
       if(match)utterance.voice=match;
-      window.speechSynthesis.speak(utterance);
+      try{synth.speak(utterance);}catch(e){console.warn('TEMO AI speech output unavailable:',e);}
     };
-    speakWithAvailableVoice();
+    if(synth.getVoices().length){
+      chooseVoiceAndSpeak();
+    }else{
+      synth.onvoiceschanged=chooseVoiceAndSpeak;
+      chooseVoiceAndSpeak();
+    }
   }catch(e){console.warn('TEMO AI speech output unavailable:',e);}
 }
 function aiCurrentLanguage(){
