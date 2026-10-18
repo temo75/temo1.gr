@@ -177,6 +177,18 @@ html body .notice,html body .muted{font-size:13px}
     'სინქრონიზაცია დასრულდა, მაგრამ ამ წერილებში ამოსაცნობი DEI ქვითარი ვერ მოიძებნა.':['Sync completed, but no recognizable DEI bill was found in these emails.','Ο συγχρονισμός ολοκληρώθηκε, αλλά δεν βρέθηκε αναγνωρίσιμος λογαριασμός ΔΕΗ στα email.'],
     'DEI-ის შენახული ქვითარი ჯერ არ არის. დააჭირე სინქრონიზაციას.':['No saved DEI bill yet. Tap Sync.','Δεν υπάρχει ακόμη αποθηκευμένος λογαριασμός ΔΕΗ. Πάτησε Συγχρονισμός.']
   };
+  const partials=[
+    ['გადასახადის დამატება',['Add a bill','Προσθήκη λογαριασμού']],
+    ['გადასახდელია',['Due','Προς πληρωμή']],
+    ['გადახდილია',['Paid','Πληρωμένο']],
+    ['შესამოწმებელია',['Needs checking','Χρειάζεται έλεγχος']],
+    ['ხელით დამატებული',['added manually','χειροκίνητη προσθήκη']],
+    ['ეს სია ამ ბრაუზერის localStorage-ში ინახება.',['This list is stored in this browser’s localStorage.','Αυτή η λίστα αποθηκεύεται στο localStorage αυτού του προγράμματος περιήγησης.']],
+    ['Gmail-იდან სინქრონიზებული DEI ქვითრები ცალკე, ზემოთ მოცემულ ისტორიაში ჩანს.',['DEI bills synced from Gmail appear separately in the history above.','Οι λογαριασμοί ΔΕΗ που συγχρονίζονται από το Gmail εμφανίζονται ξεχωριστά στο παραπάνω ιστορικό.']],
+    ['შენიშვნა: GitHub Pages სტატიკური საიტია.',['Note: GitHub Pages is a static site.','Σημείωση: Το GitHub Pages είναι στατικός ιστότοπος.']],
+    ['რეალური ადმინისტრატორის დაცვა უნდა გაკეთდეს სერვერზე/Firebase Security Rules-ით.',['Real administrator protection must be implemented on the server/Firebase Security Rules.','Η πραγματική προστασία διαχειριστή πρέπει να υλοποιείται στον server/Firebase Security Rules.']],
+    ['მხოლოდ ბრაუზერში შემოწმება უსაფრთხოების სრულ დაცვას არ უზრუნველყოფს.',['Browser-only checks do not provide full security.','Οι έλεγχοι μόνο στο πρόγραμμα περιήγησης δεν παρέχουν πλήρη ασφάλεια.']]
+  ];
   const replacements=[
     ['გადახდის ვადა მითითებული არ არის',['No due date specified','Δεν έχει οριστεί ημερομηνία πληρωμής']],
     ['გადახდის ვადა:',['Due date:','Ημερομηνία πληρωμής:']],
@@ -192,6 +204,9 @@ html body .notice,html body .muted{font-size:13px}
     nodes.forEach(n=>{
       const p=n.parentElement;if(!p||p.closest('script,style,textarea,input,select,option'))return;
       let v=n.nodeValue,trim=v.trim(),out=dict[trim]?.[idx];
+      if(!out){
+        for(const [needle,vals] of partials){if(trim.includes(needle)){out=trim.replace(needle,vals[idx]);break}}
+      }
       if(!out){
         for(const [needle,vals] of replacements){if(trim.includes(needle)){out=trim.replace(needle,vals[idx]);break}}
       }
