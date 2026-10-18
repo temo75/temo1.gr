@@ -25,5 +25,12 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           set -euo pipefail
-          export CLOUDFLARE_API_TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n')"
+          token="$CLOUDFLARE_API_TOKEN"
+          token="${token//$'\r'/}"
+          token="${token//$'\n'/}"
+          token="${token#Bearer }"
+          token="${token#bearer }"
+          token="${token#\"}"
+          token="${token%\"}"
+          export CLOUDFLARE_API_TOKEN="$token"
           npx --yes wrangler@4 deploy worker.js --name temo-ai --compatibility-date 2026-09-26
