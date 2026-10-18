@@ -184,7 +184,7 @@
       });
       apply();
     });
-    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    observer.observe(document.body,{childList:true,subtree:true});
     window.addEventListener('storage',e=>{if(e.key===langKey||e.key==='temoLanguage'){lang=readLang();apply();}});
     window.addEventListener('pageshow',()=>{lang=readLang();apply();});
   }
