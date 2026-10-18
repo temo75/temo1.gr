@@ -78,5 +78,119 @@
 })();
 </script>
 <script src="./dei-bill-sync.js"></script><script>if(window.DEIBillSync){const root=document.getElementById("deiCloudBill");if(root)window.DEIBillSync.mount(root)}</script>
+
+<script id="temo-bills-three-language-012">
+(function(){
+  const uid=String(localStorage.getItem('temoWorkTrackerUserId')||'').trim();
+  const langKey=uid?'temoLanguage_'+uid:'temoLanguage';
+  const fallback=localStorage.getItem('temoLanguage')||'ka';
+  const translations={
+    '💶 ჩემი გადასახადები':['💶 My Bills','💶 Οι λογαριασμοί μου'],
+    'პირადი გადასახადები — ':['Personal bills — ','Προσωπικοί λογαριασμοί — '],
+    '← მთავარზე':['← Home','← Αρχική'],
+    '＋ გადასახადის დამატება':['＋ Add a bill','＋ Προσθήκη λογαριασμού'],
+    'სერვისი':['Service','Υπηρεσία'],
+    'თანხა (€)':['Amount (€)','Ποσό (€)'],
+    'გადახდის ვადა':['Due date','Προθεσμία πληρωμής'],
+    'სტატუსი':['Status','Κατάσταση'],
+    'გადასახდელია':['Due','Προς πληρωμή'],
+    'გადახდილია':['Paid','Εξοφλήθηκε'],
+    'შესამოწმებელია':['Needs checking','Χρειάζεται έλεγχο'],
+    'შენახვა':['Save','Αποθήκευση'],
+    'ყველა ჩანაწერი — ხელით დამატებული':['All entries — added manually','Όλες οι εγγραφές — χειροκίνητη καταχώριση'],
+    'ეს სია ამ ბრაუზერის localStorage-ში ინახება. Gmail-იდან სინქრონიზებული DEI ქვითრები ცალკე, ზემოთ მოცემულ ისტორიაში ჩანს.':['This list is stored in this browser’s localStorage. DEI bills synced from Gmail appear separately in the history above.','Αυτή η λίστα αποθηκεύεται στο localStorage αυτού του προγράμματος περιήγησης. Οι λογαριασμοί ΔΕΗ που συγχρονίζονται από το Gmail εμφανίζονται ξεχωριστά στο παραπάνω ιστορικό.'],
+    'შენიშვნა: GitHub Pages სტატიკური საიტია. რეალური ადმინისტრატორის დაცვა უნდა გაკეთდეს სერვერზე/Firebase Security Rules-ით. მხოლოდ ბრაუზერში შემოწმება უსაფრთხოების სრულ დაცვას არ უზრუნველყოფს.':['Note: GitHub Pages is a static site. Real administrator protection must be implemented on the server/Firebase Security Rules. Browser-only checks do not provide full security.','Σημείωση: Το GitHub Pages είναι στατικός ιστότοπος. Η πραγματική προστασία διαχειριστή πρέπει να υλοποιείται στον διακομιστή/στους κανόνες ασφαλείας Firebase. Οι έλεγχοι μόνο στο πρόγραμμα περιήγησης δεν παρέχουν πλήρη ασφάλεια.'],
+    'შესვლა საჭიროა':['Sign-in required','Απαιτείται σύνδεση'],
+    'გადასახადების სანახავად ჯერ შედი TEMO ანგარიშში.':['Sign in to your TEMO account first to view bills.','Συνδεθείτε πρώτα στον λογαριασμό TEMO για να δείτε τους λογαριασμούς.'],
+    'შესვლაზე დაბრუნება':['Back to sign in','Επιστροφή στη σύνδεση'],
+    'ჯერ გადასახადი არ დაგიმატებია.':['You haven’t added any bills yet.','Δεν έχετε προσθέσει ακόμη λογαριασμούς.'],
+    'გადახდის ვადა: ':['Due date: ','Προθεσμία πληρωμής: '],
+    'გადახდის ვადა მითითებული არ არის':['No due date set','Δεν έχει οριστεί προθεσμία πληρωμής'],
+    'მონიშნე გადასახდელად':['Mark as due','Σήμανση ως πληρωτέο'],
+    'მონიშნე გადახდილად':['Mark as paid','Σήμανση ως εξοφλημένο'],
+    'წაშლა':['Delete','Διαγραφή'],
+    'Worker-ში შენახულ ბოლო DEI ქვითარს ვკითხულობ...':['Loading the latest DEI bill saved in Worker…','Φόρτωση του τελευταίου λογαριασμού ΔΕΗ από το Worker…'],
+    'ბოლო DEI ქვითარი':['Latest DEI bill','Τελευταίος λογαριασμός ΔΕΗ'],
+    'Gmail აქტორიზებულია ამ ბრაუზერში':['Gmail is authorized in this browser','Το Gmail είναι εξουσιοδοτημένο σε αυτό το πρόγραμμα περιήγησης'],
+    'ახალავე სინქრონიზაცია':['Sync now','Συγχρονισμός τώρα'],
+    'ამ ბრაუზერის სესიის დასრულება':['End this browser session','Τερματισμός αυτής της συνεδρίας'],
+    'თანხა':['Amount','Ποσό'],
+    'ბოლო განახლება':['Last updated','Τελευταία ενημέρωση'],
+    'ბოლო ქვითრის ისტორია':['Latest bill history','Ιστορικό τελευταίων λογαριασμών'],
+    'ისტორია ჯერ არ ჩატვირთულა.':['History has not loaded yet.','Το ιστορικό δεν έχει φορτωθεί ακόμη.'],
+    'ავტორიზაცია საჭიროა':['Authorization required','Απαιτείται εξουσιοδότηση'],
+    'ამ ბრაუზერში Gmail ავტორიზაცია არ არის აქტიური.':['Gmail authorization is not active in this browser.','Η εξουσιοδότηση Gmail δεν είναι ενεργή σε αυτό το πρόγραμμα περιήγησης.'],
+    'Gmail-ის დაკავშირება':['Connect Gmail','Σύνδεση Gmail'],
+    'შეცდომა':['Error','Σφάλμα'],
+    'უცნობი':['Unknown','Άγνωστο']
+  };
+  let lang='ka';
+  function readLang(){
+    const v=localStorage.getItem(langKey)||fallback;
+    return ['ka','en','el'].includes(v)?v:'ka';
+  }
+  function tr(source){
+    let out=source;
+    const keys=Object.keys(translations).sort((a,b)=>b.length-a.length);
+    for(const ka of keys){
+      const target=lang==='ka'?ka:translations[ka][lang==='en'?0:1];
+      if(out===ka||out===translations[ka][0]||out===translations[ka][1]){
+        const lead=out.match(/^\s*/)?.[0]||'',trail=out.match(/\s*$/)?.[0]||'';
+        return lead+target+trail;
+      }
+      for(const from of [ka,translations[ka][0],translations[ka][1]]){
+        if(from&&out.includes(from))out=out.split(from).join(target);
+      }
+    }
+    return out;
+  }
+  const originalText=new WeakMap(),originalAttrs=new WeakMap();
+  let applying=false;
+  function apply(root=document.body){
+    if(applying||!root)return;
+    applying=true;
+    try{
+      document.documentElement.lang=lang;
+      document.title=tr('TEMO — ჩემი გადასახადები');
+      const walker=document.createTreeWalker(root,NodeFilter.SHOW_TEXT);
+      const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+      nodes.forEach(n=>{
+        const p=n.parentElement;
+        if(!p||['SCRIPT','STYLE'].includes(p.tagName)||p.closest('[data-user-content="true"]'))return;
+        if(!originalText.has(n))originalText.set(n,n.nodeValue);
+        n.nodeValue=tr(originalText.get(n));
+      });
+      root.querySelectorAll?.('input[placeholder],button[aria-label],button[title],a[aria-label]').forEach(el=>{
+        ['placeholder','aria-label','title'].forEach(a=>{
+          if(!el.hasAttribute(a))return;
+          let map=originalAttrs.get(el);if(!map){map={};originalAttrs.set(el,map);}
+          if(!(a in map))map[a]=el.getAttribute(a);
+          el.setAttribute(a,tr(map[a]));
+        });
+      });
+    }finally{applying=false;}
+  }
+  function start(){
+    lang=readLang();apply();
+    const observer=new MutationObserver(records=>{
+      if(applying)return;
+      records.forEach(m=>{
+        m.addedNodes?.forEach(n=>{
+          if(n.nodeType===Node.TEXT_NODE){if(!originalText.has(n))originalText.set(n,n.nodeValue);}
+          else if(n.nodeType===Node.ELEMENT_NODE){
+            n.querySelectorAll?.('*').forEach(el=>{});
+          }
+        });
+      });
+      apply();
+    });
+    observer.observe(document.body,{childList:true,subtree:true,characterData:true});
+    window.addEventListener('storage',e=>{if(e.key===langKey||e.key==='temoLanguage'){lang=readLang();apply();}});
+    window.addEventListener('pageshow',()=>{lang=readLang();apply();});
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+
 </body>
 </html>
