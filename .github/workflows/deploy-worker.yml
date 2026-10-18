@@ -6,11 +6,11 @@ on:
       - main
     paths:
       - 'worker.js'
+      - '.github/workflows/deploy-worker.yml'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     permissions:
       contents: read
 
@@ -19,8 +19,10 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Deploy Worker to Cloudflare
-        uses: cloudflare/wrangler-action@v4
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy worker.js --name temo-ai --compatibility-date 2026-09-26
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          set -euo pipefail
+          export CLOUDFLARE_API_TOKEN="$(printf '%s' "$CLOUDFLARE_API_TOKEN" | tr -d '\r\n')"
+          npx --yes wrangler@4 deploy worker.js --name temo-ai --compatibility-date 2026-09-26
