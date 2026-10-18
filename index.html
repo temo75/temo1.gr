@@ -6131,7 +6131,7 @@ async function ensureTEMOPushSubscription(){
       try{detail=(await r.text()).slice(0,300);}catch(_){}
       throw new Error('Worker HTTP '+r.status+(detail?' — '+detail:''));
     }
-    const b=document.getElementById('notesPushEnableBtn');if(b)b.textContent='✅ შეტყობინებები ჩართულია';
+    const b=document.getElementById('notesPushEnableBtn');if(b)b.textContent=t('✅ შეტყობინებები ჩართულია');
     return true;
   }catch(e){
     console.warn('TEMO Push subscription failed:',e);
