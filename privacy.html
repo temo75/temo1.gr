@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f3f7fb">
+<title>TEMO — Privacy Policy</title>
+<style>
+:root{color-scheme:light;--blue:#0878d1;--text:#17212b;--muted:#526373;--line:#dbe5ef}
+*{box-sizing:border-box}body{margin:0;background:#f3f7fb;color:var(--text);font:16px/1.65 system-ui,Arial,sans-serif}main{max-width:900px;margin:24px auto;padding:24px;background:#fff;border:1px solid var(--line);border-radius:16px}h1,h2{line-height:1.25;color:#075b9e}h1{font-size:30px}h2{margin-top:28px;font-size:21px}.muted{color:var(--muted)}a{color:var(--blue)}nav{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:20px}section{border-top:1px solid var(--line);padding-top:10px;margin-top:22px}@media(max-width:600px){main{margin:0;padding:18px;border-radius:0}h1{font-size:25px}}
+</style>
+</head>
+<body><main>
+<nav><a href="./index.html">TEMO Home</a><a href="./terms.html">Terms of Service</a></nav>
+<h1>Privacy Policy</h1>
+<p class="muted">Last updated: 18 October 2026</p>
+<p>This Privacy Policy explains how TEMO (the “Service”), available at <a href="https://temo1.gr/">temo1.gr</a>, handles information when you use the personal bills area and choose to connect Gmail to find DEI (Greek Public Power Corporation) electricity-bill emails.</p>
+<section><h2>1. Information we process</h2>
+<ul>
+<li><strong>Account and identity information:</strong> information provided by the sign-in service and, when you connect Google, the Google account email address used to identify the connected account.</li>
+<li><strong>Gmail data for DEI bills:</strong> when you give permission, the service searches Gmail for messages that appear to be DEI electricity bills or related payment confirmations. The integration reads message headers and content to identify the sender, subject, date, amount, due date and payment status. It may also process a message identifier and a short message excerpt to display the relevant result.</li>
+<li><strong>Connection and security data:</strong> OAuth authorization state, a protected refresh token used to maintain the connection, short-lived service session tokens, and synchronization timestamps.</li>
+<li><strong>Manually entered bills:</strong> entries you add yourself to the bills page may be stored in your browser’s local storage. These browser-local entries are separate from Gmail-synchronized DEI bill history.</li>
+</ul>
+</section>
+<section><h2>2. How we use Gmail data</h2>
+<p>Gmail access is optional and begins only after you choose to connect an account and approve Google’s consent screen. The integration requests the Gmail read-only scope and is intended to locate DEI bill-related messages, extract bill details, show your bill history and calculate totals. TEMO does not ask for or receive your Google password.</p>
+<p><strong>Gmail data is not used to serve advertising, build advertising profiles, sell data, or for unrelated purposes.</strong> It is not used to train generalized AI or machine-learning models. Human access is not intended except where needed for security, support, legal compliance, or investigating abuse, and should be limited to what is necessary.</p>
+</section>
+<section><h2>3. Storage, service providers and security</h2>
+<p>Gmail-derived bill records and the OAuth refresh token are stored by the DEI synchronization service using Cloudflare Worker and Cloudflare KV infrastructure. The token is used to refresh access authorized by you; short-lived website session tokens are held in the browser session storage and expire after approximately eight hours. The service is designed to keep records separated by the connected account. No internet service can guarantee absolute security, but reasonable technical and organizational safeguards are used.</p>
+<p>Google processes the authorization and Gmail API requests under Google’s own terms and privacy practices. Cloudflare provides hosting and storage infrastructure. Information may be processed by these providers only as needed to operate, secure and support the feature, or as required by law.</p>
+</section>
+<section><h2>4. Retention and deletion</h2>
+<p>Bill records and the connection token may remain stored until they are deleted by the service operator or the connection is removed. The current interface may not provide a complete one-click deletion of all server-side records. To request deletion of your connected Gmail token and associated DEI bill records, contact <a href="mailto:temo75elia@gmail.com">temo75elia@gmail.com</a> from the connected account and identify the account you want removed. We may ask for reasonable verification before acting.</p>
+<p>You can also revoke TEMO’s Google access at any time from your Google Account’s third-party connections/security settings. Revoking access prevents future access through that grant, but may not automatically erase records already stored by TEMO; contact us for deletion of those records. Clearing browser storage removes manually entered browser-local bills from that browser.</p>
+</section>
+<section><h2>5. Legal basis and your rights</h2>
+<p>Where the EU General Data Protection Regulation applies, we process information to provide the feature you request, maintain service security, and meet legal obligations. Depending on the circumstances, you may have rights to access, correct, erase, restrict or object to processing, and to lodge a complaint with your data protection authority. Contact us at <a href="mailto:temo75elia@gmail.com">temo75elia@gmail.com</a> to make a request. We will respond as required by applicable law.</p>
+</section>
+<section><h2>6. Children</h2>
+<p>The Gmail bill-sync feature is not intended for children under 16. Do not connect an account unless you are legally able to authorize the processing of that account’s information.</p>
+</section>
+<section><h2>7. Changes and contact</h2>
+<p>We may update this policy when the service or legal requirements change. The current version will be published on this page with its update date. For privacy questions or requests, email <a href="mailto:temo75elia@gmail.com">temo75elia@gmail.com</a>.</p>
+</section>
+<section><h2>Σύντομη ενημέρωση στα Ελληνικά</h2>
+<p>Η σύνδεση Gmail είναι προαιρετική και γίνεται μόνο με τη συγκατάθεσή σας μέσω της επίσημης οθόνης Google. Η υπηρεσία αναζητά μηνύματα που σχετίζονται με λογαριασμούς ηλεκτρικού ρεύματος ΔΕΗ και επεξεργάζεται τα απαραίτητα στοιχεία (ημερομηνία, ποσό, προθεσμία και κατάσταση πληρωμής). Δεν ζητά τον κωδικό πρόσβασης Google, δεν πωλεί δεδομένα και δεν χρησιμοποιεί δεδομένα Gmail για διαφημίσεις ή εκπαίδευση γενικών μοντέλων AI. Τα σχετικά στοιχεία και το διακριτικό σύνδεσης αποθηκεύονται στην υποδομή Cloudflare για τη λειτουργία της υπηρεσίας. Για ανάκληση πρόσβασης χρησιμοποιήστε τις ρυθμίσεις ασφαλείας του Google Account· για διαγραφή των αποθηκευμένων στοιχείων επικοινωνήστε στο <a href="mailto:temo75elia@gmail.com">temo75elia@gmail.com</a>. Η ανάκληση πρόσβασης δεν διαγράφει αυτόματα τα ήδη αποθηκευμένα στοιχεία.</p>
+</section>
+<section><h2>მოკლე ინფორმაცია ქართულად</h2>
+<p>Gmail-ის დაკავშირება ნებაყოფლობითია და ხდება მხოლოდ Google-ის თანხმობის გვერდზე თქვენი ნებართვის შემდეგ. სერვისი ეძებს DEI-ის ელექტროენერგიის ქვითრებთან დაკავშირებულ წერილებს და ამუშავებს საჭირო მონაცემებს: წერილის თარიღს, თანხას, გადახდის ვადასა და სტატუსს. TEMO არ ითხოვს Google-ის პაროლს, არ ყიდის მონაცემებს და Gmail-ის მონაცემებს არ იყენებს რეკლამისთვის ან ზოგადი AI მოდელების გასაწვრთნელად. ქვითრის მონაცემები და კავშირის განახლების ტოკენი ინახება Cloudflare-ის ინფრასტრუქტურაში. Google-ის წვდომის გასაუქმებლად გამოიყენეთ Google Account-ის უსაფრთხოების პარამეტრები; უკვე შენახული მონაცემების წასაშლელად მოგვწერეთ <a href="mailto:temo75elia@gmail.com">temo75elia@gmail.com</a>. წვდომის გაუქმება შენახულ მონაცემებს ავტომატურად არ შლის.</p>
+</section>
+</main></body></html>
