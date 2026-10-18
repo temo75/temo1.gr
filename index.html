@@ -7201,6 +7201,78 @@ body.temo-admin-slide-menu-open{overflow:hidden}
 
 <footer style="max-width:1100px;margin:24px auto 90px;padding:12px 18px;text-align:center;font-size:13px;color:#9fb0b8"><a href="./privacy-policy.html" style="color:inherit;text-decoration:underline">Privacy Policy / კონფიდენციალურობის პოლიტიკა</a></footer>
 <script id="temo-bottom-neon-active-final-fix">(function(){const map={mainPage:0,settingsPage:1,userManagementPage:2,walletPage:3,expensesPage:3,notesPage:4};function sync(id){const i=map[id];if(i===undefined)return;document.querySelectorAll('#bottomNav > button:not(#temoAdminMenuToggle)').forEach((b,n)=>{b.classList.toggle('active',n===i);b.setAttribute('aria-current',n===i?'page':'false')})}function bind(){const old=window.temoNavigatePage;if(typeof old==='function'&&!old.__neonFixed){const fn=function(id){const r=old.apply(this,arguments);sync(id);requestAnimationFrame(()=>sync(id));setTimeout(()=>sync(id),550);return r};fn.__neonFixed=true;window.temoNavigatePage=fn}const ids=Object.keys(map);const obs=new MutationObserver(()=>{const visible=ids.map(id=>document.getElementById(id)).filter(p=>p&&!p.classList.contains('pageHidden'));if(visible.length===1)sync(visible[0].id)});ids.forEach(id=>{const p=document.getElementById(id);if(p)obs.observe(p,{attributes:true,attributeFilter:['class']})});const visible=ids.map(id=>document.getElementById(id)).find(p=>p&&!p.classList.contains('pageHidden'));if(visible)sync(visible.id)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind()})();</script>
+
+<style id="temo-language-reminder-click-fix">
+/* Keep the language selector above nearby page layers and fully clickable. */
+html body .headerRight,
+html body .headerRight .languageBox,
+html body #loginScreen .loginLanguageBox{position:relative;z-index:100000}
+html body .languageBtn,
+html body .languageMenu,
+html body .languageOption{pointer-events:auto}
+html body .languageMenu{z-index:2147483000}
+html body #notesPage .notesPageSwitch,
+html body #notesPage #notesNewBtn,
+html body #notesPage #notesPushEnableBtn{pointer-events:auto;position:relative;z-index:100}
+</style>
+<script id="temo-language-reminder-click-fix-js">
+(function(){
+  if(window.__temoLanguageReminderClickFixInstalled)return;
+  window.__temoLanguageReminderClickFixInstalled=true;
+  document.addEventListener('click',function(e){
+    const target=e.target&&e.target.closest?e.target.closest('#languageBtn,#languageBtnLogin'):null;
+    if(!target)return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    const menu=document.getElementById(target.id==='languageBtnLogin'?'languageMenuLogin':'languageMenu');
+    if(!menu)return;
+    const shouldOpen=!menu.classList.contains('show');
+    document.querySelectorAll('.languageMenu').forEach(m=>m.classList.remove('show'));
+    if(shouldOpen)menu.classList.add('show');
+  },true);
+  document.addEventListener('click',function(e){
+    const option=e.target&&e.target.closest?e.target.closest('.languageOption[data-lang]'):null;
+    if(!option)return;
+    const next=option.dataset.lang;
+    if(!['ka','en','el'].includes(next))return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    document.querySelectorAll('.languageMenu').forEach(m=>m.classList.remove('show'));
+    if(typeof window.setCurrentLanguage==='function'){
+      window.setCurrentLanguage(next);
+    }else{
+      try{localStorage.setItem('temoLanguage',next);}catch(_){}
+      location.reload();
+    }
+  },true);
+  document.addEventListener('click',function(e){
+    const button=e.target&&e.target.closest?e.target.closest('#notesNewBtn,#notesPushEnableBtn'):null;
+    if(!button)return;
+    e.preventDefault();
+    e.stopImmediatePropagation();
+    if(button.id==='notesNewBtn'){
+      if(typeof window.openNoteModal==='function')window.openNoteModal();
+      else alert('შეხსენების ფანჯარა ვერ გაიხსნა. განაახლე გვერდი და სცადე თავიდან.');
+      return;
+    }
+    if(typeof window.enableTEMOPush==='function'){
+      Promise.resolve(window.enableTEMOPush()).then(ok=>{
+        if(!ok)console.warn('TEMO Push was not enabled; check the message shown and Worker configuration.');
+      }).catch(err=>{
+        console.error('TEMO Push setup failed:',err);
+        alert('შეტყობინებების ჩართვა ვერ მოხერხდა: '+(err&&err.message?err.message:String(err)));
+      });
+    }else{
+      alert('შეტყობინებების ფუნქცია ვერ ჩაიტვირთა. განაახლე გვერდი და სცადე თავიდან.');
+    }
+  },true);
+  document.addEventListener('click',function(e){
+    if(e.target&&e.target.closest&&e.target.closest('.languageBox'))return;
+    document.querySelectorAll('.languageMenu.show').forEach(m=>m.classList.remove('show'));
+  });
+})();
+</script>
+
 </body>
 <style id="temo-bottom-neon-css-final">
 /* ქვედა მენიუს ნეონი მხოლოდ აქტიურ ღილაკზეა; წინა ღილაკზე გადასული glow/transition არ რჩება. */
