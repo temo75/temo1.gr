@@ -4520,7 +4520,7 @@ function renderUserChatMessages(thread){
   if(!Array.isArray(thread)||!thread.length){userChatRenderKey='';box.innerHTML='<div class="chatEmpty">ჯერ შეტყობინება არ არის.</div>';return;}
   const key=JSON.stringify(thread.map(m=>[m.id,m.text,m.reply,m.createdAt,m.replyAt]));
   if(key===userChatRenderKey&&box.children.length)return;userChatRenderKey=key;
-  box.innerHTML=thread.map(m=>`<div class="chatMessage"><div class="chatMessageHead"><b>${t('📨 შენ')}</b><span class="chatMessageTime">${chatEscape(chatFormatTime(m.createdAt))}</span></div><div class="chatMessageText">${chatEscape(m.text)}</div>${m.reply?`<div class="chatReplyBox"><div class="chatReplyLabel">${t('↩️ ადმინისტრატორის პასუხი')} · ${chatEscape(chatFormatTime(m.replyAt))}</div><div class="chatAdminMessageText">${chatEscape(m.reply)}</div></div>`:''}<div class="chatDeleteRow userMessageDeleteRow"><button type="button" class="chatDeleteBtn" onclick="deleteOwnMessage('${chatEscape(m.id)}')">🗑️ მესიჯის წაშლა</button></div></div>`).join('');
+  box.innerHTML=thread.map(m=>`<div class="chatMessage"><div class="chatMessageHead"><b>${t('📨 შენ')}</b><span class="chatMessageTime">${chatEscape(chatFormatTime(m.createdAt))}</span></div><div class="chatMessageText">${chatEscape(m.text)}</div>${m.reply?`<div class="chatReplyBox"><div class="chatReplyLabel">${t('↩️ ადმინისტრატორის პასუხი')} · ${chatEscape(chatFormatTime(m.replyAt))}</div><div class="chatAdminMessageText">${chatEscape(m.reply)}</div></div>`:''}<div class="chatDeleteRow userMessageDeleteRow"><button type="button" class="chatDeleteBtn" onclick="deleteOwnMessage('${chatEscape(m.id)}')">${t('🗑️ მესიჯის წაშლა')}</button></div></div>`).join('');
 }
 async function deleteOwnMessage(messageId){
   if(!currentUser||currentUser===ADMIN_USER)return;
@@ -6418,6 +6418,7 @@ startNotesReminderWatcher();
     '0 / 100 სიტყვა':['0 / 100 words','0 / 100 λέξεις'],
     '📨 გაგზავნა':['📨 Send','📨 Αποστολή'],
     '📨 შენ':['📨 You','📨 Εσύ'],
+    '🗑️ მესიჯის წაშლა':['🗑️ Delete message','🗑️ Διαγραφή μηνύματος'],
     '↩️ ადმინისტრატორის პასუხი':['↩️ Administrator reply','↩️ Απάντηση διαχειριστή'],
     'ჯერ შეტყობინება არ არის.':['There are no messages yet.','Δεν υπάρχουν ακόμη μηνύματα.'],
     'შეტყობინება მაქსიმუმ 100 სიტყვა უნდა იყოს.':['The message must be 100 words or fewer.','Το μήνυμα πρέπει να έχει έως 100 λέξεις.'],
