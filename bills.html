@@ -118,5 +118,59 @@ html body .notice,html body .muted{font-size:13px}
 }
 </style>
 
+
+<script id="temo-bills-language-sync">
+(function(){
+  const dict={
+    'ჩემი გადასახადები':['My Bills','Οι λογαριασμοί μου'],
+    'პირადი გადასახადები —':['Personal bills —','Προσωπικοί λογαριασμοί —'],
+    '← მთავარზე':['← Home','← Αρχική'],
+    '＋ გადასახადის დამატება':['＋ Add a bill','＋ Προσθήκη λογαριασμού'],
+    'სერვისი':['Service','Υπηρεσία'],
+    'თანხა (€)':['Amount (€)','Ποσό (€)'],
+    'გადახდის ვადა':['Due date','Ημερομηνία πληρωμής'],
+    'სტატუსი':['Status','Κατάσταση'],
+    'გადასახდელია':['Due','Προς πληρωμή'],
+    'გადახდილია':['Paid','Πληρωμένο'],
+    'შესამოწმებელია':['Needs checking','Χρειάζεται έλεγχος'],
+    'შენახვა':['Save','Αποθήκευση'],
+    'ყველა ჩანაწერი — ხელით დამატებული':['All entries — added manually','Όλες οι εγγραφές — χειροκίνητη προσθήκη'],
+    'შესვლა საჭიროა':['Sign-in required','Απαιτείται σύνδεση'],
+    'ჯერ გადასახადი არ დაგიმატებია.':['You have not added any bills yet.','Δεν έχετε προσθέσει λογαριασμούς ακόμη.'],
+    'მონიშნე გადასახდელად':['Mark as due','Σήμανση ως προς πληρωμή'],
+    'მონიშნე გადახდილად':['Mark as paid','Σήμανση ως πληρωμένο'],
+    'წაშლა':['Delete','Διαγραφή'],
+    'Gmail აქტორიზებულია ამ ბრაუზერში':['Gmail is authorized in this browser','Το Gmail έχει εξουσιοδοτηθεί σε αυτό το πρόγραμμα περιήγησης'],
+    'ბოლო კვიტარი უსაფრთოხოდ ჩაიტვირთა KV-დან.':['Latest bill loaded securely from KV.','Ο τελευταίος λογαριασμός φορτώθηκε με ασφάλεια από το KV.']
+  };
+  function lang(){
+    try{return localStorage.getItem('temoLanguage')||'ka'}catch(e){return 'ka'}
+  }
+  function translate(){
+    const l=lang(); if(!['ka','en','el'].includes(l))return;
+    const idx=l==='en'?0:l==='el'?1:-1;
+    if(idx<0)return;
+    const walker=document.createTreeWalker(document.body,NodeFilter.SHOW_TEXT);
+    const nodes=[];while(walker.nextNode())nodes.push(walker.currentNode);
+    nodes.forEach(n=>{
+      const p=n.parentElement;if(!p||p.closest('script,style,textarea,input,select'))return;
+      const raw=n.nodeValue,trim=raw.trim();if(!trim)return;
+      if(dict[trim]){
+        const lead=raw.match(/^\s*/)?.[0]||'',trail=raw.match(/\s*$/)?.[0]||'';
+        n.nodeValue=lead+dict[trim][idx]+trail;
+      }
+    });
+    document.querySelectorAll('input[placeholder],button[title]').forEach(el=>{
+      const attr=el.hasAttribute('placeholder')?'placeholder':'title';
+      const val=el.getAttribute(attr);if(dict[val])el.setAttribute(attr,dict[val][idx]);
+    });
+    document.documentElement.lang=l;
+  }
+  window.addEventListener('storage',e=>{if(e.key==='temoLanguage'||e.key?.startsWith('temoLanguage_'))location.reload()});
+  document.addEventListener('DOMContentLoaded',translate);
+  window.addEventListener('pageshow',translate);
+})();
+</script>
+
 </body>
 </html>
