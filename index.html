@@ -3901,7 +3901,7 @@ function aiAddMessage(role,text){
     speak.textContent=lang==='el'?'🔊 Ακρόαση':lang==='en'?'🔊 Listen':'🔊 მოსმენა';
     speak.setAttribute('aria-label',speak.textContent);
     speak.style.cssText='display:block;margin:5px 0 12px auto;padding:6px 11px;border:1px solid #168cff;border-radius:16px;background:transparent;color:inherit;font-size:13px;cursor:pointer;';
-    speak.addEventListener('click',()=>aiSpeakReply(String(text||'')));
+    speak.addEventListener('click',()=>aiSpeakReply(String(text||''),speak));
     box.appendChild(speak);
   }
   box.scrollTop=box.scrollHeight;
@@ -4117,17 +4117,34 @@ function toggleTEMOAIListening(){
   }
 }
 
-function aiSpeakReply(text){
+function aiSpeakReply(text,button){
   const clean=String(text||'').trim();
-  if(!clean||!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
-    console.warn('TEMO AI speech synthesis is not supported in this browser.');
+  const originalLabel=button?.textContent||'🔊 მოსმენა';
+  const showStatus=(label)=>{
+    if(button)button.textContent=label;
+  };
+  if(!clean){
+    showStatus('⚠️ ტექსტი ცარიელია');
     return;
   }
+  if(!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
+    showStatus('⚠️ ბრაუზერს ხმა არ აქვს');
+    aiAddMessage('system','🔊 ამ ბრაუზერში ხმოვანი წაკითხვა მიუწვდომელია.');
+    return;
+  }
+  const synth=window.speechSynthesis;
+  const requested=aiCurrentLanguage();
+  const targetLang=requested==='el'?'el-GR':requested==='en'?'en-US':'ka-GE';
+  showStatus('⏳ ხმის ჩართვა...');
   try{
-    const synth=window.speechSynthesis;
     synth.cancel();
-    const requested=aiCurrentLanguage();
-    const targetLang=requested==='el'?'el-GR':requested==='en'?'en-US':'ka-GE';
+    synth.resume();
+    let finished=false;
+    const finish=(label)=>{
+      if(finished)return;
+      finished=true;
+      showStatus(label);
+    };
     const speakNow=()=>{
       const voices=synth.getVoices()||[];
       const prefix=targetLang.slice(0,2).toLowerCase();
@@ -4135,13 +4152,30 @@ function aiSpeakReply(text){
       const matching=exact||voices.find(v=>String(v.lang||'').toLowerCase().startsWith(prefix));
       const fallback=matching||voices.find(v=>v.default)||voices[0]||null;
       const utterance=new SpeechSynthesisUtterance(clean);
-      utterance.lang=fallback&&fallback.lang?(matching?targetLang:fallback.lang):targetLang;
+      utterance.lang=matching?targetLang:(fallback?.lang||targetLang);
       if(fallback)utterance.voice=fallback;
-      utterance.rate=0.92;
+      utterance.rate=0.9;
       utterance.pitch=1;
-      utterance.onstart=()=>console.log('TEMO AI speech started:',utterance.lang);
-      utterance.onerror=e=>console.warn('TEMO AI speech error:',e.error||e);
-      try{synth.speak(utterance);}catch(e){console.warn('TEMO AI speech output unavailable:',e);}
+      utterance.volume=1;
+      utterance.onstart=()=>{showStatus('🔊 უკრავს...');};
+      utterance.onend=()=>finish(originalLabel);
+      utterance.onerror=e=>{
+        console.warn('TEMO AI speech error:',e.error||e);
+        finish('⚠️ ხმა ვერ ჩაირთო');
+        if(!button)aiAddMessage('system','🔊 ხმოვანი წაკითხვა ვერ ჩაირთო ('+String(e.error||'უცნობი შეცდომა')+'). შეამოწმე ტელეფონის მედიის ხმა და ტექსტის ხმამაღლა წაკითხვის პარამეტრები.');
+      };
+      try{
+        synth.speak(utterance);
+        synth.resume();
+        window.setTimeout(()=>{
+          if(!finished && !synth.speaking && !synth.pending){
+            finish('⚠️ ხმა ვერ ჩაირთო');
+          }
+        },1800);
+      }catch(e){
+        console.warn('TEMO AI speech output unavailable:',e);
+        finish('⚠️ ხმა ვერ ჩაირთო');
+      }
     };
     const voices=synth.getVoices()||[];
     if(voices.length){
@@ -4150,8 +4184,7 @@ function aiSpeakReply(text){
       let started=false;
       const onVoices=()=>{
         if(started)return;
-        const available=synth.getVoices()||[];
-        if(!available.length)return;
+        if(!(synth.getVoices()||[]).length)return;
         started=true;
         synth.removeEventListener?.('voiceschanged',onVoices);
         speakNow();
@@ -4159,14 +4192,17 @@ function aiSpeakReply(text){
       if('addEventListener' in synth)synth.addEventListener('voiceschanged',onVoices);
       else synth.onvoiceschanged=onVoices;
       window.setTimeout(()=>{
-        if(!started){
-          started=true;
-          synth.removeEventListener?.('voiceschanged',onVoices);
-          speakNow();
-        }
-      },700);
+        if(started)return;
+        started=true;
+        synth.removeEventListener?.('voiceschanged',onVoices);
+        speakNow();
+      },1000);
     }
-  }catch(e){console.warn('TEMO AI speech output unavailable:',e);}
+  }catch(e){
+    console.warn('TEMO AI speech output unavailable:',e);
+    showStatus('⚠️ ხმა ვერ ჩაირთო');
+    aiAddMessage('system','🔊 ხმის გაშვების შეცდომა: '+String(e?.message||e));
+  }
 }
 function aiCurrentLanguage(){
   return typeof window.getCurrentLanguage==='function'?String(window.getCurrentLanguage()||'ka'):'ka';
