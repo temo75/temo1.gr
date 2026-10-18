@@ -4,7 +4,7 @@
 <script>
 (function(){
   if(location.pathname === '/index.html' || location.pathname === '/index.html/'){
-    var cleanPath = location.pathname.replace(/index\\.html\\/?$/, '');
+    var cleanPath = location.pathname.slice(0, location.pathname.lastIndexOf('index.html'));
     history.replaceState(null, '', cleanPath + location.search + location.hash);
   }
 })();
