@@ -7391,3 +7391,34 @@ html body .stats > .mini .miniActionIcon{
   }
 }
 </style>
+
+
+<style id="temo-version-003-all-text-numbers-smaller">
+/* Version 003: reduce readable text and numeric typography site-wide; keep layout and functionality intact. */
+html body :is(h1,h2,h3,h4,h5,h6,p,span,b,strong,small,label,legend,summary,li,dt,dd,
+  button,input,select,textarea,option,
+  .amount,.label,.meta,.mini,.calendarTitle,.calendarWeek div,.dayCell .num,
+  .dayCell .jobCount,.calendarNav,.calendarNoteBtn,.monthRow,.section h2,
+  .dayJobsTitle,.userWelcomeUnderLogo,.calendarAddBtn,.settingsBtn,.add,
+  .expenseQuickCard,.miniReceivable,.toolbox,.form,.item,.userRow,.stats){
+  font-size:90% !important;
+}
+html body .grid .card.red .amount,
+html body .grid .monthTotalHero .amount{
+  font-size:90% !important;
+}
+html body #bottomNav > button{
+  font-size:90% !important;
+}
+@media(max-width:700px){
+  html body :is(h1,h2,h3,h4,h5,h6,p,span,b,strong,small,label,legend,summary,li,dt,dd,
+    button,input,select,textarea,option,
+    .amount,.label,.meta,.mini,.calendarTitle,.calendarWeek div,.dayCell .num,
+    .dayCell .jobCount,.calendarNav,.calendarNoteBtn,.monthRow,.section h2,
+    .dayJobsTitle,.userWelcomeUnderLogo,.calendarAddBtn,.settingsBtn,.add,
+    .expenseQuickCard,.miniReceivable,.toolbox,.form,.item,.userRow,.stats){
+    font-size:86% !important;
+  }
+  html body #bottomNav > button .navLogo{font-size:27px !important}
+}
+</style>
