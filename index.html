@@ -4119,28 +4119,52 @@ function toggleTEMOAIListening(){
 
 function aiSpeakReply(text){
   const clean=String(text||'').trim();
-  if(!clean||!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined')return;
+  if(!clean||!('speechSynthesis' in window)||typeof SpeechSynthesisUtterance==='undefined'){
+    console.warn('TEMO AI speech synthesis is not supported in this browser.');
+    return;
+  }
   try{
     const synth=window.speechSynthesis;
     synth.cancel();
-    const utterance=new SpeechSynthesisUtterance(clean);
-    const lang=aiCurrentLanguage();
-    utterance.lang=lang==='el'?'el-GR':lang==='en'?'en-US':'ka-GE';
-    utterance.rate=0.96;
-    utterance.pitch=1;
-    const chooseVoiceAndSpeak=()=>{
+    const requested=aiCurrentLanguage();
+    const targetLang=requested==='el'?'el-GR':requested==='en'?'en-US':'ka-GE';
+    const speakNow=()=>{
       const voices=synth.getVoices()||[];
-      const prefix=lang==='el'?'el':lang==='en'?'en':'ka';
-      const match=voices.find(v=>String(v.lang||'').toLowerCase()===utterance.lang.toLowerCase())
-        ||voices.find(v=>String(v.lang||'').toLowerCase().startsWith(prefix));
-      if(match)utterance.voice=match;
+      const prefix=targetLang.slice(0,2).toLowerCase();
+      const exact=voices.find(v=>String(v.lang||'').toLowerCase()===targetLang.toLowerCase());
+      const matching=exact||voices.find(v=>String(v.lang||'').toLowerCase().startsWith(prefix));
+      const fallback=matching||voices.find(v=>v.default)||voices[0]||null;
+      const utterance=new SpeechSynthesisUtterance(clean);
+      utterance.lang=fallback&&fallback.lang?(matching?targetLang:fallback.lang):targetLang;
+      if(fallback)utterance.voice=fallback;
+      utterance.rate=0.92;
+      utterance.pitch=1;
+      utterance.onstart=()=>console.log('TEMO AI speech started:',utterance.lang);
+      utterance.onerror=e=>console.warn('TEMO AI speech error:',e.error||e);
       try{synth.speak(utterance);}catch(e){console.warn('TEMO AI speech output unavailable:',e);}
     };
-    if(synth.getVoices().length){
-      chooseVoiceAndSpeak();
+    const voices=synth.getVoices()||[];
+    if(voices.length){
+      speakNow();
     }else{
-      synth.onvoiceschanged=chooseVoiceAndSpeak;
-      chooseVoiceAndSpeak();
+      let started=false;
+      const onVoices=()=>{
+        if(started)return;
+        const available=synth.getVoices()||[];
+        if(!available.length)return;
+        started=true;
+        synth.removeEventListener?.('voiceschanged',onVoices);
+        speakNow();
+      };
+      if('addEventListener' in synth)synth.addEventListener('voiceschanged',onVoices);
+      else synth.onvoiceschanged=onVoices;
+      window.setTimeout(()=>{
+        if(!started){
+          started=true;
+          synth.removeEventListener?.('voiceschanged',onVoices);
+          speakNow();
+        }
+      },700);
     }
   }catch(e){console.warn('TEMO AI speech output unavailable:',e);}
 }
