@@ -7422,3 +7422,52 @@ html body #bottomNav > button{
   html body #bottomNav > button .navLogo{font-size:27px !important}
 }
 </style>
+
+
+<style id="temo-version-004-summary-card-typography-fix">
+/* Version 004: specifically reduce labels, amounts and captions in the four red dashboard cards. */
+html body .stats > .mini > span:not(.miniActionIcon){
+  font-size:12px !important;
+  line-height:1.22 !important;
+  overflow-wrap:anywhere !important;
+  max-width:100% !important;
+}
+html body .stats > .mini > b{
+  font-size:22px !important;
+  line-height:1.12 !important;
+  overflow-wrap:anywhere !important;
+  max-width:100% !important;
+}
+html body .stats > .mini > small{
+  font-size:9px !important;
+  line-height:1.18 !important;
+  overflow-wrap:anywhere !important;
+  max-width:100% !important;
+}
+html body .stats > .mini .miniActionIcon{
+  width:25px !important;
+  height:25px !important;
+  min-width:25px !important;
+  min-height:25px !important;
+  font-size:15px !important;
+  line-height:1 !important;
+}
+@media(max-width:700px){
+  html body .stats > .mini > span:not(.miniActionIcon){
+    font-size:11px !important;
+  }
+  html body .stats > .mini > b{
+    font-size:19px !important;
+  }
+  html body .stats > .mini > small{
+    font-size:8px !important;
+  }
+  html body .stats > .mini .miniActionIcon{
+    width:22px !important;
+    height:22px !important;
+    min-width:22px !important;
+    min-height:22px !important;
+    font-size:13px !important;
+  }
+}
+</style>
