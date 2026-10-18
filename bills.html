@@ -172,17 +172,17 @@
   }
   function start(){
     lang=readLang();apply();
+    let translateTimer=0;
     const observer=new MutationObserver(records=>{
       if(applying)return;
-      records.forEach(m=>{
-        m.addedNodes?.forEach(n=>{
-          if(n.nodeType===Node.TEXT_NODE){if(!originalText.has(n))originalText.set(n,n.nodeValue);}
-          else if(n.nodeType===Node.ELEMENT_NODE){
-            n.querySelectorAll?.('*').forEach(el=>{});
-          }
-        });
-      });
-      apply();
+      // Sync widgets can insert many nodes at once; debounce translation to avoid
+      // repeatedly walking the entire page and freezing mobile browsers.
+      if(!records.some(m=>m.addedNodes&&m.addedNodes.length))return;
+      if(translateTimer)clearTimeout(translateTimer);
+      translateTimer=setTimeout(()=>{
+        translateTimer=0;
+        if(!applying)apply();
+      },180);
     });
     observer.observe(document.body,{childList:true,subtree:true});
     window.addEventListener('storage',e=>{if(e.key===langKey||e.key==='temoLanguage'){lang=readLang();apply();}});
