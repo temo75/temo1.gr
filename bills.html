@@ -169,12 +169,12 @@
   };
   let lang='ka';
   function readLang(){
-    // The language selector on the main page updates this global key too.
-    // Prefer it so a stale per-user key cannot switch this page back to Georgian.
-    const global=localStorage.getItem('temoLanguage');
-    if(['ka','en','el'].includes(global))return global;
+    // Match the main page: use the current user's language first.
+    // The global key may be stale and must not override the selected language.
     const saved=localStorage.getItem(langKey);
     if(['ka','en','el'].includes(saved))return saved;
+    const global=localStorage.getItem('temoLanguage');
+    if(['ka','en','el'].includes(global))return global;
     return fallback;
   }
   function tr(source){
