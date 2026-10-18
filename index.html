@@ -7530,3 +7530,37 @@ html body #notesPage .notesHeader{
   }
 }
 </style>
+
+
+<style id="temo-version-006-home-header-spacing-logo">
+/* Version 006: move home content upward and reduce the TEMO logo on mobile. */
+@media(max-width:700px){
+  html body > .app{
+    padding-top:2px !important;
+  }
+  html body > .app > header{
+    margin-top:0 !important;
+    margin-bottom:8px !important;
+    gap:6px !important;
+    align-items:flex-start !important;
+  }
+  html body .temo-logo{
+    width:44px !important;
+    height:44px !important;
+    margin-top:2px !important;
+  }
+  html body .temo-logo img,
+  html body .temo-logo svg{
+    width:44px !important;
+    height:44px !important;
+  }
+  html body .userWelcomeUnderLogo{
+    margin-top:3px !important;
+    font-size:12px !important;
+    min-height:0 !important;
+  }
+  html body .headerRight{
+    padding-top:2px !important;
+  }
+}
+</style>
