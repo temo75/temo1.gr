@@ -116,7 +116,13 @@
     const historySummary = element("p", "muted", "ისტორია ჯერ არ ჩატვირთულა.");
     const annualSummary = element("div", "dei-bill-annual-summary");
     const historyList = element("div", "dei-bill-history-list");
-    historyPanel.append(historyTitle, historySummary, annualSummary, historyList);
+    const historyFooter = element("div", "dei-bill-history-footer");
+    historyFooter.style.cssText = "display:flex;justify-content:flex-end;margin-top:12px";
+    const clearHistory = element("button", "dei-bill-clear-history", "ისტორიის წაშლა");
+    clearHistory.type = "button";
+    clearHistory.style.cssText = "background:#45242a;border:1px solid #74333d;color:#fff;min-height:40px;padding:9px 12px";
+    historyFooter.append(clearHistory);
+    historyPanel.append(historyTitle, historySummary, annualSummary, historyList, historyFooter);
     root.append(header, message, details, actions, historyPanel);
 
     function setStatus(text, good) {
@@ -227,8 +233,7 @@ async function syncAllPages(session) {
         historySummary.textContent = "ისტორია ვერ ჩაიტვირთა: " + error.message;
       }
     }
-    const clearHistory = document.getElementById("deiBillClearHistory");
-    if (clearHistory) clearHistory.addEventListener("click", async () => {
+    clearHistory.addEventListener("click", async () => {
       const session = getSession();
       if (!session) {
         alert("ისტორიის წასაშლელად ჯერ Gmail უნდა დააკავშირო ამ ბრაუზერში.");
