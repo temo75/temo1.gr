@@ -227,6 +227,26 @@ async function syncAllPages(session) {
         historySummary.textContent = "ისტორია ვერ ჩაიტვირთა: " + error.message;
       }
     }
+    const clearHistory = document.getElementById("deiBillClearHistory");
+    if (clearHistory) clearHistory.addEventListener("click", async () => {
+      const session = getSession();
+      if (!session) {
+        alert("ისტორიის წასაშლელად ჯერ Gmail უნდა დააკავშირო ამ ბრაუზერში.");
+        return;
+      }
+      if (!confirm("ნამდვილად წავშალო საიტზე შენახული DEI ქვითრების ისტორია? Gmail-ის წერილები არ წაიშლება.")) return;
+      clearHistory.disabled = true;
+      try {
+        await api("/api/history/clear", session, { method: "POST", body: {} });
+        await refreshHistory(session);
+        message.textContent = "საიტზე შენახული ქვითრების ისტორია წაიშალა. Gmail-ის წერილები უცვლელია.";
+      } catch (error) {
+        message.textContent = "ისტორიის წაშლა ვერ შესრულდა: " + error.message;
+      } finally {
+        clearHistory.disabled = false;
+      }
+    });
+
     connect.addEventListener("click", connectGmail);
     sync.addEventListener("click", async () => {
       sync.disabled = true;
