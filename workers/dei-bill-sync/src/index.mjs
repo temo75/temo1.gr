@@ -301,33 +301,22 @@ async function listStoredNovaBills(env, ownerKey) {
 }
 
 function extractNovaAmount(text) {
-  const value = String(text || "").replace(/\\u00a0/g, " ");
+  const value = String(text || "").replace(/\u00a0/g, " ");
   const patterns = [
-    /(?:ποσό(?:\s+του\s+τρέχοντος\s+λογαριασμού)?|συνολικό ποσό πληρωμής|payable amount|amount due|amount paid|total amount)[^\\d€]{0,80}(?:€\\s*)?(\\d{1,5}(?:[.,]\\d{1,2})?)/i,
-    /(\\d{1,5}[.,]\\d{1,2})\\s*€/i,
-    /€\\s*(\\d{1,5}[.,]\\d{1,2})/i
+    /(?:ποσό(?:\s+του\s+τρέχοντος\s+λογαριασμού)?|συνολικό ποσό πληρωμής|payable amount|amount due|amount paid|total amount)[^\d€]{0,80}(?:€\s*)?(\d{1,5}(?:[.,]\d{1,2})?)/i,
+    /(\d{1,5}[.,]\d{1,2})\s*€/i,
+    /€\s*(\d{1,5}[.,]\d{1,2})/i
   ];
   for (const re of patterns) {
     const m = value.match(re);
     if (!m) continue;
-    const normalized = m[1].includes(",") ? m[1].replace(/\\./g, "").replace(",", ".") : m[1];
+    const normalized = m[1].includes(",") ? m[1].replace(/\./g, "").replace(",", ".") : m[1];
     const amount = Number(normalized);
     if (Number.isFinite(amount) && amount >= 0 && amount < 100000) return amount.toFixed(2);
   }
   return null;
 }
 
-*
- * TEMO DEI bill sync — Cloudflare Worker
- * Required binding: DEI_KV (KV namespace)
- * Required variables/secrets:
- *   GOOGLE_CLIENT_ID       (text variable)
- *   GOOGLE_CLIENT_SECRET   (secret)
- *   T1 bill access uses short-lived sessions issued after Google OAuth.
- * OAuth redirect URI:
- *   https://dei-bill-sync.temo75elia.workers.dev/oauth/callback
- * Optional: configure a Cron Trigger every 3 hours.
- */
 
 const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
 const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
