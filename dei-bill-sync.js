@@ -110,22 +110,29 @@
     return new Intl.NumberFormat("el-GR", { style: "currency", currency: "EUR" }).format(amount);
   }
 
+  function dateLocale() {
+    const lang = selectedLanguage();
+    return lang === "en" ? "en-GB" : lang === "el" ? "el-GR" : "ka-GE";
+  }
+
   function formatDueDate(value) {
-    if (!value) return "ვადა წერილში ვერ მოიძებნა";
+    if (!value) return translateWidgetText("ვადა წერილში ვერ მოიძებნა");
     const date = new Date(value + "T00:00:00Z");
-    return Number.isNaN(date.getTime()) ? "ვადა წერილში ვერ მოიძებნა" : date.toLocaleDateString("ka-GE", { timeZone: "UTC" });
+    return Number.isNaN(date.getTime())
+      ? translateWidgetText("ვადა წერილში ვერ მოიძებნა")
+      : date.toLocaleDateString(dateLocale(), { timeZone: "UTC" });
   }
 
   function formatEmailDate(value) {
-    if (!value) return "თარიღი უცნობია";
+    if (!value) return translateWidgetText("თარიღი უცნობია");
     const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "თარიღი უცნობია";
-    return new Intl.DateTimeFormat("ka-GE", {
+    if (Number.isNaN(date.getTime())) return translateWidgetText("თარიღი უცნობია");
+    return new Intl.DateTimeFormat(dateLocale(), {
       year: "numeric", month: "long", day: "numeric", timeZone: "Europe/Athens"
     }).format(date);
   }
 
-  function paymentLabel(status, dueDate) {
+    function paymentLabel(status, dueDate) {
     if (status === "paid") return "გადახდილია";
     if (status === "due") {
       if (dueDate && new Date(dueDate + "T23:59:59Z").getTime() < Date.now()) return "ვადა გადაცილებულია";
