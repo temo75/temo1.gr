@@ -21,11 +21,16 @@
 .dei-sync-badge{font-size:12px;padding:6px 9px;border-radius:20px;background:#263443;color:#c7d7e3}.dei-sync-badge.is-connected{background:#173c2b;color:#8ef0b1}.dei-sync-badge.is-error{background:#45242a;color:#ff9a9a}
 .dei-sync-message{color:var(--muted);line-height:1.5}.dei-sync-details{display:grid;grid-template-columns:1fr 2fr;gap:7px 12px;margin:14px 0}
 .dei-sync-details dt{color:var(--muted);font-size:13px}.dei-sync-details dd{margin:0;font-weight:bold;overflow-wrap:anywhere}.dei-sync-actions{display:flex;gap:8px;flex-wrap:wrap}.dei-sync-primary{border-color:var(--blue);background:#12354a}
+
+/* Fixed Home shortcut in the bottom-left corner on the bills page */
+.bills-home-fixed{position:fixed;left:14px;bottom:calc(18px + env(safe-area-inset-bottom, 0px));z-index:9999;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border:1px solid #2999df;border-radius:16px;background:rgba(19,49,66,.96);color:#f2f8fc;text-decoration:none;font-size:16px;box-shadow:0 4px 18px rgba(0,0,0,.35);backdrop-filter:blur(8px)}
+body{padding-bottom:78px}
 </style>
 </head>
 <body>
+<a class="bills-home-fixed" href="./index.html" aria-label="მთავარზე">← მთავარზე</a>
 <div class="app">
-<header><div><h1>💶 ჩემი გადასახადები</h1><small>პირადი გადასახადები — <span id="billUserName"></span></small></div><div class="header-actions"><button onclick="location.href='./index.html'">← მთავარზე</button></div></header>
+<header><div><h1>💶 ჩემი გადასახადები</h1><small>პირადი გადასახადები — <span id="billUserName"></span></small></div><div class="header-actions"></div></header>
 <div id="deiCloudBill" class="panel"></div>
 <div class="panel">
 <h2 style="margin-top:0">＋ გადასახადის დამატება</h2>
