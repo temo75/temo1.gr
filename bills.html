@@ -55,9 +55,8 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
   </div>
 </section>
 <section id="billCategoryPlaceholder" class="bill-category-placeholder" hidden>
-  <button id="billCategoryBack" class="bill-category-back" type="button">← კატეგორიებზე დაბრუნება</button>
-  <h1 id="billCategoryPlaceholderTitle"></h1>
-  <p id="billCategoryPlaceholderText"></p>
+  <button id="billCategoryBack" class="bill-category-back" type="button" aria-label="კატეგორიებზე დაბრუნება">←</button>
+  <div id="billCategoryPlaceholderText"></div>
 </section>
 <a class="bills-home-fixed" href="#" id="billBackToCategories" aria-label="კატეგორიებზე დაბრუნება">← კატეგორიებზე დაბრუნება</a>
 <div class="app">
@@ -113,7 +112,7 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
   render();
 })();
 </script>
-<script src="./dei-bill-sync.js?v=114ddd7"></script><script>if(window.DEIBillSync){const root=document.getElementById("deiCloudBill");if(root)window.DEIBillSync.mount(root)}</script>
+<script src="./dei-bill-sync.js?v=114ddd7"></script><script src="./nova-bill-sync.js?v=1"></script><script>if(window.DEIBillSync){const root=document.getElementById("deiCloudBill");if(root)window.DEIBillSync.mount(root)}</script>
 
 <script id="temo-bills-three-language-012">
 (function(){
@@ -309,7 +308,7 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
  function applyLang(){const l=getLang();document.querySelectorAll("#billCategoryScreen [data-ka]").forEach(el=>{el.textContent=el.getAttribute("data-"+l)||el.getAttribute("data-ka");});const h=document.querySelector("#billCategoryScreen h1");if(h)h.textContent=langNames[l].title;const sub=document.querySelector("#billCategoryScreen .category-subtitle");if(sub)sub.textContent=langNames[l].choose;document.getElementById("billCategoryBack").setAttribute("aria-label",langNames[l].back);document.querySelector(".bill-category-home").setAttribute("aria-label",langNames[l].home);document.querySelector(".bill-category-home").setAttribute("title",langNames[l].home);}
  function showBills(){document.body.classList.remove("category-start");document.getElementById("billCategoryScreen").hidden=true;document.getElementById("billCategoryPlaceholder").hidden=true;document.querySelector(".app").style.display="";document.getElementById("billBackToCategories").style.display="inline-flex";window.scrollTo(0,0);}
  function showCategories(){document.body.classList.add("category-start");document.getElementById("billCategoryScreen").hidden=false;document.getElementById("billCategoryPlaceholder").hidden=true;document.querySelector(".app").style.display="";document.getElementById("billBackToCategories").style.display="none";window.scrollTo(0,0);}
- document.querySelectorAll("[data-category]").forEach(btn=>btn.addEventListener("click",function(){const cat=btn.dataset.category;if(cat==="dei"){showBills();return;}const l=getLang();document.getElementById("billCategoryScreen").hidden=true;const p=document.getElementById("billCategoryPlaceholder");p.hidden=false;document.getElementById("billCategoryPlaceholderTitle").textContent=cats[cat][l];document.getElementById("billCategoryPlaceholderText").textContent=langNames[l].soon;}));
+ document.querySelectorAll("[data-category]").forEach(btn=>btn.addEventListener("click",function(){const cat=btn.dataset.category;if(cat==="dei"){showBills();return;}const l=getLang();document.getElementById("billCategoryScreen").hidden=true;const p=document.getElementById("billCategoryPlaceholder");p.hidden=false;const content=document.getElementById("billCategoryPlaceholderText");if(cat==="nova"&&window.NOVABillSync){window.NOVABillSync.mount(content,l);return;}content.innerHTML="";const h=document.createElement("h1");h.textContent=cats[cat][l];const msg=document.createElement("p");msg.textContent=langNames[l].soon;content.append(h,msg);}));
  document.getElementById("billCategoryBack").addEventListener("click",showCategories);document.getElementById("billBackToCategories").addEventListener("click",function(e){e.preventDefault();showCategories();});document.getElementById("billBackToCategories").style.display="none";
  window.addEventListener("temo-language-changed",applyLang);window.addEventListener("storage",applyLang);applyLang();
 })();
