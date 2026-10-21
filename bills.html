@@ -366,7 +366,7 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
   // OAuth callback returns to this page with #dei_code. The DEI widget exchanges it
   // and writes the shared session token; wait for that exchange, then open the chosen category.
   let pending=null;try{pending=sessionStorage.getItem(PENDING);}catch(e){}
-  if(pending&&new URLSearchParams(location.hash.replace(/^#/,"")).has("dei_code")){
+  if(pending){
     applyLabels();overlay.classList.add("is-open");message.textContent=words().checking;connect.disabled=true;
     const started=Date.now();
     const timer=setInterval(function(){
