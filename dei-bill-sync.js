@@ -84,6 +84,11 @@
     "შესამოწმებელია": ["Needs checking", "Χρειάζεται έλεγχο"],
     "ბოლო ქვითრის ისტორია": ["Latest bill history", "Ιστορικό τελευταίων λογαριασμών"],
     "ბოლო ქვითარი უსაფრთხოდ ჩაიტვირთა KV-დან.": ["The latest bill was securely loaded from KV.", "Ο τελευταίος λογαριασμός φορτώθηκε με ασφάλεια από το KV."],
+    "ამ ბრაუზერში Gmail არ არის ავტორიზებული": ["Gmail is not authorized in this browser", "Το Gmail δεν είναι εξουσιοδοτημένο σε αυτό το πρόγραμμα περιήγησης"],
+    "სტატუსის შემოწმება…": ["Checking status…", "Έλεγχος κατάστασης…"],
+    "სინქრონიზაციის შეცდომა": ["Synchronization error", "Σφάλμα συγχρονισμού"],
+    "სტატუსის შემოწმება ვერ შესრულდა": ["Could not check status", "Δεν ήταν δυνατός ο έλεγχος κατάστασης"],
+    "კავშირი ვერ მოწმდება": ["Connection cannot be checked", "Δεν είναι δυνατός ο έλεγχος σύνδεσης"],
     "Gmail ავტორიზებულია ამ ბრაუზერში": ["Gmail is authorized in this browser", "Το Gmail είναι εξουσιοδοτημένο σε αυτό το πρόγραμμα περιήγησης"],
     "განაახლე": ["Refresh", "Ανανέωση"],
     "ანგარიშიდან გასვლა": ["Sign out", "Αποσύνδεση"],
@@ -197,7 +202,7 @@
     root.append(header, message, details, actions, historyPanel);
 
     function setStatus(text, good) {
-      badge.textContent = text;
+      badge.textContent = translateWidgetText(text);
       badge.classList.toggle("is-connected", Boolean(good));
       badge.classList.toggle("is-error", good === false);
     }
