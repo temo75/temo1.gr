@@ -28,8 +28,8 @@ body{padding-bottom:78px}
 
 /* Bill category chooser: shown before opening any bill section */
 body.category-start .app,body.category-start .bills-home-fixed{display:none!important}
-.bill-category-screen{max-width:760px;margin:24px auto;padding:22px 16px 34px;color:#eff8fc}
-.bill-category-top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.bill-category-home{display:inline-flex;align-items:center;justify-content:center;padding:11px 15px;border:1px solid #2999df;border-radius:14px;background:#17384a;color:#f2f8fc;text-decoration:none;white-space:nowrap}.bill-category-screen h1{font-size:clamp(25px,5vw,34px);margin:8px 0}
+.bill-category-screen{max-width:760px;margin:24px auto;padding:22px 16px 34px;color:#eff8fc;position:relative}
+.bill-category-top{display:flex;align-items:center;justify-content:flex-start;gap:12px;margin-bottom:12px}.bill-category-home{position:fixed;left:16px;bottom:calc(24px + env(safe-area-inset-bottom,0px));z-index:9999;display:inline-flex;align-items:center;justify-content:center;width:58px;height:58px;padding:0;border:1px solid #2999df;border-radius:18px;background:rgba(19,49,66,.97);color:#f2f8fc;text-decoration:none;white-space:nowrap;font-size:28px;box-shadow:0 4px 18px rgba(0,0,0,.4);backdrop-filter:blur(8px)}.bill-category-home .home-label{display:none}.bill-category-home .home-icon{display:block;width:32px;height:32px;object-fit:contain}.bill-category-screen h1{font-size:clamp(25px,5vw,34px);margin:8px 0}
 .bill-category-screen .category-subtitle{color:#9fb4c0;margin:0 0 22px}
 .bill-category-list{display:grid;grid-template-columns:1fr;gap:13px}
 .bill-category-button{width:100%;display:flex;align-items:center;gap:15px;text-align:left;padding:17px;border:1px solid #2d5060;border-radius:20px;background:linear-gradient(145deg,#102631,#091a22);color:#f2f8fb;cursor:pointer;box-shadow:0 5px 18px #0003}
@@ -45,7 +45,7 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
 
 <body class="category-start">
 <section id="billCategoryScreen" class="bill-category-screen" aria-label="Bill categories">
-  <div class="bill-category-top"><div style="font-size:36px">💶</div><a class="bill-category-home" href="./index.html" data-ka="← მთავარი" data-en="← Home" data-el="← Αρχική">← მთავარი</a></div>
+  <div class="bill-category-top"><div style="font-size:36px">💶</div><a class="bill-category-home" href="./index.html" aria-label="Home" title="Home"><span class="home-label">მთავარი</span><svg class="home-icon" viewBox="0 0 32 32" aria-hidden="true"><path d="M3 14.5 16 4l13 10.5M7 13v15h18V13M13 28V18h6v10" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg></a></div>
   <h1 data-ka="ჩემი გადასახადები" data-en="My Bills" data-el="Οι λογαριασμοί μου">ჩემი გადასახადები</h1>
   <p class="category-subtitle" data-ka="აირჩიე კატეგორია" data-en="Choose a category" data-el="Επιλέξτε κατηγορία">აირჩიე კატეგორია</p>
   <div class="bill-category-list">
