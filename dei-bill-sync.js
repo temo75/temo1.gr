@@ -316,8 +316,8 @@ async function syncAllPages(session) {
     (async () => {
       try {
         await exchangeOAuthCode();
-        // On page open, rescan Gmail pages so history missing from this site session can be restored.
-        await refresh(true);
+        // Load the already-saved history on page open. Gmail rescans only when the user presses Sync.
+        await refresh(false);
       } catch (error) {
         message.textContent = "კავშირის შემოწმება ვერ შესრულდა: " + error.message;
         setStatus("კავშირი ვერ მოწმდება", false);
