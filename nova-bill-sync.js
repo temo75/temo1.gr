@@ -2,41 +2,102 @@
   "use strict";
   const API = "https://dei-bill-sync.temo75elia.workers.dev";
   const SESSION_KEY = "t1.deiBillSession.v1";
-  const text = {
-    ka: {title:"NOVA — გადასახადები",desc:"Gmail-იდან NOVA-ს ქვითრები",sync:"განახლება",connect:"Gmail-ის დაკავშირება",loading:"NOVA-ს წერილებს ვკითხულობ…",count:"ქვითრების რაოდენობა",paid:"გადახდილი ჯამი",due:"გადასახდელი ჯამი",history:"NOVA-ს ქვითრების ისტორია",amount:"თანხა",status:"სტატუსი",issued:"წერილის თარიღი",dueDate:"გადახდის ბოლო ვადა",paidDate:"გადახდის თარიღი",paidStatus:"გადახდილია",dueStatus:"გადასახდელია",unknown:"სტატუსი უცნობია",noDate:"მითითებული არ არის",empty:"NOVA-ს შესაბამისი წერილები ჯერ არ მოიძებნა.",error:"შეცდომა",back:"კატეგორიებზე დაბრუნება",receipt:"გადახდის დადასტურება",invoice:"ქვითარი"},
-    en: {title:"NOVA — Bills",desc:"NOVA bills from Gmail",sync:"Refresh",connect:"Connect Gmail",loading:"Reading NOVA emails…",count:"Number of bills",paid:"Total paid",due:"Total due",history:"NOVA bill history",amount:"Amount",status:"Status",issued:"Email date",dueDate:"Payment due date",paidDate:"Payment date",paidStatus:"Paid",dueStatus:"Due",unknown:"Status unknown",noDate:"Not provided",empty:"No matching NOVA emails found yet.",error:"Error",back:"Back to categories",receipt:"Payment confirmation",invoice:"Bill"},
-    el: {title:"NOVA — Λογαριασμοί",desc:"Λογαριασμοί NOVA από το Gmail",sync:"Ανανέωση",connect:"Σύνδεση Gmail",loading:"Ανάγνωση email NOVA…",count:"Αριθμός λογαριασμών",paid:"Σύνολο εξοφλημένων",due:"Σύνολο προς πληρωμή",history:"Ιστορικό λογαριασμών NOVA",amount:"Ποσό",status:"Κατάσταση",issued:"Ημερομηνία email",dueDate:"Προθεσμία πληρωμής",paidDate:"Ημερομηνία πληρωμής",paidStatus:"Εξοφλήθηκε",dueStatus:"Προς πληρωμή",unknown:"Άγνωστη κατάσταση",noDate:"Δεν αναφέρεται",empty:"Δεν βρέθηκαν ακόμη σχετικά email NOVA.",error:"Σφάλμα",back:"Επιστροφή στις κατηγορίες",receipt:"Επιβεβαίωση πληρωμής",invoice:"Λογαριασμός"}
+  const L = {
+    ka: {title:"NOVA — ელფოსტის ქვითრები",desc:"Gmail-იდან მოძიებული NOVA-ს ინვოისები და გადახდის შეტყობინებები.",connect:"Gmail-ის დაკავშირება",sync:"ელფოსტის შემოწმება",loading:"NOVA-ს წერილებს ვამოწმებ…",history:"მოძიებული NOVA-ს წერილები",count:"ინვოისები",paid:"გადახდილი",due:"გადასახდელი",issued:"წერილის თარიღი",dueDate:"გადახდის ბოლო ვადა",paymentDate:"გადახდის თარიღი",invoice:"ინვოისი",receipt:"გადახდის დადასტურება",paidStatus:"გადახდილია",dueStatus:"გადასახდელია",unknown:"სტატუსი დასადგენია",empty:"NOVA-ს შესაბამისი წერილები ჯერ არ მოიძებნა. დააჭირე „ელფოსტის შემოწმებას“.",notConnected:"Gmail ჯერ არ არის დაკავშირებული. დააჭირე „Gmail-ის დაკავშირებას“ და Google-ის ფანჯარაში დაადასტურე წვდომა.",back:"გადასახადების კატეგორიები",lastSync:"ბოლო შემოწმება",error:"შეცდომა",noDate:"მითითებული არ არის"},
+    en: {title:"NOVA — Email bills",desc:"NOVA invoices and payment emails found in Gmail.",connect:"Connect Gmail",sync:"Check email",loading:"Checking NOVA emails…",history:"NOVA emails found",count:"Invoices",paid:"Paid",due:"Due",issued:"Email date",dueDate:"Payment due date",paymentDate:"Payment date",invoice:"Invoice",receipt:"Payment confirmation",paidStatus:"Paid",dueStatus:"Due",unknown:"Status needs checking",empty:"No matching NOVA emails found yet. Tap Check email.",notConnected:"Gmail is not connected. Tap Connect Gmail and approve access in Google's window.",back:"Bill categories",lastSync:"Last checked",error:"Error",noDate:"Not provided"},
+    el: {title:"NOVA — Λογαριασμοί email",desc:"Λογαριασμοί NOVA και email πληρωμών που βρέθηκαν στο Gmail.",connect:"Σύνδεση Gmail",sync:"Έλεγχος email",loading:"Έλεγχος email NOVA…",history:"Email NOVA που βρέθηκαν",count:"Λογαριασμοί",paid:"Εξοφλημένα",due:"Προς πληρωμή",issued:"Ημερομηνία email",dueDate:"Προθεσμία πληρωμής",paymentDate:"Ημερομηνία πληρωμής",invoice:"Λογαριασμός",receipt:"Επιβεβαίωση πληρωμής",paidStatus:"Εξοφλήθηκε",dueStatus:"Προς πληρωμή",unknown:"Χρειάζεται έλεγχος",empty:"Δεν βρέθηκαν ακόμη σχετικά email NOVA. Πατήστε Έλεγχος email.",notConnected:"Το Gmail δεν είναι συνδεδεμένο. Πατήστε Σύνδεση Gmail και εγκρίνετε την πρόσβαση.",back:"Κατηγορίες λογαριασμών",lastSync:"Τελευταίος έλεγχος",error:"Σφάλμα",noDate:"Δεν αναφέρεται"}
   };
-  function session(){try{const v=JSON.parse(sessionStorage.getItem(SESSION_KEY)||"null");return v&&v.token&&Date.parse(v.expiresAt)>Date.now()?v:null;}catch{return null;}}
-  async function api(path, sess, method="GET"){const headers={Accept:"application/json"};if(sess?.token)headers.Authorization="Bearer "+sess.token;const r=await fetch(API+path,{method,headers,cache:"no-store"});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||("HTTP "+r.status));return d;}
-  function date(value, lang){if(!value)return "—";const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value);return new Intl.DateTimeFormat(lang==="ka"?"ka-GE":lang==="el"?"el-GR":"en-GB",{year:"numeric",month:"short",day:"numeric",timeZone:"Europe/Athens"}).format(d);}
-  function euro(value, lang){if(value==null||value==="")return "—";return new Intl.NumberFormat(lang==="ka"?"ka-GE":lang==="el"?"el-GR":"en-GB",{style:"currency",currency:"EUR"}).format(Number(value));}
-  function el(tag, cls, value){const n=document.createElement(tag);if(cls)n.className=cls;if(value!=null)n.textContent=value;return n;}
-  function mount(root, lang){const t=text[lang]||text.ka;root.replaceChildren();root.className="nova-bill-root";
-    const style=el("style");style.textContent=".nova-bill-root{color:var(--text,#edf7fb);padding:12px 0 90px}.nova-bill-panel{border:1px solid #2999df;border-radius:20px;background:linear-gradient(145deg,#0d1b24,#10232f);padding:18px;margin:10px 0 18px}.nova-bill-root h1{font-size:25px;margin:0 0 8px}.nova-muted{color:#a7b8c2;line-height:1.5}.nova-actions{display:flex;gap:10px;flex-wrap:wrap;margin:16px 0}.nova-btn{border:1px solid #31556a;border-radius:14px;padding:12px 16px;background:#19394a;color:#f4f9fc;font:inherit}.nova-btn.primary{border-color:#2999df}.nova-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}.nova-stat{padding:12px;border:1px solid #31556a;border-radius:14px;background:#0b2029}.nova-stat span{display:block;color:#a7b8c2;font-size:14px;margin-bottom:6px}.nova-stat strong{font-size:20px}.nova-bill-card{border:1px solid #294757;border-radius:17px;padding:16px;margin:12px 0;background:rgba(4,18,25,.42)}.nova-bill-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.nova-bill-amount{font-size:24px;font-weight:700}.nova-pill{border-radius:12px;padding:7px 10px;background:#393622;font-weight:700}.nova-pill.paid{background:#173c2b;color:#8ef0b1}.nova-row{margin-top:14px}.nova-label{display:block;color:#a7b8c2;font-size:14px;margin-bottom:3px}.nova-error{color:#ffaaaa;white-space:pre-wrap}.nova-empty{padding:18px 0;color:#a7b8c2}.nova-bill-root[hidden]{display:none}.nova-category-back{position:fixed;left:16px;bottom:calc(22px + env(safe-area-inset-bottom,0px));z-index:99999;width:58px;height:58px;min-width:58px;padding:0;border:1px solid #2999df;border-radius:18px;background:rgba(19,49,66,.97);color:#f2f8fc;font-size:0;box-shadow:0 4px 18px rgba(0,0,0,.4);backdrop-filter:blur(8px)}.nova-category-back::before{content:"";display:block;width:30px;height:30px;margin:auto;background:currentColor;mask:url("data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 24 24%27 fill=%27none%27 stroke=%27black%27 stroke-width=%272%27 stroke-linecap=%27round%27 stroke-linejoin=%27round%27%3E%3Cpath d=%27M19 12H5%27/%3E%3Cpath d=%27m12 19-7-7 7-7%27/%3E%3C/svg%3E") center/contain no-repeat}@media(min-width:600px){.nova-stats{grid-template-columns:repeat(3,1fr)}}";
-    root.append(style);
-    const back=el("button","nova-category-back","");back.type="button";back.setAttribute("aria-label",t.back);back.title=t.back;back.addEventListener("click",()=>{const cats=document.getElementById("billCategoryScreen");const placeholder=document.getElementById("billCategoryPlaceholder");const app=document.querySelector(".app");const backLink=document.getElementById("billBackToCategories");if(cats)cats.hidden=false;if(placeholder)placeholder.hidden=true;document.body.classList.add("category-start");if(app)app.style.display="";if(backLink)backLink.style.display="none";window.scrollTo(0,0);});root.append(back);const panel=el("div","nova-bill-panel");panel.append(el("h1","",t.title),el("p","nova-muted",t.desc));
-    const status=el("p","nova-muted","");panel.append(status);
-    const actions=el("div","nova-actions");const sync=el("button","nova-btn primary",t.sync);sync.type="button";const connect=el("button","nova-btn",t.connect);connect.type="button";actions.append(sync,connect);panel.append(actions);
-    const stats=el("div","nova-stats");panel.append(stats);
-    const histPanel=el("div","nova-bill-panel");histPanel.append(el("h2","",t.history));const list=el("div","");histPanel.append(list);root.append(panel,histPanel);
-    connect.addEventListener("click",()=>{location.href=API+"/oauth/start?return_to="+encodeURIComponent(location.origin+location.pathname);});
-    async function load(doSync){const sess=session();status.textContent=doSync?t.loading:"";list.replaceChildren();stats.replaceChildren();sync.disabled=true;connect.hidden=!!sess;
-      if(!sess){status.textContent=lang==="el"?"Συνδέστε πρώτα το Gmail από την ενότητα ΔΕΗ.":lang==="en"?"Connect Gmail first in the DEI section.":"ჯერ Gmail დააკავშირე დენის (DEI) განყოფილებიდან.";sync.disabled=false;return;}
-      try{const d=await api(doSync?"/api/nova/sync":"/api/nova/history",sess,doSync?"POST":"GET");status.textContent=d.lastSyncAt?((lang==="el"?"Τελευταίος συγχρονισμός: ":lang==="en"?"Last sync: ":"ბოლო სინქრონიზაცია: ")+date(d.lastSyncAt,lang)):"";
-        const stat=(label,val)=>{const box=el("div","nova-stat");box.append(el("span","",label),el("strong","",val));stats.append(box);};
-        stat(t.count,String(d.count||0));stat(t.paid,euro(d.totalPaidEUR||0,lang));stat(t.due,euro(d.totalDueEUR||0,lang));
-        const bills=Array.isArray(d.bills)?d.bills:[];
-        if(!bills.length){list.append(el("p","nova-empty",t.empty));return;}
-        bills.forEach(b=>{const card=el("article","nova-bill-card");const head=el("div","nova-bill-head");head.append(el("div","nova-bill-amount",euro(b.totalEUR,lang)));const paid=b.paymentStatus==="paid";const due=b.paymentStatus==="due";head.append(el("span","nova-pill"+(paid?" paid":""),paid?t.paidStatus:due?t.dueStatus:t.unknown));card.append(head);
-          const row=(label,val)=>{const wrap=el("div","nova-row");wrap.append(el("span","nova-label",label),el("div","",val||"—"));card.append(wrap);};
-          row(t.issued,date(b.emailDate,lang));row(t.dueDate,date(b.dueDate,lang));if(paid&&b.paymentDate)row(t.paidDate,date(b.paymentDate,lang));if(b.subject)row(lang==="el"?"Θέμα email":lang==="en"?"Email subject":"წერილის სათაური",b.subject);
-          list.append(card);
-        });
-      }catch(e){status.className="nova-error";status.textContent=t.error+": "+(e.message||String(e));}
-      finally{sync.disabled=false;}
-    }
-    sync.addEventListener("click",()=>load(true));load(false);
+  let lang = "ka";
+  function language() {
+    try {
+      const uid = String(localStorage.getItem("temoWorkTrackerUserId") || "").trim();
+      const v = localStorage.getItem(uid ? "temoLanguage_" + uid : "temoLanguage") || localStorage.getItem("temoLanguage");
+      return ["ka","en","el"].includes(v) ? v : "ka";
+    } catch { return "ka"; }
   }
-  window.NOVABillSync={mount};
+  function session() {
+    try {
+      const v = JSON.parse(sessionStorage.getItem(SESSION_KEY) || "null");
+      if (v && v.token && Date.parse(v.expiresAt) > Date.now()) return v;
+    } catch {}
+    return null;
+  }
+  async function api(path, sess, method = "GET", body) {
+    const headers = {Accept:"application/json"};
+    if (sess && sess.token) headers.Authorization = "Bearer " + sess.token;
+    if (body !== undefined) headers["Content-Type"] = "application/json";
+    const response = await fetch(API + path, {method,headers,body:body === undefined ? undefined : JSON.stringify(body),cache:"no-store"});
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      if (response.status === 401) sessionStorage.removeItem(SESSION_KEY);
+      throw new Error(data.error || ("HTTP " + response.status));
+    }
+    return data;
+  }
+  async function exchangeCode() {
+    const params = new URLSearchParams(location.hash.replace(/^#/,""));
+    const code = params.get("dei_code");
+    if (!code) return;
+    history.replaceState(null,"",location.pathname + location.search);
+    const result = await api("/api/session/exchange",null,"POST",{code});
+    if (!result.sessionToken || !result.expiresAt) throw new Error("Google session was not returned");
+    sessionStorage.setItem(SESSION_KEY,JSON.stringify({token:result.sessionToken,expiresAt:result.expiresAt}));
+  }
+  const $ = id => document.getElementById(id);
+  function euro(v) { return v == null || v === "" ? "—" : new Intl.NumberFormat(lang==="ka"?"ka-GE":lang==="el"?"el-GR":"en-GB",{style:"currency",currency:"EUR"}).format(Number(v)); }
+  function date(v) {
+    if (!v) return text().noDate;
+    const d = new Date(v);
+    return Number.isNaN(d.getTime()) ? String(v) : new Intl.DateTimeFormat(lang==="ka"?"ka-GE":lang==="el"?"el-GR":"en-GB",{year:"numeric",month:"short",day:"numeric",timeZone:"Europe/Athens"}).format(d);
+  }
+  function text() { return L[lang] || L.ka; }
+  function node(tag, cls, value) { const n=document.createElement(tag); if(cls)n.className=cls; if(value!==undefined)n.textContent=value; return n; }
+  function status(message, error=false) { $("novaStatus").textContent=message; $("novaStatus").className=error?"error":"muted"; }
+  function connect() { location.href = API + "/oauth/start?return_to=" + encodeURIComponent(location.origin + "/nova.html"); }
+  function render(data) {
+    const t=text(); const bills=Array.isArray(data.bills)?data.bills:[];
+    const invoices=bills.filter(b=>b.kind!=="payment-receipt");
+    $("novaStats").replaceChildren();
+    const stat=(label,value)=>{const card=node("div","stat");card.append(node("span","muted",label),node("strong","",value));$("novaStats").append(card);};
+    stat(t.count,String(invoices.length));stat(t.paid,euro(data.totalPaidEUR||0));stat(t.due,euro(data.totalDueEUR||0));
+    const list=$("novaList");list.replaceChildren();
+    if(!bills.length){list.append(node("p","muted",t.empty));return;}
+    bills.forEach(b=>{
+      const isReceipt=b.kind==="payment-receipt";
+      const card=node("article","bill");
+      const head=node("div","billHead");
+      head.append(node("h3","",isReceipt?t.receipt:t.invoice));
+      const paid=b.paymentStatus==="paid";
+      head.append(node("span","pill "+(paid?"paid":b.paymentStatus==="due"?"due":"unknown"),paid?t.paidStatus:b.paymentStatus==="due"?t.dueStatus:t.unknown));
+      card.append(head,node("div","amount",euro(b.totalEUR)));
+      const detail=(label,value)=>{const row=node("div","detail");row.append(node("span","muted",label),node("span","",value||"—"));card.append(row);};
+      detail(t.issued,date(b.emailDate));detail(t.dueDate,date(b.dueDate));
+      if(b.paymentDate)detail(t.paymentDate,date(b.paymentDate));
+      if(b.subject)detail(lang==="el"?"Θέμα email":lang==="en"?"Email subject":"წერილის სათაური",b.subject);
+      list.append(card);
+    });
+  }
+  async function load(sync) {
+    const t=text(); const button=$("novaSync");button.disabled=true;
+    try {
+      const sess=session();
+      if(!sess) { $("novaConnect").hidden=false;button.disabled=false;status(t.notConnected);$("novaList").replaceChildren();$("novaStats").replaceChildren();return; }
+      $("novaConnect").hidden=true;status(sync?t.loading:"");
+      const data=await api(sync?"/api/nova/sync":"/api/nova/history",sess,sync?"POST":"GET");
+      render(data);
+      status(data.lastSyncAt ? t.lastSync+": "+date(data.lastSyncAt) : "");
+    } catch(e) {
+      status(t.error+": "+(e.message||String(e)),true);
+    } finally {button.disabled=false;}
+  }
+  function init() {
+    lang=language();const t=text();
+    document.documentElement.lang=lang;
+    $("novaTitle").textContent=t.title;$("novaDesc").textContent=t.desc;$("novaConnect").textContent=t.connect;$("novaSync").textContent=t.sync;$("novaHistoryTitle").textContent=t.history;$("novaBack").textContent="← "+t.back;
+    $("novaConnect").addEventListener("click",connect);
+    $("novaSync").addEventListener("click",()=>load(true));
+    $("novaBack").addEventListener("click",()=>location.href="./bills.html");
+    (async()=>{try{await exchangeCode();await load(false);}catch(e){status(t.error+": "+(e.message||String(e)),true);}})();
+  }
+  document.addEventListener("DOMContentLoaded",init,{once:true});
 })();
