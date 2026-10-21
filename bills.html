@@ -25,9 +25,41 @@
 /* Fixed Home shortcut in the bottom-left corner on the bills page */
 .bills-home-fixed{position:fixed;left:14px;bottom:calc(18px + env(safe-area-inset-bottom, 0px));z-index:9999;display:inline-flex;align-items:center;justify-content:center;padding:12px 18px;border:1px solid #2999df;border-radius:16px;background:rgba(19,49,66,.96);color:#f2f8fc;text-decoration:none;font-size:16px;box-shadow:0 4px 18px rgba(0,0,0,.35);backdrop-filter:blur(8px)}
 body{padding-bottom:78px}
+
+/* Bill category chooser: shown before opening any bill section */
+body.category-start .app,body.category-start .bills-home-fixed{display:none!important}
+.bill-category-screen{max-width:760px;margin:24px auto;padding:22px 16px 34px;color:#eff8fc}
+.bill-category-screen h1{font-size:clamp(25px,5vw,34px);margin:8px 0}
+.bill-category-screen .category-subtitle{color:#9fb4c0;margin:0 0 22px}
+.bill-category-list{display:grid;grid-template-columns:1fr;gap:13px}
+.bill-category-button{width:100%;display:flex;align-items:center;gap:15px;text-align:left;padding:17px;border:1px solid #2d5060;border-radius:20px;background:linear-gradient(145deg,#102631,#091a22);color:#f2f8fb;cursor:pointer;box-shadow:0 5px 18px #0003}
+.bill-category-icon{width:56px;height:56px;flex:0 0 56px;display:grid;place-items:center;border-radius:15px;background:#17384a;font-size:30px}
+.bill-category-copy{flex:1;min-width:0}.bill-category-copy strong{display:block;font-size:19px}.bill-category-copy small{display:block;color:#a8bac4;font-size:14px;margin-top:4px}.bill-category-arrow{font-size:24px;color:#77caff}
+.bill-category-button:active{transform:scale(.99);border-color:#2999df}
+.bill-category-back{margin:0 0 18px;padding:11px 16px;border:1px solid #2d5060;border-radius:13px;background:#17384a;color:#fff;font-size:16px}
+.bill-category-placeholder{max-width:760px;margin:30px auto;padding:22px 16px;color:#eff8fc}
+@media(min-width:560px){.bill-category-list{grid-template-columns:1fr 1fr}}
+
 </style>
 </head>
-<body>
+
+<body class="category-start">
+<section id="billCategoryScreen" class="bill-category-screen" aria-label="Bill categories">
+  <div style="font-size:36px">💶</div>
+  <h1 data-ka="ჩემი გადასახადები" data-en="My Bills" data-el="Οι λογαριασμοί μου">ჩემი გადასახადები</h1>
+  <p class="category-subtitle" data-ka="აირჩიე კატეგორია" data-en="Choose a category" data-el="Επιλέξτε κατηγορία">აირჩიე კატეგორია</p>
+  <div class="bill-category-list">
+    <button class="bill-category-button" type="button" data-category="dei"><span class="bill-category-icon">⚡</span><span class="bill-category-copy"><strong>ΔΕΗ — დენი</strong><small data-ka="ელექტროენერგიის ქვითრები" data-en="Electricity bills" data-el="Λογαριασμοί ηλεκτρικού ρεύματος">ელექტროენერგიის ქვითრები</small></span><span class="bill-category-arrow">›</span></button>
+    <button class="bill-category-button" type="button" data-category="nova"><span class="bill-category-icon">📶</span><span class="bill-category-copy"><strong>NOVA</strong><small data-ka="ტელეფონი და ინტერნეტი" data-en="Phone and internet" data-el="Τηλέφωνο και ίντερνετ">ტელეფონი და ინტერნეტი</small></span><span class="bill-category-arrow">›</span></button>
+    <button class="bill-category-button" type="button" data-category="water"><span class="bill-category-icon">💧</span><span class="bill-category-copy"><strong data-ka="წყალი" data-en="Water" data-el="Νερό">წყალი</strong><small data-ka="წყლის გადასახადები" data-en="Water bills" data-el="Λογαριασμοί νερού">წყლის გადასახადები</small></span><span class="bill-category-arrow">›</span></button>
+    <button class="bill-category-button" type="button" data-category="bank"><span class="bill-category-icon">🏦</span><span class="bill-category-copy"><strong data-ka="ბანკი" data-en="Bank" data-el="Τράπεζα">ბანკი</strong><small data-ka="ბანკის გადასახადები" data-en="Bank payments" data-el="Τραπεζικές πληρωμές">ბანკის გადასახადები</small></span><span class="bill-category-arrow">›</span></button>
+  </div>
+</section>
+<section id="billCategoryPlaceholder" class="bill-category-placeholder" hidden>
+  <button id="billCategoryBack" class="bill-category-back" type="button">← კატეგორიებზე დაბრუნება</button>
+  <h1 id="billCategoryPlaceholderTitle"></h1>
+  <p id="billCategoryPlaceholderText"></p>
+</section>
 <a class="bills-home-fixed" href="./index.html" aria-label="მთავარზე">← მთავარზე</a>
 <div class="app">
 <header><div><h1>💶 ჩემი გადასახადები</h1><small>პირადი გადასახადები — <span id="billUserName"></span></small></div><div class="header-actions"></div></header>
@@ -266,6 +298,21 @@ body{padding-bottom:78px}
     window.addEventListener('pageshow',()=>{lang=readLang();apply();});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+</script>
+
+
+<script>
+(function(){
+ const langNames={ka:{title:"ჩემი გადასახადები",choose:"აირჩიე კატეგორია",back:"← კატეგორიებზე დაბრუნება",soon:"ამ კატეგორიის გვერდი მოგვიანებით დაემატება."},en:{title:"My Bills",choose:"Choose a category",back:"← Back to categories",soon:"This category page will be added later."},el:{title:"Οι λογαριασμοί μου",choose:"Επιλέξτε κατηγορία",back:"← Επιστροφή στις κατηγορίες",soon:"Η σελίδα αυτής της κατηγορίας θα προστεθεί αργότερα."}};
+ const cats={nova:{ka:"NOVA",en:"NOVA",el:"NOVA"},water:{ka:"წყალი",en:"Water",el:"Νερό"},bank:{ka:"ბანკი",en:"Bank",el:"Τράπεζα"}};
+ function getLang(){try{if(typeof window.getCurrentLanguage==="function"){const v=window.getCurrentLanguage();if(v==="en"||v==="el"||v==="ka")return v;}}catch(e){}const keys=["temoLanguage","temo_language","language","lang"];for(const k of keys){const v=localStorage.getItem(k);if(v==="en"||v==="el"||v==="ka")return v;}return "ka";}
+ function applyLang(){const l=getLang();document.querySelectorAll("#billCategoryScreen [data-ka]").forEach(el=>{el.textContent=el.getAttribute("data-"+l)||el.getAttribute("data-ka");});const h=document.querySelector("#billCategoryScreen h1");if(h)h.textContent=langNames[l].title;const sub=document.querySelector("#billCategoryScreen .category-subtitle");if(sub)sub.textContent=langNames[l].choose;document.getElementById("billCategoryBack").textContent=langNames[l].back;}
+ function showBills(){document.body.classList.remove("category-start");document.getElementById("billCategoryScreen").hidden=true;document.getElementById("billCategoryPlaceholder").hidden=true;document.querySelector(".app").style.display="";}
+ function showCategories(){document.body.classList.add("category-start");document.getElementById("billCategoryScreen").hidden=false;document.getElementById("billCategoryPlaceholder").hidden=true;document.querySelector(".app").style.display="";}
+ document.querySelectorAll("[data-category]").forEach(btn=>btn.addEventListener("click",function(){const cat=btn.dataset.category;if(cat==="dei"){showBills();return;}const l=getLang();document.getElementById("billCategoryScreen").hidden=true;const p=document.getElementById("billCategoryPlaceholder");p.hidden=false;document.getElementById("billCategoryPlaceholderTitle").textContent=cats[cat][l];document.getElementById("billCategoryPlaceholderText").textContent=langNames[l].soon;}));
+ document.getElementById("billCategoryBack").addEventListener("click",showCategories);
+ window.addEventListener("temo-language-changed",applyLang);window.addEventListener("storage",applyLang);applyLang();
 })();
 </script>
 
