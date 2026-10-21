@@ -165,16 +165,40 @@
         " · გადახდილი ჯამი: " + formatAmount(result.totalPaidEUR) +
         " · გადასახდელი ჯამი: " + formatAmount(result.totalDueEUR);
       annualSummary.replaceChildren();
-      annualSummary.append(element("h4", "", "წლიური ჯამები"));
+      annualSummary.style.cssText = "margin:18px 0 20px;padding:14px;border:1px solid #254253;border-radius:14px;background:linear-gradient(145deg,rgba(14,36,47,.96),rgba(8,25,34,.9));";
+      const annualTitle = element("h4", "", "📊 წლიური ჯამები");
+      annualTitle.style.cssText = "margin:0 0 12px;font-size:1.08rem;letter-spacing:.2px;";
+      annualSummary.append(annualTitle);
       if (Array.isArray(result.annualTotals) && result.annualTotals.length) {
         result.annualTotals.forEach((year) => {
-          const line = element("p", "dei-bill-year-total");
-          line.textContent = year.year + " — გადახდილი: " + formatAmount(year.paidEUR) +
-            " · გადასახდელი: " + formatAmount(year.dueEUR);
+          const line = element("div", "dei-bill-year-total");
+          line.style.cssText = "display:flex;flex-direction:column;gap:10px;padding:12px;margin:9px 0 0;border:1px solid rgba(70,111,132,.55);border-radius:11px;background:rgba(5,20,28,.52);";
+          const yearTitle = element("strong", "", String(year.year));
+          yearTitle.style.cssText = "font-size:1.05rem;color:#eef7f7;";
+          const values = element("div", "");
+          values.style.cssText = "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;";
+          const paid = element("div", "");
+          paid.style.cssText = "min-width:0;padding:10px;border-radius:9px;background:rgba(40,150,95,.12);border:1px solid rgba(40,150,95,.25);";
+          const paidLabel = element("div", "", "გადახდილი");
+          paidLabel.style.cssText = "font-size:.84rem;color:#9fb0b8;margin-bottom:5px;";
+          const paidValue = element("strong", "", formatAmount(year.paidEUR));
+          paidValue.style.cssText = "font-size:1rem;overflow-wrap:anywhere;";
+          paid.append(paidLabel, paidValue);
+          const due = element("div", "");
+          due.style.cssText = "min-width:0;padding:10px;border-radius:9px;background:rgba(220,155,35,.12);border:1px solid rgba(220,155,35,.25);";
+          const dueLabel = element("div", "", "გადასახდელი");
+          dueLabel.style.cssText = "font-size:.84rem;color:#9fb0b8;margin-bottom:5px;";
+          const dueValue = element("strong", "", formatAmount(year.dueEUR));
+          dueValue.style.cssText = "font-size:1rem;overflow-wrap:anywhere;";
+          due.append(dueLabel, dueValue);
+          values.append(paid, due);
+          line.append(yearTitle, values);
           annualSummary.append(line);
         });
       } else {
-        annualSummary.append(element("p", "muted", "წლიური ჯამები ჯერ არ არის."));
+        const emptyAnnual = element("p", "muted", "წლიური ჯამები ჯერ არ არის.");
+        emptyAnnual.style.cssText = "margin:0;";
+        annualSummary.append(emptyAnnual);
       }
       if (!result.bills.length) {
         historyList.append(element("p", "muted", "ჯერ შენახული ქვითრები არ არის. დააჭირე სინქრონიზაციას."));
