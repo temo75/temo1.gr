@@ -115,8 +115,8 @@
 
     const actions = element("div", "dei-sync-actions");
     const connect = element("button", "dei-sync-primary", "Gmail-ის უსაფრთხოდ დაკავშირება");
-    const sync = element("button", "", "ახლავე სინქრონიზაცია");
-    const signOut = element("button", "", "ამ ბრაუზერის სესიის დასრულება");
+    const sync = element("button", "", "განაახლე");
+    const signOut = element("button", "", "ანგარიშიდან გასვლა");
     sync.hidden = true;
     signOut.hidden = true;
     actions.append(connect, sync, signOut);
