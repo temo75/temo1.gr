@@ -140,6 +140,8 @@
     'თანხა წერილიდან ვერ ამოვიღე':['Could not extract amount from the email','Δεν ήταν δυνατή η εξαγωγή ποσού από το email'],
     'ვადა წერილში ვერ მოიძებნა':['Due date not found in the email','Δεν βρέθηκε προθεσμία στο email'],
     'ვადა გადაცილებულია':['Overdue','Εκπρόθεσμο'],
+    'წლიური ჯამები':['Annual totals','Ετήσια σύνολα'],
+    'გადახდის ვადა გადაცილებულია':['Overdue','Εκπρόθεσμο'],
     'წერილში გადახდის სტატუსი ვერ დადგინდა':['Could not determine payment status from the email','Δεν ήταν δυνατός ο προσδιορισμός της κατάστασης πληρωμής από το email'],
     'ამ ბრაუზერში Gmail არ არის ავტორიზებული':['Gmail is not authorized in this browser','Το Gmail δεν είναι εξουσιοδοτημένο σε αυτό το πρόγραμμα περιήγησης'],
     'დააკავშირე Google ანგარიში OAuth-ის ოფიციალური თანხმობის გვერდით. პაროლს ან საიდუმლო გასაღებს ეს გვერდი არ ითხოვს.':['Connect your Google account using the official OAuth consent page. This page never asks for your password or secret key.','Συνδέστε τον λογαριασμό Google μέσω της επίσημης σελίδας συγκατάθεσης OAuth. Αυτή η σελίδα δεν ζητά τον κωδικό πρόσβασης ή μυστικό κλειδί σας.'],
@@ -182,9 +184,11 @@
     const keys=Object.keys(translations);
     const targetFor=key=>lang==='ka'?key:translations[key][lang==='en'?0:1];
     const exact=input.trim();
+    const normalized=value=>String(value??'').replace(/\\s+/g,' ').trim().toLocaleLowerCase();
+    const normalizedInput=normalized(exact);
     for(const key of keys){
       const variants=[key,translations[key][0],translations[key][1]];
-      if(variants.includes(exact)){
+      if(variants.some(value=>normalized(value)===normalizedInput)){
         const lead=input.match(/^\\s*/)?.[0]||'',trail=input.match(/\\s*$/)?.[0]||'';
         return lead+targetFor(key)+trail;
       }
