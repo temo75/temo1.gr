@@ -39,6 +39,15 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
 .bill-category-placeholder{max-width:760px;margin:30px auto;padding:22px 16px;color:#eff8fc}
 @media(min-width:560px){.bill-category-list{grid-template-columns:1fr 1fr}}
 
+
+.bill-auth-overlay{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;padding:22px;background:rgba(0,7,12,.78);backdrop-filter:blur(7px)}
+.bill-auth-overlay.is-open{display:flex}
+.bill-auth-dialog{width:min(100%,440px);border:1px solid #2999df;border-radius:22px;padding:24px;background:linear-gradient(145deg,#102631,#07151c);color:#eef7f7;box-shadow:0 16px 50px #0008}
+.bill-auth-dialog h2{font-size:22px;margin:0 0 12px}.bill-auth-dialog p{color:#a7b8c2;line-height:1.55;margin:0 0 18px}
+.bill-auth-actions{display:flex;gap:10px;flex-wrap:wrap}.bill-auth-actions button{flex:1;min-width:130px;padding:13px 15px;border-radius:13px}
+.bill-auth-primary{border:1px solid #2999df!important;background:#12354a!important}.bill-auth-cancel{background:#14232c!important}
+#billAuthMessage{font-size:14px;margin-top:14px;overflow-wrap:anywhere;color:#a7b8c2}
+
 </style>
 </head>
 
@@ -59,6 +68,17 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
   <div id="billCategoryPlaceholderText"></div>
 </section>
 <a class="bills-home-fixed" href="#" id="billBackToCategories" aria-label="კატეგორიებზე დაბრუნება">← კატეგორიებზე დაბრუნება</a>
+<div id="billAuthOverlay" class="bill-auth-overlay" role="dialog" aria-modal="true" aria-labelledby="billAuthTitle">
+  <div class="bill-auth-dialog">
+    <h2 id="billAuthTitle">Google ანგარიშის დაკავშირება</h2>
+    <p id="billAuthDesc">DEI-სა და NOVA-ს წერილები ერთი Google ანგარიშით გახსენი. ავტორიზაცია ერთხელ გაიარე და შემდეგ აირჩიე სასურველი კატეგორია.</p>
+    <div class="bill-auth-actions">
+      <button id="billAuthConnect" class="bill-auth-primary" type="button">Google-ით ავტორიზაცია</button>
+      <button id="billAuthCancel" class="bill-auth-cancel" type="button">გაუქმება</button>
+    </div>
+    <div id="billAuthMessage" role="status"></div>
+  </div>
+</div>
 <div class="app">
 <header><div><h1>💶 ჩემი გადასახადები</h1><small>პირადი გადასახადები — <span id="billUserName"></span></small></div><div class="header-actions"></div></header>
 <div id="deiCloudBill" class="panel"></div>
@@ -308,11 +328,60 @@ body.category-start .app,body.category-start .bills-home-fixed{display:none!impo
  function applyLang(){const l=getLang();document.querySelectorAll("#billCategoryScreen [data-ka]").forEach(el=>{el.textContent=el.getAttribute("data-"+l)||el.getAttribute("data-ka");});const h=document.querySelector("#billCategoryScreen h1");if(h)h.textContent=langNames[l].title;const sub=document.querySelector("#billCategoryScreen .category-subtitle");if(sub)sub.textContent=langNames[l].choose;document.getElementById("billCategoryBack").setAttribute("aria-label",langNames[l].back);document.querySelector(".bill-category-home").setAttribute("aria-label",langNames[l].home);document.querySelector(".bill-category-home").setAttribute("title",langNames[l].home);}
  function showBills(){document.body.classList.remove("category-start");document.getElementById("billCategoryScreen").hidden=true;document.getElementById("billCategoryPlaceholder").hidden=true;document.querySelector(".app").style.display="";document.getElementById("billBackToCategories").style.display="inline-flex";window.scrollTo(0,0);}
  function showCategories(){document.body.classList.add("category-start");document.getElementById("billCategoryScreen").hidden=false;document.getElementById("billCategoryPlaceholder").hidden=true;document.querySelector(".app").style.display="";document.getElementById("billBackToCategories").style.display="none";window.scrollTo(0,0);}
- document.querySelectorAll("[data-category]").forEach(btn=>btn.addEventListener("click",function(){const cat=btn.dataset.category;if(cat==="dei"){showBills();return;}if(cat==="nova"){location.href="./nova.html";return;}const l=getLang();document.getElementById("billCategoryScreen").hidden=true;const p=document.getElementById("billCategoryPlaceholder");p.hidden=false;const content=document.getElementById("billCategoryPlaceholderText");content.innerHTML="";const h=document.createElement("h1");h.textContent=cats[cat][l];const msg=document.createElement("p");msg.textContent=langNames[l].soon;content.append(h,msg);}));
+ document.querySelectorAll("[data-category]").forEach(btn=>btn.addEventListener("click",function(){const cat=btn.dataset.category;if(cat==="dei"||cat==="nova"){if(window.TEMOBillAuthGate){window.TEMOBillAuthGate.open(cat);}return;}const l=getLang();document.getElementById("billCategoryScreen").hidden=true;const p=document.getElementById("billCategoryPlaceholder");p.hidden=false;const content=document.getElementById("billCategoryPlaceholderText");content.innerHTML="";const h=document.createElement("h1");h.textContent=cats[cat][l];const msg=document.createElement("p");msg.textContent=langNames[l].soon;content.append(h,msg);}));
  document.getElementById("billCategoryBack").addEventListener("click",showCategories);document.getElementById("billBackToCategories").addEventListener("click",function(e){e.preventDefault();showCategories();});document.getElementById("billBackToCategories").style.display="none";
  window.addEventListener("temo-language-changed",applyLang);window.addEventListener("storage",applyLang);applyLang();
 })();
 </script>
 
+
+<script>
+(function(){
+  "use strict";
+  const API="https://dei-bill-sync.temo75elia.workers.dev";
+  const KEY="t1.deiBillSession.v1";
+  const PENDING="temo.billCategoryAfterGoogleAuth";
+  const overlay=document.getElementById("billAuthOverlay");
+  const message=document.getElementById("billAuthMessage");
+  const connect=document.getElementById("billAuthConnect");
+  const cancel=document.getElementById("billAuthCancel");
+  const title=document.getElementById("billAuthTitle");
+  const desc=document.getElementById("billAuthDesc");
+  const labels={
+    ka:{title:"Google ანგარიშის დაკავშირება",desc:"DEI-სა და NOVA-ს წერილები ერთი Google ანგარიშით გახსენი. ავტორიზაცია ერთხელ გაიარე და შემდეგ აირჩიე სასურველი კატეგორია.",connect:"Google-ით ავტორიზაცია",cancel:"გაუქმება",checking:"Google ავტორიზაციას ვამოწმებ…",error:"ავტორიზაცია ვერ დადასტურდა. სცადე ხელახლა.",need:"DEI-სა და NOVA-ს გასახსნელად ჯერ Google ანგარიში დააკავშირე."},
+    en:{title:"Connect Google account",desc:"Use one Google account for both DEI and NOVA emails. Authorize once, then choose either category.",connect:"Authorize with Google",cancel:"Cancel",checking:"Checking Google authorization…",error:"Authorization could not be confirmed. Please try again.",need:"Connect your Google account first to open DEI or NOVA."},
+    el:{title:"Σύνδεση λογαριασμού Google",desc:"Χρησιμοποιήστε έναν λογαριασμό Google για τα email ΔΕΗ και NOVA. Συνδεθείτε μία φορά και μετά επιλέξτε κατηγορία.",connect:"Σύνδεση με Google",cancel:"Ακύρωση",checking:"Έλεγχος εξουσιοδότησης Google…",error:"Δεν επιβεβαιώθηκε η εξουσιοδότηση. Δοκιμάστε ξανά.",need:"Συνδέστε πρώτα τον λογαριασμό Google για να ανοίξετε ΔΕΗ ή NOVA."}
+  };
+  function lang(){try{const v=localStorage.getItem("temoLanguage");return ["ka","en","el"].includes(v)?v:"ka";}catch(e){return "ka";}}
+  function words(){return labels[lang()];}
+  function applyLabels(){const t=words();title.textContent=t.title;desc.textContent=t.desc;connect.textContent=t.connect;cancel.textContent=t.cancel;}
+  function sessionValid(){try{const s=JSON.parse(sessionStorage.getItem(KEY)||"null");return !!(s&&s.token&&s.expiresAt&&Date.parse(s.expiresAt)>Date.now());}catch(e){return false;}}
+  function open(category){if(sessionValid()){go(category);return;}try{sessionStorage.setItem(PENDING,category);}catch(e){}applyLabels();message.textContent=words().need;overlay.classList.add("is-open");}
+  function close(){overlay.classList.remove("is-open");}
+  function go(category){if(category==="nova"){location.href="./nova.html";return;}if(category==="dei"){close();document.body.classList.remove("category-start");document.getElementById("billCategoryScreen").hidden=true;document.getElementById("billCategoryPlaceholder").hidden=true;document.querySelector(".app").style.display="";document.getElementById("billBackToCategories").style.display="inline-flex";window.scrollTo(0,0);}}
+  connect.addEventListener("click",function(){const t=words();try{sessionStorage.setItem(PENDING,sessionStorage.getItem(PENDING)||"dei");}catch(e){}message.textContent=t.checking;connect.disabled=true;location.assign(API+"/oauth/start?return_to="+encodeURIComponent(location.origin+location.pathname));});
+  cancel.addEventListener("click",function(){close();try{sessionStorage.removeItem(PENDING);}catch(e){}});
+  overlay.addEventListener("click",function(e){if(e.target===overlay)cancel.click();});
+  window.TEMOBillAuthGate={open};
+  // OAuth callback returns to this page with #dei_code. The DEI widget exchanges it
+  // and writes the shared session token; wait for that exchange, then open the chosen category.
+  let pending=null;try{pending=sessionStorage.getItem(PENDING);}catch(e){}
+  if(pending&&new URLSearchParams(location.hash.replace(/^#/,"")).has("dei_code")){
+    applyLabels();overlay.classList.add("is-open");message.textContent=words().checking;connect.disabled=true;
+    const started=Date.now();
+    const timer=setInterval(function(){
+      if(sessionValid()){
+        clearInterval(timer);connect.disabled=false;
+        try{sessionStorage.removeItem(PENDING);}catch(e){}
+        go(pending);
+      }else if(Date.now()-started>18000){
+        clearInterval(timer);connect.disabled=false;message.textContent=words().error;
+      }
+    },150);
+  }
+  window.addEventListener("storage",applyLabels);
+  window.addEventListener("temo-language-changed",applyLabels);
+})();
+</script>
 </body>
 </html>
