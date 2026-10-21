@@ -48,10 +48,58 @@
     return true;
   }
 
+  function selectedLanguage() {
+    try {
+      const uid = String(localStorage.getItem("temoWorkTrackerUserId") || "").trim();
+      const saved = localStorage.getItem(uid ? "temoLanguage_" + uid : "temoLanguage");
+      if (["ka", "en", "el"].includes(saved)) return saved;
+      const global = localStorage.getItem("temoLanguage");
+      return ["ka", "en", "el"].includes(global) ? global : "ka";
+    } catch { return "ka"; }
+  }
+
+  const WIDGET_TEXT = {
+    "ქვითრების რაოდენობა": ["Number of bills", "Αριθμός λογαριασμών"],
+    "გადახდილი ჯამი": ["Total paid", "Σύνολο εξοφλημένων"],
+    "გადასახდელი ჯამი": ["Total due", "Σύνολο προς πληρωμή"],
+    "წლიური ჯამები": ["Annual totals", "Ετήσια σύνολα"],
+    "გადახდილი": ["Paid", "Εξοφλημένα"],
+    "გადასახდელი": ["Due", "Προς πληρωμή"],
+    "წლიური ჯამები ჯერ არ არის.": ["No annual totals yet.", "Δεν υπάρχουν ακόμη ετήσια σύνολα."],
+    "ჯერ შენახული ქვითრები არ არის. დააჭირე სინქრონიზაციას.": ["No saved bills yet. Press Sync now.", "Δεν υπάρχουν ακόμη αποθηκευμένοι λογαριασμοί. Πατήστε Συγχρονισμός τώρα."],
+    "თანხა წერილიდან ვერ ამოვიღე": ["Could not extract amount from the email", "Δεν ήταν δυνατή η εξαγωγή ποσού από το email"],
+    "ვადა წერილში ვერ მოიძებნა": ["Due date not found in the email", "Δεν βρέθηκε προθεσμία στο email"],
+    "ვადა გადაცილებულია": ["Overdue", "Εκπρόθεσμο"],
+    "გადახდის ვადა": ["Payment due date", "Προθεσμία πληρωμής"],
+    "გადახდის სტატუსი": ["Payment status", "Κατάσταση πληρωμής"],
+    "ქვითრის წერილი": ["Bill email", "Email λογαριασμού"],
+    "ბოლო სინქრონიზაცია": ["Last sync", "Τελευταίος συγχρονισμός"],
+    "თანხა": ["Amount", "Ποσό"],
+    "გადახდილია": ["Paid", "Εξοφλήθηκε"],
+    "გადასახდელია": ["Due", "Προς πληρωμή"],
+    "შესამოწმებელია": ["Needs checking", "Χρειάζεται έλεγχο"],
+    "ბოლო ქვითრის ისტორია": ["Latest bill history", "Ιστορικό τελευταίων λογαριασμών"],
+    "ბოლო ქვითარი უსაფრთხოდ ჩაიტვირთა KV-დან.": ["The latest bill was securely loaded from KV.", "Ο τελευταίος λογαριασμός φορτώθηκε με ασφάλεια από το KV."],
+    "Gmail აქტორიზებულია ამ ბრაუზერში": ["Gmail is authorized in this browser", "Το Gmail είναι εξουσιοδοτημένο σε αυτό το πρόγραμμα περιήγησης"],
+    "Gmail აქტორიზებულია ამ ბრაუზერში": ["Gmail is authorized in this browser", "Το Gmail είναι εξουσιοδοτημένο σε αυτό το πρόγραμμα περιήγησης"],
+    "Gmail აქტორიზებულია ამ ბრაუზერში": ["Gmail is authorized in this browser", "Το Gmail είναι εξουσιοδοτημένο σε αυτό το πρόγραμμα περιήγησης"]
+  };
+
+  function translateWidgetText(value) {
+    let text = String(value ?? "");
+    const lang = selectedLanguage();
+    if (lang === "ka") return text;
+    const replacements = Object.entries(WIDGET_TEXT)
+      .map(([ka, pair]) => [ka, pair[lang === "en" ? 0 : 1]])
+      .sort((a, b) => b[0].length - a[0].length);
+    for (const [source, target] of replacements) text = text.split(source).join(target);
+    return text;
+  }
+
   function element(tag, className, value) {
     const node = document.createElement(tag);
     if (className) node.className = className;
-    if (value !== undefined) node.textContent = value;
+    if (value !== undefined) node.textContent = translateWidgetText(value);
     return node;
   }
 
