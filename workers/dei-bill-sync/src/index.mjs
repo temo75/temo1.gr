@@ -300,6 +300,342 @@ async function listStoredNovaBills(env, ownerKey) {
   return bills.sort((a, b) => Number(b.internalDate || 0) - Number(a.internalDate || 0));
 }
 
+function extractNovaAmount(text) {
+  const value = String(text || "").replace(/\\u00a0/g, " ");
+  const patterns = [
+    /(?:ποσό(?:\s+του\s+τρέχοντος\s+λογαριασμού)?|συνολικό ποσό πληρωμής|payable amount|amount due|amount paid|total amount)[^\\d€]{0,80}(?:€\\s*)?(\\d{1,5}(?:[.,]\\d{1,2})?)/i,
+    /(\\d{1,5}[.,]\\d{1,2})\\s*€/i,
+    /€\\s*(\\d{1,5}[.,]\\d{1,2})/i
+  ];
+  for (const re of patterns) {
+    const m = value.match(re);
+    if (!m) continue;
+    const normalized = m[1].includes(",") ? m[1].replace(/\\./g, "").replace(",", ".") : m[1];
+    const amount = Number(normalized);
+    if (Number.isFinite(amount) && amount >= 0 && amount < 100000) return amount.toFixed(2);
+  }
+  return null;
+}
+
+*
+ * TEMO DEI bill sync — Cloudflare Worker
+ * Required binding: DEI_KV (KV namespace)
+ * Required variables/secrets:
+ *   GOOGLE_CLIENT_ID       (text variable)
+ *   GOOGLE_CLIENT_SECRET   (secret)
+ *   T1 bill access uses short-lived sessions issued after Google OAuth.
+ * OAuth redirect URI:
+ *   https://dei-bill-sync.temo75elia.workers.dev/oauth/callback
+ * Optional: configure a Cron Trigger every 3 hours.
+ */
+
+const GOOGLE_AUTH = "https://accounts.google.com/o/oauth2/v2/auth";
+const GOOGLE_TOKEN = "https://oauth2.googleapis.com/token";
+const GMAIL_API = "https://gmail.googleapis.com/gmail/v1/users/me";
+const ALLOWED_ORIGINS = new Set(["https://temo75.github.io", "https://temo1.gr", "https://www.temo1.gr"]);
+// Search broadly across DEI mail, then identify invoice-like messages in code.
+ // in:anywhere also allows older messages still present in Spam/Trash to be considered.
+const GMAIL_QUERY = 'in:anywhere {from:(dei.gr) subject:(Fwd) subject:(FW) subject:(Forward) subject:(Προώθηση) subject:(λογαριασμού) subject:(ΔΕΗ) subject:(Ηλεκτρικής)}';
+
+function corsHeaders(extra = {}) {
+  return {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET, POST, OPTIONS",
+    "access-control-allow-headers": "Authorization, Content-Type",
+    "access-control-max-age": "86400",
+    "vary": "Origin",
+    ...extra,
+  };
+}
+
+function json(data, status = 200, extraHeaders = {}) {
+  return new Response(JSON.stringify(data, null, 2), {
+    status,
+    headers: corsHeaders({
+      "content-type": "application/json; charset=utf-8",
+      "cache-control": "no-store",
+      ...extraHeaders,
+    }),
+  });
+}
+
+function html(message, status = 200) {
+  return new Response(`<!doctype html><html lang="el"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>DEI Gmail σύνδεση</title><body style="font:16px Arial,sans-serif;max-width:680px;margin:40px auto;padding:20px;line-height:1.6">${message}</body></html>`, {
+    status,
+    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+  });
+}
+
+function escapeHtml(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[ch]);
+}
+
+function base64UrlDecode(value) {
+  const normalized = String(value || "").replace(/-/g, "+").replace(/_/g, "/");
+  const padded = normalized + "=".repeat((4 - normalized.length % 4) % 4);
+  const binary = atob(padded);
+  const bytes = Uint8Array.from(binary, c => c.charCodeAt(0));
+  return new TextDecoder("utf-8").decode(bytes);
+}
+
+function findBody(payload, wantedMime) {
+  if (!payload) return "";
+  if (payload.mimeType === wantedMime && payload.body?.data) {
+    try { return base64UrlDecode(payload.body.data); } catch { /* try other parts */ }
+  }
+  for (const part of payload.parts || []) {
+    const found = findBody(part, wantedMime);
+    if (found) return found;
+  }
+  if (payload.body?.data && !(payload.parts || []).length) {
+    try { return base64UrlDecode(payload.body.data); } catch { /* malformed body */ }
+  }
+  return "";
+}
+
+function headerValue(headers, name) {
+  return (headers || []).find(h => String(h.name).toLowerCase() === name.toLowerCase())?.value || "";
+}
+
+function stripHtml(s) {
+  return String(s || "")
+    .replace(/<script[\s\S]*?<\/script>/gi, " ")
+    .replace(/<style[\s\S]*?<\/style>/gi, " ")
+    .replace(/<\/(p|div|tr|li|h[1-6]|br|td|th)>/gi, "\n")
+    .replace(/<\/?[a-z][a-z0-9:-]*(?:\s[^>]*)?>/gi, " ")
+    .replace(/&nbsp;|&#160;/gi, " ")
+    .replace(/&euro;|&#8364;|&#x20ac;/gi, "€")
+    .replace(/&amp;/gi, "&")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#39;|&apos;/gi, "'")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
+    .trim();
+}
+
+function extractAmount(text) {
+  const t = String(text || "").replace(/\u00a0/g, " ");
+  const patterns = [
+    /(?:συνολικ[όο]\s+ποσ[όο]|πληρωτέο\s+ποσ[όο]|ποσ[όο]\s+πληρωμ[ής]|total\s+amount|amount\s+due)[^\d€]{0,60}(?:€\s*)?(\d{1,5}(?:[.,]\d{2})?)/i,
+    /(\d{1,5}[.,]\d{2})\s*€/i,
+    /€\s*(\d{1,5}[.,]\d{2})/i,
+  ];
+  for (const re of patterns) {
+    const match = t.match(re);
+    if (!match) continue;
+    const raw = match[1];
+    const normalized = raw.includes(",") ? raw.replace(/\./g, "").replace(",", ".") : raw;
+    const amount = Number(normalized);
+    if (Number.isFinite(amount) && amount >= 0 && amount < 100000) return amount.toFixed(2);
+  }
+  return null;
+}
+
+function extractPaymentStatus(text) {
+  const value = String(text || "").toLocaleLowerCase("el").normalize("NFC").replace(/[\u00a0\s]+/g, " ");
+  // An explicit unpaid statement wins; generic invoice labels like "amount due"
+  // can coexist with a payment confirmation elsewhere in the same HTML email.
+  const explicitlyUnpaid = /(δεν\s+(?:έχει\s+)?εξοφληθεί|δεν\s+εξοφλήθηκε|ανεξόφλητ|not\s+paid|unpaid|payment\s+pending)/i.test(value);
+  if (explicitlyUnpaid) return "due";
+  const paid = /(εξοφλ[ήη]θ|εξοφλ[ηή]μέν|έχει εξοφληθεί|έχει πληρωθεί|πληρώθηκε|πληρωμένο|καταβλήθηκε|paid in full|fully paid|payment received|settled)/i.test(value);
+  if (paid) return "paid";
+  const due = /(οφειλ|ανεξόφλητ|πληρωτέο|ποσό προς πληρωμή|ποσό πληρωμής|προς εξόφληση|χρεωστικό υπόλοιπο|υπόλοιπο οφειλής|τελικό ποσό πληρωμής|amount due|payable amount|amount payable|total due|payment due|outstanding|to pay)/i.test(value);
+  if (due) return "due";
+  return "unknown";
+}
+function extractDueDate(text) {
+  const patterns = [
+    /(?:ημερομηνία\s+λήξης|λήξη\s+πληρωμής|πληρωτέο\s+έως|due\s+date)[^\d]{0,30}(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/i,
+    /(?:έως|μέχρι|until|by)\s+(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{2,4})/i,
+  ];
+  for (const re of patterns) {
+    const match = String(text || "").match(re);
+    if (!match) continue;
+    const day = Number(match[1]);
+    const month = Number(match[2]);
+    const year = Number(match[3].length === 2 ? `20${match[3]}` : match[3]);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (date.getUTCFullYear() === year && date.getUTCMonth() === month - 1 && date.getUTCDate() === day) {
+      return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
+    }
+  }
+  return null;
+}
+
+const T1_RETURN_PATHS = new Set([
+  "https://temo75.github.io/t1/dei-bill.html",
+  "https://temo75.github.io/t1/bills.html",
+  "https://temo1.gr/dei-bill.html",
+  "https://temo1.gr/bills.html",
+  "https://temo1.gr/t1/dei-bill.html",
+  "https://temo1.gr/t1/bills.html",
+  "https://www.temo1.gr/dei-bill.html",
+  "https://www.temo1.gr/bills.html",
+  "https://www.temo1.gr/t1/dei-bill.html",
+  "https://www.temo1.gr/t1/bills.html",
+]);
+function safeReturnTo(value) {
+  try {
+    const target = new URL(value || "https://temo75.github.io/t1/dei-bill.html");
+    if (!ALLOWED_ORIGINS.has(target.origin)) return null;
+    // temo1.gr is the new full T1 site: OAuth may be launched from the home
+    // page or any nested page, not only the two standalone DEI pages.
+    // Keep the old GitHub Pages domain restricted to the original T1 DEI pages.
+    const isNewT1Domain = target.origin === "https://temo1.gr" || target.origin === "https://www.temo1.gr";
+    if (!isNewT1Domain && !T1_RETURN_PATHS.has(target.origin + target.pathname)) return null;
+    if (target.username || target.password) return null;
+    return target.origin + target.pathname;
+  } catch { return null; }
+}
+function randomHex(size = 32) {
+  return Array.from(crypto.getRandomValues(new Uint8Array(size)), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+async function sha256Hex(value) {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(String(value)));
+  return Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, "0")).join("");
+}
+async function getT1SessionOwner(request, env) {
+  const token = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
+  if (!token || !env.DEI_KV) return null;
+  return await env.DEI_KV.get("t1_session:" + await sha256Hex(token));
+}
+function assertConfig(env) {
+  const missing = [];
+  if (!env.GOOGLE_CLIENT_ID) missing.push("GOOGLE_CLIENT_ID");
+  if (!env.GOOGLE_CLIENT_SECRET) missing.push("GOOGLE_CLIENT_SECRET");
+  if (!env.DEI_KV) missing.push("DEI_KV binding");
+  return missing;
+}
+
+async function refreshAccessToken(env, ownerKey) {
+  const refreshToken = await env.DEI_KV.get("gmail_refresh_token:" + ownerKey);
+  if (!refreshToken) throw new Error("GMAIL_NOT_CONNECTED");
+  const form = new URLSearchParams({
+    client_id: env.GOOGLE_CLIENT_ID,
+    client_secret: env.GOOGLE_CLIENT_SECRET,
+    refresh_token: refreshToken,
+    grant_type: "refresh_token",
+  });
+  const response = await fetch(GOOGLE_TOKEN, {
+    method: "POST",
+    headers: { "content-type": "application/x-www-form-urlencoded" },
+    body: form,
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || !data.access_token) throw new Error(`GOOGLE_REFRESH_FAILED_${response.status}`);
+  return data.access_token;
+}
+
+async function gmailFetch(env, ownerKey, path, accessToken = "") {
+  const token = accessToken || await refreshAccessToken(env, ownerKey);
+  const response = await fetch(`${GMAIL_API}${path}`, { headers: { authorization: `Bearer ${token}` } });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(`GMAIL_API_FAILED_${response.status}`);
+  return data;
+}
+
+function isDeiOrigin(from, subject, bodyText) {
+  if (/@(?:[a-z0-9-]+\.)*dei\.gr\b/i.test(String(from || ""))) return true;
+  const body = String(bodyText || "");
+  const forwarded = /(?:^|\n)\s*(?:from|από|αποστολέας|αποστολεας)\s*:/im.test(body);
+  const quotedDeiAddress = /<[^>\n]*@(?:[a-z0-9-]+\.)*dei\.gr\s*>|[a-z0-9._%+-]+@(?:[a-z0-9-]+\.)*dei\.gr/i.test(body);
+  const forwardSubject = /^\s*(?:fwd?|forwarded message|προώθηση|fw)\s*[:：]/i.test(String(subject || ""));
+  const deiBillSubject = /(ειδοποίηση έκδοσης λογαριασμού|λογαριασμού ηλεκτρικής ενέργειας|\bδεη\b|\bdei\b)/i.test(String(subject || ""));
+  // Accept a forwarded message when the quoted original DEI sender is present
+  // and either forwarding metadata or the recognizable DEI bill subject survives.
+  return quotedDeiAddress && (forwarded || forwardSubject || deiBillSubject);
+}
+
+function isLikelyInvoice(subject, bodyText) {
+  const s = String(subject || "").toLocaleLowerCase("el");
+  const t = String(bodyText || "").toLocaleLowerCase("el");
+  const combined = s + "\n" + t;
+  if (/(verification code|security code|one[- ]time password|login code|κωδικός επιβεβαίωσης|κωδικός ασφαλείας|κωδικός μιας χρήσης)/i.test(combined)) return false;
+  const subjectLooksLikeBill = /(δεη|δ[εέ]η|λογαριασμ|bill|invoice|electricity|ρεύμα)/i.test(s);
+  const bodyLooksLikeBill = /(πληρωτέο ποσό|συνολικό ποσό|προθεσμία πληρωμής|ημερομηνία λήξης|amount due|due date|electricity bill|λογαριασμός ηλεκτρικού)/i.test(t);
+  return subjectLooksLikeBill || bodyLooksLikeBill;
+}
+
+function isPaymentConfirmation(subject, bodyText) {
+  const combined = String(subject || "") + "\\n" + String(bodyText || "");
+  return /(payment confirmation|payment received|receipt for payment|επιβεβαίωση πληρωμής|απόδειξη πληρωμής|εξόφληση λογαριασμού|η πληρωμή σας καταχωρήθηκε|πληρωμή ολοκληρώθηκε|ο λογαριασμός εξοφλήθηκε)/i.test(combined);
+}
+
+async function applyPaymentConfirmation(env, ownerKey, existingBills, existingById, amount, dueDate, fetchedAt) {
+  if (amount == null) return false;
+  const cents = Math.round(Number(amount) * 100);
+  let candidates = existingBills.filter(bill =>
+    Math.round(Number(bill.totalEUR) * 100) === cents &&
+    bill.paymentStatus !== "paid"
+  );
+  if (dueDate) {
+    const exact = candidates.filter(bill => String(bill.dueDate || "") === dueDate);
+    if (exact.length === 1) candidates = exact;
+  }
+  // Never guess when multiple different invoices have the same amount.
+  if (candidates.length !== 1) return false;
+  const matched = candidates[0];
+  const updated = { ...matched, paymentStatus: "paid", paymentConfirmedAt: fetchedAt };
+  const key = BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(matched.gmailMessageId));
+  await env.DEI_KV.put(key, JSON.stringify(updated));
+  existingById.set(String(matched.gmailMessageId), updated);
+  const index = existingBills.findIndex(bill => String(bill.gmailMessageId) === String(matched.gmailMessageId));
+  if (index >= 0) existingBills[index] = updated;
+  const latestKey = "latest_bill:" + ownerKey;
+  const latest = await env.DEI_KV.get(latestKey, "json");
+  if (latest && String(latest.gmailMessageId) === String(matched.gmailMessageId)) {
+    await env.DEI_KV.put(latestKey, JSON.stringify(updated));
+  }
+  return true;
+}
+function canonicalBillContent(text) {
+  return String(text || "")
+    .split(/\r?\n/)
+    .filter(line => !/^\s*(?:[-_]{3,}\s*)?(?:forwarded message|original message)\s*[-_]*\s*$/i.test(line))
+    .filter(line => !/^\s*(?:from|date|subject|to|cc|bcc|από|αποστολέας|αποστολεας)\s*:/i.test(line))
+    .join(" ")
+    .toLocaleLowerCase("el")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+const BILL_PREFIX = "bill_history:";
+const NOVA_BILL_PREFIX = "nova_bill_history:";
+const NOVA_GMAIL_QUERY = 'in:anywhere {from:(nova.gr) from:(ebill.nova.gr)}';
+
+async function listStoredNovaBills(env, ownerKey) {
+  const bills = [];
+  let cursor;
+  do {
+    const page = await env.DEI_KV.list({ prefix: NOVA_BILL_PREFIX + ownerKey + ":", limit: 1000, cursor });
+    for (const key of page.keys || []) {
+      const bill = await env.DEI_KV.get(key.name, "json");
+      if (bill && bill.gmailMessageId) bills.push(bill);
+    }
+    cursor = page.list_complete ? undefined : page.cursor;
+  } while (cursor);
+  return bills.sort((a, b) => Number(b.internalDate || 0) - Number(a.internalDate || 0));
+}
+
+function extractNovaAmount(text) {
+  const value = String(text || "").replace(/\\u00a0/g, " ");
+  const patterns = [
+    /(?:ποσό(?:\s+του\s+τρέχοντος\s+λογαριασμού)?|συνολικό ποσό πληρωμής|payable amount|amount due|amount paid|total amount)[^\\d€]{0,80}(?:€\\s*)?(\\d{1,5}(?:[.,]\\d{1,2})?)/i,
+    /(\\d{1,5}[.,]\\d{1,2})\\s*€/i,
+    /€\\s*(\\d{1,5}[.,]\\d{1,2})/i
+  ];
+  for (const re of patterns) {
+    const m = value.match(re);
+    if (!m) continue;
+    const normalized = m[1].includes(",") ? m[1].replace(/\\./g, "").replace(",", ".") : m[1];
+    const amount = Number(normalized);
+    if (Number.isFinite(amount) && amount >= 0 && amount < 100000) return amount.toFixed(2);
+  }
+  return null;
+}
+
 async function syncNovaBills(env, ownerKey) {
   const accessToken = await refreshAccessToken(env, ownerKey);
   const list = await gmailFetch(env, ownerKey, "/messages?q=" + encodeURIComponent(NOVA_GMAIL_QUERY) + "&maxResults=100", accessToken);
