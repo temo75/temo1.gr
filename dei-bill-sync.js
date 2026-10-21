@@ -68,6 +68,15 @@
     return Number.isNaN(date.getTime()) ? "ვადა წერილში ვერ მოიძებნა" : date.toLocaleDateString("ka-GE", { timeZone: "UTC" });
   }
 
+  function formatEmailDate(value) {
+    if (!value) return "თარიღი უცნობია";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "თარიღი უცნობია";
+    return new Intl.DateTimeFormat("ka-GE", {
+      year: "numeric", month: "long", day: "numeric", timeZone: "Europe/Athens"
+    }).format(date);
+  }
+
   function paymentLabel(status, dueDate) {
     if (status === "paid") return "გადახდილია";
     if (status === "due") {
@@ -173,9 +182,24 @@
       }
       result.bills.forEach((bill) => {
         const row = element("article", "dei-bill-history-item");
-        row.append(element("strong", "", formatAmount(bill.totalEUR)));
-        row.append(element("span", "", paymentLabel(bill.paymentStatus, bill.dueDate)));
-        row.append(element("small", "", (bill.emailDate || "თარიღი უცნობია") + " · ვადა: " + formatDueDate(bill.dueDate)));
+        row.style.cssText = "display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:14px;margin:10px 0;border:1px solid #254253;border-radius:12px;background:rgba(8,25,34,.55);overflow-wrap:anywhere;min-width:0;";
+        const topLine = element("div", "");
+        topLine.style.cssText = "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;";
+        const amount = element("strong", "", formatAmount(bill.totalEUR));
+        amount.style.cssText = "font-size:1.2rem;";
+        const status = element("span", "", paymentLabel(bill.paymentStatus, bill.dueDate));
+        status.style.cssText = "font-weight:700;padding:5px 9px;border-radius:8px;background:" + (bill.paymentStatus === "paid" ? "rgba(40,150,95,.18)" : bill.paymentStatus === "due" ? "rgba(220,155,35,.18)" : "rgba(130,145,155,.15)") + ";";
+        topLine.append(amount, status);
+        row.append(topLine);
+        const emailLine = element("div", "");
+        emailLine.style.cssText = "font-size:.95rem;line-height:1.5;overflow-wrap:anywhere;";
+        emailLine.append(element("span", "", "ქვითრის თარიღი: "), element("strong", "", formatEmailDate(bill.emailDate)));
+        const dueLine = element("div", "");
+        dueLine.style.cssText = "display:flex;flex-direction:column;align-items:flex-start;gap:4px;font-size:.95rem;line-height:1.5;min-width:0;";
+        const dueValue = element("strong", "", formatDueDate(bill.dueDate));
+        dueValue.style.cssText = "white-space:nowrap;font-variant-numeric:tabular-nums;";
+        dueLine.append(element("span", "", "გადახდის საბოლოო ვადა:"), dueValue);
+        row.append(emailLine, dueLine);
         historyList.append(row);
       });
     }
