@@ -161,9 +161,30 @@
         throw new Error("Worker-ის /api/history endpoint არ აბრუნებს ქვითრების ისტორიას. განახლებული Worker ჯერ არ არის აქტიური.");
       }
       historyList.replaceChildren();
-      historySummary.textContent = "ქვითრები: " + result.count +
-        " · გადახდილი ჯამი: " + formatAmount(result.totalPaidEUR) +
-        " · გადასახდელი ჯამი: " + formatAmount(result.totalDueEUR);
+      historySummary.textContent = "";
+      historySummary.style.cssText = "display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:14px 0 18px;padding:14px;border:1px solid #254253;border-radius:14px;background:linear-gradient(145deg,rgba(14,36,47,.96),rgba(8,25,34,.92));box-shadow:0 5px 16px rgba(0,0,0,.12);";
+      const countBox = element("div", "");
+      countBox.style.cssText = "grid-column:1 / -1;padding:10px 12px;border:1px solid rgba(70,111,132,.5);border-radius:10px;background:rgba(5,20,28,.45);";
+      const countLabel = element("div", "", "ქვითრების რაოდენობა");
+      countLabel.style.cssText = "font-size:.88rem;color:#a9bbc4;margin-bottom:4px;";
+      const countValue = element("strong", "", String(result.count));
+      countValue.style.cssText = "font-size:1.2rem;color:#f1f7f8;";
+      countBox.append(countLabel, countValue);
+      const paidBox = element("div", "");
+      paidBox.style.cssText = "min-width:0;padding:11px 10px;border:1px solid rgba(40,150,95,.32);border-radius:10px;background:rgba(40,150,95,.10);";
+      const paidLabel = element("div", "", "გადახდილი ჯამი");
+      paidLabel.style.cssText = "font-size:.83rem;color:#a9bbc4;margin-bottom:6px;";
+      const paidValue = element("strong", "", formatAmount(result.totalPaidEUR));
+      paidValue.style.cssText = "display:block;font-size:1.02rem;color:#e9f8ef;overflow-wrap:anywhere;";
+      paidBox.append(paidLabel, paidValue);
+      const dueBox = element("div", "");
+      dueBox.style.cssText = "min-width:0;padding:11px 10px;border:1px solid rgba(220,155,35,.32);border-radius:10px;background:rgba(220,155,35,.10);";
+      const dueLabel = element("div", "", "გადასახდელი ჯამი");
+      dueLabel.style.cssText = "font-size:.83rem;color:#a9bbc4;margin-bottom:6px;";
+      const dueValue = element("strong", "", formatAmount(result.totalDueEUR));
+      dueValue.style.cssText = "display:block;font-size:1.02rem;color:#fff0ce;overflow-wrap:anywhere;";
+      dueBox.append(dueLabel, dueValue);
+      historySummary.append(countBox, paidBox, dueBox);
       annualSummary.replaceChildren();
       annualSummary.style.cssText = "margin:18px 0 20px;padding:14px;border:1px solid #254253;border-radius:14px;background:linear-gradient(145deg,rgba(14,36,47,.96),rgba(8,25,34,.9));";
       const annualTitle = element("h4", "", "📊 წლიური ჯამები");
