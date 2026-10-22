@@ -4467,7 +4467,7 @@ async function temoAILoadBillContext(){
       provider:String(b?.provider||b?.utility||b?.company||'').slice(0,80),
       kind:String(b?.kind||'invoice').slice(0,40),
       subject:String(b?.subject||b?.title||'').slice(0,250),
-      amount:Number.isFinite(Number(b?.totalEUR))?Number(b.totalEUR):null,
+      amount:b?.totalEUR!=null&&b?.totalEUR!==""&&Number.isFinite(Number(b.totalEUR))?Number(b.totalEUR):null,
       currency:String(b?.currency||'EUR').slice(0,8),
       date:String(b?.emailDate||b?.date||b?.issuedAt||'').slice(0,50),
       dueDate:String(b?.dueDate||'').slice(0,30),
