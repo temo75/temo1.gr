@@ -396,7 +396,7 @@ export default {
         provider: String(b?.provider ?? "").slice(0, 80),
         kind: String(b?.kind ?? "invoice").slice(0, 40),
         subject: String(b?.subject ?? "").slice(0, 250),
-        amount: Number.isFinite(Number(b?.amount)) ? Number(b.amount) : null,
+        amount: b?.amount != null && b?.amount !== "" && Number.isFinite(Number(b.amount)) ? Number(b.amount) : null,
         currency: String(b?.currency ?? "EUR").slice(0, 8),
         date: String(b?.date ?? "").slice(0, 50),
         dueDate: String(b?.dueDate ?? "").slice(0, 30),
