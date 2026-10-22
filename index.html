@@ -4446,6 +4446,40 @@ async function deleteAIChatReminderCommand(message){
   }
 }
 
+async function temoAILoadBillContext(){
+  const API='https://dei-bill-sync.temo75elia.workers.dev';
+  const KEY='t1.deiBillSession.v1';
+  const empty={connected:false,deiBills:[],novaBills:[],error:null};
+  let session=null;
+  try{
+    session=JSON.parse(sessionStorage.getItem(KEY)||'null');
+    if(!session?.token||!session?.expiresAt||Date.parse(session.expiresAt)<=Date.now())return empty;
+  }catch(e){return empty;}
+  async function read(path){
+    const response=await fetch(API+path,{headers:{Accept:'application/json',Authorization:'Bearer '+session.token},cache:'no-store'});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||('HTTP '+response.status));
+    return data;
+  }
+  try{
+    const [dei,nova]=await Promise.all([read('/api/history'),read('/api/nova/history')]);
+    const pick=(b)=>({
+      provider:String(b?.provider||b?.utility||b?.company||'').slice(0,80),
+      kind:String(b?.kind||'invoice').slice(0,40),
+      subject:String(b?.subject||b?.title||'').slice(0,250),
+      amount:Number.isFinite(Number(b?.totalEUR))?Number(b.totalEUR):null,
+      currency:String(b?.currency||'EUR').slice(0,8),
+      date:String(b?.emailDate||b?.date||b?.issuedAt||'').slice(0,50),
+      dueDate:String(b?.dueDate||'').slice(0,30),
+      paymentDate:String(b?.paymentDate||'').slice(0,50),
+      paymentStatus:String(b?.paymentStatus||'unknown').slice(0,40),
+      from:String(b?.from||'').slice(0,160),
+      receiptFor:String(b?.receiptFor||'').slice(0,160)
+    });
+    return {connected:true,deiBills:(Array.isArray(dei?.bills)?dei.bills:dei?.bill?[dei.bill]:[]).slice(-100).map(pick),novaBills:(Array.isArray(nova?.bills)?nova.bills:[]).slice(-100).map(pick),error:null};
+  }catch(e){return {...empty,connected:true,error:String(e?.message||e).slice(0,200)};}
+}
+
 async function sendAIMessage(){
   if(!currentUser||aiBusy)return;
   const input=document.getElementById('aiChatInput');
@@ -4470,8 +4504,10 @@ async function sendAIMessage(){
   try{
     const language=typeof window.getCurrentLanguage==='function'?String(window.getCurrentLanguage()||'ka'):'ka';
     const history=aiHistory.slice(-12);
+    const billContext=await temoAILoadBillContext();
     const userContext={
       name:String(currentUser||''),
+      billContext,
       jobs:Array.isArray(jobs)?jobs.slice(-200).map(j=>({
         date:j?.date??null,
         place:String(j?.place??''),
