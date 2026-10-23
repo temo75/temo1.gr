@@ -2561,7 +2561,7 @@ async function refreshT1SiteControl(){
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
   const data=await r.json();
   t1SiteEnabled=!(data&&data.enabled===false);
-  status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია':'🔴 T1 გამორთულია';
+  status.textContent='';
   button.setAttribute('aria-checked',String(t1SiteEnabled));
   button.classList.toggle('is-on',t1SiteEnabled);
   document.getElementById('t1SiteSwitchLabel').textContent=t1SiteEnabled?'T1 ჩართულია':'T1 გამორთულია';
@@ -2585,13 +2585,13 @@ async function toggleT1Site(){
   const saved=await verify.json();
   if(!saved||saved.enabled!==nextEnabled)throw new Error('Firebase-ში ახალი სტატუსი არ დადასტურდა. შეამოწმე Firebase Rules.');
   t1SiteEnabled=saved.enabled;
-  status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია — Firebase-ში დადასტურებულია':'🔴 T1 გამორთულია — Firebase-ში დადასტურებულია';
+  status.textContent='';
   button.setAttribute('aria-checked',String(t1SiteEnabled));
   button.classList.toggle('is-on',t1SiteEnabled);
   document.getElementById('t1SiteSwitchLabel').textContent=t1SiteEnabled?'T1 ჩართულია':'T1 გამორთულია';
   button.disabled=false;
  }catch(e){
-  status.textContent='შენახვა ვერ მოხერხდა: '+String(e.message||e)+' — შეამოწმე Firebase Rules.';
+  status.textContent='';alert('T1 სტატუსის შეცვლა ვერ მოხერხდა: '+String(e.message||e)+' — შეამოწმე Firebase Rules.');
   button.textContent='ხელახლა სცადე';button.disabled=false;
  }
 }
