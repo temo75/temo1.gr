@@ -2592,7 +2592,7 @@ async function toggleT1Site(){
   button.disabled=false;
  }catch(e){
   status.textContent='';alert('T1 სტატუსის შეცვლა ვერ მოხერხდა: '+String(e.message||e)+' — შეამოწმე Firebase Rules.');
-  button.textContent='ხელახლა სცადე';button.disabled=false;
+  document.getElementById('t1SiteSwitchLabel').textContent='ხელახლა სცადე';button.disabled=false;
  }
 }
 let currentUser=localStorage.getItem(SESSION_USER_KEY)||'';
