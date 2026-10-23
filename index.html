@@ -4169,12 +4169,12 @@ function aiSpeakReply(text,button){
       const prefix=targetLang.slice(0,2).toLowerCase();
       const matching=voices.find(v=>String(v.lang||'').toLowerCase()===targetLang.toLowerCase())
         ||voices.find(v=>String(v.lang||'').toLowerCase().startsWith(prefix));
-      const fallback=matching||voices.find(v=>v.default)||voices[0]||null;
       const utterance=new SpeechSynthesisUtterance(clean);
       temoAISpeechUtterance=utterance;
-      utterance.lang=matching?targetLang:(fallback?.lang||targetLang);
-      if(fallback)utterance.voice=fallback;
-      utterance.rate=0.88;
+      /* Do not force an unrelated default voice (for example English) to pronounce Georgian. */
+      utterance.lang=targetLang;
+      if(matching)utterance.voice=matching;
+      utterance.rate=0.78;
       utterance.pitch=1;
       utterance.volume=1;
       let started=false;
