@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#1689cb">
+<title>TEMO CONTROL CENTER</title>
+<style>
+:root{color-scheme:light;--blue:#1689cb;--ink:#172334;--muted:#65758b;--line:#dce8f3;--bg:#f3f8fd;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(125deg,#0879bd,#27b6ef);color:white;padding:25px 18px 30px}
+.wrap{max-width:1050px;margin:auto}header .eyebrow{font-size:12px;letter-spacing:.14em;font-weight:800;opacity:.9}h1{margin:7px 0;font-size:clamp(25px,5vw,38px)}header p{margin:0;opacity:.94}
+main{max-width:1050px;margin:20px auto;padding:0 14px 40px}.notice{border:1px solid #f2d18a;background:#fff8e8;color:#795314;padding:12px 14px;border-radius:12px;font-size:13px;margin-bottom:18px}
+h2{font-size:19px;margin:22px 0 12px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:17px;box-shadow:0 5px 20px #163c5a0a;min-height:148px}
+.icon{width:42px;height:42px;display:grid;place-items:center;border-radius:12px;background:#e8f5ff;color:var(--blue);font-size:22px;margin-bottom:12px}
+.card h3{margin:0 0 5px;font-size:17px}.card p{margin:0;color:var(--muted);font-size:13px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}.btn{border:0;border-radius:11px;padding:11px 15px;background:var(--blue);color:white;font-weight:700;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.btn.secondary{background:#e5f2fc;color:#126da6}
+footer{color:var(--muted);font-size:12px;text-align:center;padding:18px}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="eyebrow">TEMO • PRIVATE ADMIN WORKSPACE</div><h1>TEMO CONTROL CENTER</h1><p>პროექტების ერთიანი მართვის სივრცე</p></div></header>
+<main>
+<div class="notice"><strong>სამუშაო პროტოტიპი.</strong> ეს გვერდი ცალკე სამუშაო ფილიალშია. რეალურ საიტზე გამოქვეყნებამდე აუცილებელია სერვერზე ადმინისტრატორის უფლებების დაცული შემოწმება; ბრაუზერის localStorage მარტო უსაფრთხოების გარანტია არ არის.</div>
+<h2>პროექტები</h2>
+<section class="grid" aria-label="პროექტები">
+<article class="card"><div class="icon">◎</div><h3>temo1.gr</h3><p>მთავარი საიტი და მომხმარებლების ფუნქციები.</p><div class="actions"><a class="btn secondary" href="https://temo1.gr/" rel="noopener">საიტის გახსნა</a></div></article>
+<article class="card"><div class="icon">⌘</div><h3>T1</h3><p>ცალკე პროექტი — ამ პანელიდან კოდი ავტომატურად არ იცვლება.</p><div class="actions"><span class="btn secondary">ცალკე საცავი</span></div></article>
+<article class="card"><div class="icon">⌖</div><h3>Kreta</h3><p>კრეტას ადგილობრივი სერვისები და ინფორმაცია.</p><div class="actions"><a class="btn secondary" href="https://temo75.github.io/Kreta-/" rel="noopener">საიტის გახსნა</a></div></article>
+<article class="card"><div class="icon">⚖</div><h3>TEMO WEIGHT</h3><p>წონის დღიური და OCR პროექტი — ცალკე შენახული.</p><div class="actions"><span class="btn secondary">ცალკე საცავი</span></div></article>
+</section>
+<h2>მართვის ხელსაწყოები</h2>
+<section class="grid">
+<article class="card"><div class="icon">⛨</div><h3>კოდის დაცვა</h3><p>შემდეგი ეტაპი: დამტკიცებული ვერსიის SHA, ცვლილებების შედარება და აღდგენის გეგმა.</p></article>
+<article class="card"><div class="icon">⌁</div><h3>სისტემის სტატუსი</h3><p>სტატუსები ჩაითვლება სანდოდ მხოლოდ რეალური შემოწმების წყაროს მიერთების შემდეგ.</p></article>
+<article class="card"><div class="icon">✦</div><h3>TEMO AI</h3><p>მომავალი ინტეგრაცია — API გასაღებები არასდროს უნდა ინახებოდეს ამ HTML ფაილში.</p></article>
+</section>
+<div class="actions"><a class="btn secondary" href="https://github.com/temo75/temo1.gr/tree/temo-control-center-dev" rel="noopener">სამუშაო ფილიალის ნახვა</a></div>
+</main>
+<footer>TEMO CONTROL CENTER • ცალკე პროტოტიპი • ჯერ არ არის გამოქვეყნებული</footer>
+</body>
+</html>
