@@ -2515,7 +2515,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 <div class="aiChatModal" id="aiChatModal" onclick="if(event.target===this)closeAIChat()">
   <div class="aiChatBox" role="dialog" aria-modal="true" aria-labelledby="aiChatTitle">
-    <div class="aiChatHeader"><h2 id="aiChatTitle">🤖 TEMO AI</h2><button type="button" class="aiChatClose" onclick="closeAIChat()" aria-label="დახურვა">✕</button></div>
+    <div class="aiChatHeader"><h2 id="aiChatTitle">🤖 TEMO AI</h2><div class="aiHeaderActions"><button type="button" id="aiVoiceToggle" class="aiVoiceToggle" onclick="toggleTEMOAIVoice()" aria-label="ხმოვანი პასუხების ჩართვა/გამორთვა" title="ხმოვანი პასუხები">🔇</button><button type="button" class="aiChatClose" onclick="closeAIChat()" aria-label="დახურვა">✕</button></div></div>
     <div class="aiChatMessages" id="aiChatMessages"></div>
     <div class="aiChatInputRow"><textarea id="aiChatInput" class="aiChatInput" rows="1" placeholder="ჰკითხე"></textarea><button type="button" id="aiChatMic" class="aiChatMic" onclick="toggleTEMOAIListening()" aria-label="მიკროფონი">🎤</button><button type="button" id="aiChatSend" class="aiChatSend" onclick="sendAIMessage()" aria-label="გაგზავნა">➤</button></div>
   </div>
@@ -3886,6 +3886,30 @@ let aiPendingWorkEntry=null;
 let aiBusy=false;
 let aiMemoryCache=[];
 
+const TEMO_AI_VOICE_KEY='temoAIVoiceEnabled';
+function temoAIVoiceEnabled(){
+  try{return localStorage.getItem(TEMO_AI_VOICE_KEY)==='on';}catch(e){return false;}
+}
+function updateTEMOAIVoiceButton(){
+  const b=document.getElementById('aiVoiceToggle');
+  if(!b)return;
+  const enabled=temoAIVoiceEnabled();
+  b.textContent=enabled?'🔊':'🔇';
+  b.classList.toggle('enabled',enabled);
+  const lang=aiCurrentLanguage();
+  const label=enabled
+    ?(lang==='el'?'Απενεργοποίηση φωνής':lang==='en'?'Turn voice off':'ხმის გამორთვა')
+    :(lang==='el'?'Ενεργοποίηση φωνής':lang==='en'?'Turn voice on':'ხმის ჩართვა');
+  b.title=label;b.setAttribute('aria-label',label);
+}
+function toggleTEMOAIVoice(){
+  const enabled=!temoAIVoiceEnabled();
+  try{localStorage.setItem(TEMO_AI_VOICE_KEY,enabled?'on':'off');}catch(e){}
+  if(!enabled && 'speechSynthesis' in window){
+    try{window.speechSynthesis.cancel();temoAISpeechRunId++;}catch(e){}
+  }
+  updateTEMOAIVoiceButton();
+}
 function aiAddMessage(role,text){
   const box=document.getElementById('aiChatMessages');
   if(!box)return;
@@ -3894,6 +3918,9 @@ function aiAddMessage(role,text){
   div.textContent=String(text||'');
   box.appendChild(div);
   if(role==='assistant' && String(text||'').trim()){
+    if(temoAIVoiceEnabled()){
+      window.setTimeout(()=>{if(temoAIVoiceEnabled())aiSpeakReply(String(text||''),null);},80);
+    }
     const speak=document.createElement('button');
     const lang=aiCurrentLanguage();
     speak.type='button';
@@ -4326,6 +4353,7 @@ function openAIChat(){
   if(!modal)return;
   modal.classList.add('show');
   const input=document.getElementById('aiChatInput');
+  updateTEMOAIVoiceButton();
   aiUpdateLanguageUI();
   if(!document.getElementById('aiChatMessages').children.length){
     aiAddMessage('assistant',aiLangText('greeting'));
@@ -7329,4 +7357,11 @@ body.temo-admin-slide-menu-open{overflow:hidden}
 body.temo-android-app #bottomNav > button .navLogo{
   font-size:28px !important;
 }
+</style>
+
+<style id="temo-ai-voice-toggle-only">
+#aiChatModal .aiHeaderActions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+#aiChatModal .aiVoiceToggle{width:34px;height:34px;padding:0;border:1px solid #2999df;border-radius:10px;background:#102b3b;color:#fff;font-size:17px;line-height:1;cursor:pointer;box-shadow:0 0 5px rgba(41,153,223,.35)}
+#aiChatModal .aiVoiceToggle.enabled{border-color:#00e5ff;box-shadow:0 0 6px rgba(0,229,255,.8),0 0 13px rgba(0,229,255,.3)}
+@media(max-width:700px){#aiChatModal .aiVoiceToggle{width:32px;height:32px;font-size:16px}}
 </style>
