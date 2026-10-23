@@ -2377,7 +2377,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 <div class="section" id="t1SiteControl" style="margin:0;padding:12px;border:1px solid #285269">
 
 <div id="t1SiteControlStatus" class="meta" role="status">სტატუსის შემოწმება...</div>
-<button type="button" id="t1SiteControlButton" class="backupBtn" onclick="toggleT1Site()" style="width:100%;margin-top:10px">⏳ შემოწმება...</button>
+<button type="button" id="t1SiteControlButton" class="t1Switch" onclick="toggleT1Site()" role="switch" aria-checked="false" aria-label="T1 საიტის ჩართვა ან გამორთვა" style="margin-top:10px"><span class="t1SwitchTrack"><span class="t1SwitchThumb"></span></span><span id="t1SiteSwitchLabel">⏳ შემოწმება...</span></button>
 <div class="meta" style="margin-top:8px">მართავს https://temo75.github.io/t1/ საიტის ხელმისაწვდომობას.</div>
 </div>
 </div>
@@ -2562,7 +2562,9 @@ async function refreshT1SiteControl(){
   const data=await r.json();
   t1SiteEnabled=!(data&&data.enabled===false);
   status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია':'🔴 T1 გამორთულია';
-  button.textContent=t1SiteEnabled?'🔴 T1-ის გამორთვა':'🟢 T1-ის ჩართვა';
+  button.setAttribute('aria-checked',String(t1SiteEnabled));
+  button.classList.toggle('is-on',t1SiteEnabled);
+  document.getElementById('t1SiteSwitchLabel').textContent=t1SiteEnabled?'T1 ჩართულია':'T1 გამორთულია';
   button.disabled=false;
  }catch(e){
   status.textContent='სტატუსის წაკითხვა ვერ მოხერხდა: '+String(e.message||e);
@@ -2584,7 +2586,9 @@ async function toggleT1Site(){
   if(!saved||saved.enabled!==nextEnabled)throw new Error('Firebase-ში ახალი სტატუსი არ დადასტურდა. შეამოწმე Firebase Rules.');
   t1SiteEnabled=saved.enabled;
   status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია — Firebase-ში დადასტურებულია':'🔴 T1 გამორთულია — Firebase-ში დადასტურებულია';
-  button.textContent=t1SiteEnabled?'🔴 T1-ის გამორთვა':'🟢 T1-ის ჩართვა';
+  button.setAttribute('aria-checked',String(t1SiteEnabled));
+  button.classList.toggle('is-on',t1SiteEnabled);
+  document.getElementById('t1SiteSwitchLabel').textContent=t1SiteEnabled?'T1 ჩართულია':'T1 გამორთულია';
   button.disabled=false;
  }catch(e){
   status.textContent='შენახვა ვერ მოხერხდა: '+String(e.message||e)+' — შეამოწმე Firebase Rules.';
@@ -7398,6 +7402,33 @@ body.temo-admin-slide-menu-open{overflow:hidden}
 #settingsPage #neonControlSection .neonValue{
   font-size:14px !important;
 }
+</style>
+<style id="temo-t1-switch-style">
+#settingsPage #t1SiteControlButton.t1Switch{
+ display:flex;align-items:center;justify-content:flex-start;gap:13px;
+ width:100%;min-height:56px;padding:10px 14px;margin-top:10px;
+ border:1px solid #526775;border-radius:16px;
+ background:#10232f;color:#eef7fa;font-size:17px;font-weight:600;
+ box-shadow:inset 0 0 8px rgba(0,0,0,.25);cursor:pointer;
+ transition:background .2s,border-color .2s,box-shadow .2s;
+}
+#settingsPage #t1SiteControlButton .t1SwitchTrack{
+ position:relative;display:inline-flex;align-items:center;flex:0 0 52px;
+ width:52px;height:30px;border-radius:999px;background:#59636b;
+ border:1px solid #7e8990;transition:background .2s,border-color .2s;
+}
+#settingsPage #t1SiteControlButton .t1SwitchThumb{
+ position:absolute;left:3px;top:3px;width:22px;height:22px;
+ border-radius:50%;background:#fff;box-shadow:0 1px 4px #0008;
+ transition:transform .2s;
+}
+#settingsPage #t1SiteControlButton.is-on{
+ border-color:#20c982;background:#102b27;
+ box-shadow:0 0 10px #20c98238;
+}
+#settingsPage #t1SiteControlButton.is-on .t1SwitchTrack{background:#159b63;border-color:#35e6a1}
+#settingsPage #t1SiteControlButton.is-on .t1SwitchThumb{transform:translateX(22px)}
+#settingsPage #t1SiteControlButton:disabled{opacity:.7;cursor:wait}
 </style>
 </body>
 <style id="temo-bottom-neon-css-final">
