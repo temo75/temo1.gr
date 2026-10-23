@@ -2555,7 +2555,7 @@ async function refreshT1SiteControl(){
  if(currentUser!==ADMIN_USER){status.textContent='ადმინისტრატორის წვდომაა საჭირო.';button.disabled=true;return;}
  button.disabled=true;button.textContent='⏳ შემოწმება...';
  try{
-  const r=await fetch(T1_SITE_CONTROL_URL,{cache:'no-store'});
+  const r=await fetch(T1_SITE_CONTROL_URL+'?check='+Date.now(),{cache:'no-store'});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
   const data=await r.json();
   t1SiteEnabled=!(data&&data.enabled===false);
@@ -2576,8 +2576,12 @@ async function toggleT1Site(){
  try{
   const r=await fetch(T1_SITE_CONTROL_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:nextEnabled,updatedAt:new Date().toISOString(),updatedBy:'TEMO'})});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-  t1SiteEnabled=nextEnabled;
-  status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია':'🔴 T1 გამორთულია';
+  const verify=await fetch(T1_SITE_CONTROL_URL+'?verify='+Date.now(),{cache:'no-store'});
+  if(!verify.ok)throw new Error('შენახვის შემდეგ სტატუსის შემოწმება ვერ მოხერხდა (HTTP '+verify.status+')');
+  const saved=await verify.json();
+  if(!saved||saved.enabled!==nextEnabled)throw new Error('Firebase-ში ახალი სტატუსი არ დადასტურდა. შეამოწმე Firebase Rules.');
+  t1SiteEnabled=saved.enabled;
+  status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია — Firebase-ში დადასტურებულია':'🔴 T1 გამორთულია — Firebase-ში დადასტურებულია';
   button.textContent=t1SiteEnabled?'🔴 T1-ის გამორთვა':'🟢 T1-ის ჩართვა';
   button.disabled=false;
  }catch(e){
