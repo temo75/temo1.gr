@@ -2373,6 +2373,12 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 <div class="section" id="websiteUpdateSection">
 <h2>🔄 საიტის განახლება</h2>
+<div class="section" id="t1SiteControl" style="margin:12px 0;padding:14px;border:1px solid #285269">
+<h2 style="margin-bottom:8px">🌐 T1 საიტის ჩართვა / გამორთვა</h2>
+<div id="t1SiteControlStatus" class="meta" role="status">სტატუსის შემოწმება...</div>
+<button type="button" id="t1SiteControlButton" class="backupBtn" onclick="toggleT1Site()" style="width:100%;margin-top:10px">⏳ შემოწმება...</button>
+<div class="meta" style="margin-top:8px">მართავს https://temo75.github.io/t1/ საიტის ხელმისაწვდომობას.</div>
+</div>
 <div class="tools">
 <input id="siteUpdateFile" type="file" accept=".html,text/html" onchange="siteFileSelected()" style="display:none">
 <button type="button" class="backupBtn" id="siteFileBtn" onclick="handleSiteFileButton()">📁 აირჩიე ფაილი</button>
@@ -2541,6 +2547,44 @@ const FRESH_USER_IDS_KEY='temoFreshUserIds';
 const ADMIN_USER='TEMO';
 const REMOVED_USER_NAMES=['TEMOADMIN'];
 const FIREBASE_DB_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app';
+const T1_SITE_CONTROL_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app/siteControls/t1.json';
+let t1SiteEnabled=true;
+async function refreshT1SiteControl(){
+ const status=document.getElementById('t1SiteControlStatus'),button=document.getElementById('t1SiteControlButton');
+ if(!status||!button)return;
+ if(currentUser!==ADMIN_USER){status.textContent='ადმინისტრატორის წვდომაა საჭირო.';button.disabled=true;return;}
+ button.disabled=true;button.textContent='⏳ შემოწმება...';
+ try{
+  const r=await fetch(T1_SITE_CONTROL_URL,{cache:'no-store'});
+  if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+  const data=await r.json();
+  t1SiteEnabled=!(data&&data.enabled===false);
+  status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია':'🔴 T1 გამორთულია';
+  button.textContent=t1SiteEnabled?'🔴 T1-ის გამორთვა':'🟢 T1-ის ჩართვა';
+  button.disabled=false;
+ }catch(e){
+  status.textContent='სტატუსის წაკითხვა ვერ მოხერხდა: '+String(e.message||e);
+  button.textContent='ხელახლა შემოწმება';button.disabled=false;
+ }
+}
+async function toggleT1Site(){
+ if(currentUser!==ADMIN_USER){alert('მხოლოდ ადმინისტრატორს შეუძლია T1-ის მართვა.');return;}
+ const button=document.getElementById('t1SiteControlButton'),status=document.getElementById('t1SiteControlStatus');
+ if(!button||button.disabled)return;
+ const nextEnabled=!t1SiteEnabled;
+ button.disabled=true;button.textContent='⏳ შენახვა...';
+ try{
+  const r=await fetch(T1_SITE_CONTROL_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:nextEnabled,updatedAt:new Date().toISOString(),updatedBy:'TEMO'})});
+  if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+  t1SiteEnabled=nextEnabled;
+  status.textContent=t1SiteEnabled?'🟢 T1 ჩართულია':'🔴 T1 გამორთულია';
+  button.textContent=t1SiteEnabled?'🔴 T1-ის გამორთვა':'🟢 T1-ის ჩართვა';
+  button.disabled=false;
+ }catch(e){
+  status.textContent='შენახვა ვერ მოხერხდა: '+String(e.message||e)+' — შეამოწმე Firebase Rules.';
+  button.textContent='ხელახლა სცადე';button.disabled=false;
+ }
+}
 let currentUser=localStorage.getItem(SESSION_USER_KEY)||'';
 let currentUserId=localStorage.getItem(SESSION_USER_ID_KEY)||'';
 let temoLoggingOut=false;
@@ -3290,7 +3334,8 @@ function exportMyDataPdf(){
   <tbody>${rowsExp||`<tr><td colspan="4">${esc(t.noData)}</td></tr>`}</tbody></table>
   <button type="button" class="noPrint" id="temoPdfPrintBtn" style="margin-top:20px;padding:10px 16px">${esc(t.print)}</button>
   <script>document.getElementById("temoPdfPrintBtn").addEventListener("click",function(){setTimeout(function(){window.focus();window.print();},50);});<\/script>
-  </body></html>`);
+  if(currentUser===ADMIN_USER){window.addEventListener('load',refreshT1SiteControl,{once:true});}
+</body></html>`);
   w.document.close();
   w.focus();
 }
