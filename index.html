@@ -2372,14 +2372,17 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 </div>
 </div>
-<div class="section" id="websiteUpdateSection">
-<h2>🔄 საიტის განახლება</h2>
-<div class="section" id="t1SiteControl" style="margin:12px 0;padding:14px;border:1px solid #285269">
-<h2 style="margin-bottom:8px">🌐 T1 საიტის ჩართვა / გამორთვა</h2>
+<div class="section" id="t1SiteControlSection">
+<h2>🌐 T1 საიტის ჩართვა / გამორთვა</h2>
+<div class="section" id="t1SiteControl" style="margin:0;padding:12px;border:1px solid #285269">
+
 <div id="t1SiteControlStatus" class="meta" role="status">სტატუსის შემოწმება...</div>
 <button type="button" id="t1SiteControlButton" class="backupBtn" onclick="toggleT1Site()" style="width:100%;margin-top:10px">⏳ შემოწმება...</button>
 <div class="meta" style="margin-top:8px">მართავს https://temo75.github.io/t1/ საიტის ხელმისაწვდომობას.</div>
 </div>
+</div>
+<div class="section" id="websiteUpdateSection">
+<h2>🔄 საიტის განახლება</h2>
 <div class="tools">
 <input id="siteUpdateFile" type="file" accept=".html,text/html" onchange="siteFileSelected()" style="display:none">
 <button type="button" class="backupBtn" id="siteFileBtn" onclick="handleSiteFileButton()">📁 აირჩიე ფაილი</button>
@@ -2390,7 +2393,8 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 <div class="meta" style="margin-top:12px">ატვირთული ფაილი უნდა იყოს index.html. Token მხოლოდ ამ ტელეფონში ინახება.</div>
 
-<div class="section" id="workerUpdateSection" style="margin-top:14px">
+</div>
+<div class="section" id="workerUpdateSection">
 <h2>⚙️ Worker-ის განახლება</h2>
 <div class="tools">
 <input id="workerUpdateFile" type="file" accept=".js,text/javascript,application/javascript" onchange="workerFileSelected()" style="display:none">
@@ -7340,6 +7344,15 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   width:38px !important;
   height:38px !important;
 }
+</style>
+<style id="temo-admin-settings-layout">
+#settingsPage > .section{margin:16px 0 0!important;padding:14px!important;border-radius:18px!important;box-sizing:border-box}
+#settingsPage > .section > h2{margin:0 0 12px!important;line-height:1.3}
+#settingsPage #neonControlSection .neonControlBox{margin:0!important;padding:10px!important}
+#settingsPage #t1SiteControl{margin:0!important;padding:12px!important;border-radius:15px!important}
+#settingsPage #websiteUpdateSection .repoTokenOpenBtn{margin-top:12px!important}
+#settingsPage #workerUpdateSection,#settingsPage #dataExportSection{margin-top:16px!important}
+@media(max-width:600px){#settingsPage > .section{padding:12px!important}}
 </style>
 </body>
 <style id="temo-bottom-neon-css-final">
