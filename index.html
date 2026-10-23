@@ -2555,7 +2555,7 @@ async function refreshT1SiteControl(){
  const status=document.getElementById('t1SiteControlStatus'),button=document.getElementById('t1SiteControlButton');
  if(!status||!button)return;
  if(currentUser!==ADMIN_USER){status.textContent='ადმინისტრატორის წვდომაა საჭირო.';button.disabled=true;return;}
- button.disabled=true;button.textContent='⏳ შემოწმება...';
+ button.disabled=true;document.getElementById('t1SiteSwitchLabel').textContent='⏳ შემოწმება...';
  try{
   const r=await fetch(T1_SITE_CONTROL_URL+'?check='+Date.now(),{cache:'no-store'});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
@@ -2568,7 +2568,7 @@ async function refreshT1SiteControl(){
   button.disabled=false;
  }catch(e){
   status.textContent='სტატუსის წაკითხვა ვერ მოხერხდა: '+String(e.message||e);
-  button.textContent='ხელახლა შემოწმება';button.disabled=false;
+  document.getElementById('t1SiteSwitchLabel').textContent='ხელახლა შემოწმება';button.disabled=false;
  }
 }
 async function toggleT1Site(){
@@ -2576,7 +2576,7 @@ async function toggleT1Site(){
  const button=document.getElementById('t1SiteControlButton'),status=document.getElementById('t1SiteControlStatus');
  if(!button||button.disabled)return;
  const nextEnabled=!t1SiteEnabled;
- button.disabled=true;button.textContent='⏳ შენახვა...';
+ button.disabled=true;document.getElementById('t1SiteSwitchLabel').textContent='⏳ შენახვა...';
  try{
   const r=await fetch(T1_SITE_CONTROL_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:nextEnabled,updatedAt:new Date().toISOString(),updatedBy:'TEMO'})});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
