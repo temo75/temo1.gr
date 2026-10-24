@@ -2626,11 +2626,31 @@ let firebaseWriteQueue=Promise.resolve();
 function makeUserId(){return window.crypto&&crypto.randomUUID?crypto.randomUUID():'u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);}
 function makeLegacyUserId(name,password){const str=String(name||'').trim().toLowerCase()+'\u0000'+String(password??'');let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return 'legacy_'+(h>>>0).toString(16);}
 function firebaseUserKey(id){return encodeURIComponent(String(id)).replace(/%/g,'_');}
+let temoFirebaseAuthReadyPromise=null;
+function waitForTEMOFirebaseAuth(){
+ const auth=window.temoFirebaseAuth;
+ if(!auth)return Promise.reject(new Error('Firebase Authentication ვერ ჩაიტვირთა.'));
+ if(auth.currentUser)return Promise.resolve(auth.currentUser);
+ if(!temoFirebaseAuthReadyPromise){
+  temoFirebaseAuthReadyPromise=new Promise((resolve,reject)=>{
+   let unsub=null;
+   const timeout=setTimeout(()=>{if(unsub)unsub();reject(new Error('Firebase ავტორიზაციის შემოწმება დრო ამოიწურა. ხელახლა შედი ანგარიშში.'));},10000);
+   unsub=auth.onAuthStateChanged(user=>{clearTimeout(timeout);if(unsub)unsub();if(user)resolve(user);else reject(new Error('Firebase-ში ავტორიზაცია არ არის აქტიური. გამოდი და შედი ელფოსტითა და Firebase პაროლით.'));},error=>{clearTimeout(timeout);if(unsub)unsub();reject(error);});
+  });
+ }
+ return temoFirebaseAuthReadyPromise;
+}
 async function firebaseAuthorizedFetch(path,options={}){
  const auth=window.temoFirebaseAuth;
- const tokenUser=auth&&auth.currentUser;
- const token=tokenUser?await tokenUser.getIdToken():null;
- const url=FIREBASE_DB_URL+path+(path.includes('?')?'&':'?')+(token?'auth='+encodeURIComponent(token):'');
+ const write=!!(options.method&& !['GET','HEAD'].includes(String(options.method).toUpperCase()));
+ let tokenUser=auth&&auth.currentUser;
+ if(!tokenUser){
+  if(write)tokenUser=await waitForTEMOFirebaseAuth();
+  else if(auth)tokenUser=await waitForTEMOFirebaseAuth();
+ }
+ if(!tokenUser)throw new Error('Firebase-ში ავტორიზაცია არ არის აქტიური.');
+ const token=await tokenUser.getIdToken();
+ const url=FIREBASE_DB_URL+path+(path.includes('?')?'&':'?')+'auth='+encodeURIComponent(token);
  return fetch(url,{...options,cache:options.cache||'no-store'});
 }
 async function firebaseAuthorizedFetchUrl(url,options={}){
