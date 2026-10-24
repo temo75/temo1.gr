@@ -5400,7 +5400,11 @@ async function registerNewUser(){
   try{
     const credential=await window.temoFirebaseAuth.createUserWithEmailAndPassword(email,p);
     authUser=credential.user;
-    const users=localUsers.filter(u=>u&&u.name&&!isRemovedUser(u));
+    const remoteUsers=await loadUsersFromFirebase();
+    if(!Array.isArray(remoteUsers))throw new Error('Firebase-ის არსებული მომხმარებლების სია ვერ ჩაიტვირთა; მონაცემების დაკარგვის თავიდან ასაცილებლად რეგისტრაცია შეჩერდა.');
+    const users=remoteUsers.map(normalizeUser).filter(u=>u&&u.name&&!isRemovedUser(u));
+    if(users.some(u=>u.name.toLowerCase()===n.toLowerCase()))throw new Error('ასეთი მომხმარებელი უკვე არსებობს');
+    if(users.some(u=>u.email&&u.email.toLowerCase()===email))throw new Error('ეს ელფოსტა უკვე გამოყენებულია');
     if(!users.some(u=>u.name.toUpperCase()===ADMIN_USER)){
       users.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,admin:true,authorized:true,blocked:false}));
     }
