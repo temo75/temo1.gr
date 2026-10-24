@@ -2651,7 +2651,41 @@ function enablePasswordOnlyLogin(){
 }
 function enableNameLogin(){enablePasswordOnlyLogin()}
 async function completeLogin(u){const user=normalizeUser(u);if(user.blocked===true||user.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;localStorage.setItem(USERS_KEY,JSON.stringify(getUsers()));localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
-async function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value;let users=getUsers();$('loginError').textContent='';try{const remote=await loadUsersFromFirebase();if(remote!==null){users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!users.some(u=>u.name.toUpperCase()===ADMIN_USER))users.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(users));}}catch(e){console.warn('Login user refresh failed:',e);}const u=users.find(x=>x.name.toLowerCase()===name.toLowerCase()&&x.password===pass);if(!u){$('loginError').textContent='სახელი ან პაროლი არასწორია. თუ ეს მონაცემები სწორია, მომხმარებლების სია Firebase-ში შესამოწმებელია.';$('loginPassword').value='';$('loginPassword').focus();return;}if(u.blocked===true||u.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';$('loginPassword').focus();return;}await completeLogin(u);}
+async function login(){
+ const name=$('loginName').value.trim(),pass=$('loginPassword').value;
+ let users=getUsers();$('loginError').textContent='';
+ if(!window.temoFirebaseAuth){$('loginError').textContent='Firebase ავტორიზაცია ვერ ჩაიტვირთა. განაახლე გვერდი.';return;}
+ try{
+  // Email-based Firebase sign-in is the only credential flow that can safely obtain an ID token.
+  if(name.includes('@')){
+   await window.temoFirebaseAuth.signInWithEmailAndPassword(name.toLowerCase(),pass);
+   const remote=await loadUsersFromFirebase();
+   if(remote===null)throw new Error('Firebase მონაცემებზე წვდომა უარყოფილია. შეამოწმე Realtime Database Rules.');
+   users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));
+   const u=users.find(x=>x.email.toLowerCase()===name.toLowerCase());
+   if(!u)throw new Error('ამ ელფოსტისთვის საიტის მომხმარებელი ვერ მოიძებნა. ადმინისტრატორმა უნდა დააკავშიროს ანგარიში.');
+   if(u.blocked===true||u.authorized!==true)throw new Error('ეს მომხმარებელი დაბლოკილია');
+   localStorage.setItem(USERS_KEY,JSON.stringify(users));
+   await completeLogin(u);return;
+  }
+  // Keep legacy username login only for a session that already has Firebase Auth.
+  if(!window.temoFirebaseAuth.currentUser){
+   $('loginError').textContent='Firebase-ის შესასვლელად შეიყვანე რეგისტრირებული ელფოსტა და Firebase Authentication-ის პაროლი.';
+   $('loginPassword').value='';$('loginPassword').focus();return;
+  }
+  const remote=await loadUsersFromFirebase();
+  if(remote===null)throw new Error('Firebase მონაცემებზე წვდომა უარყოფილია. შეამოწმე Realtime Database Rules.');
+  users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));
+  const u=users.find(x=>x.name.toLowerCase()===name.toLowerCase()&&x.email.toLowerCase()===window.temoFirebaseAuth.currentUser.email.toLowerCase());
+  if(!u)throw new Error('მომხმარებელი ამ Firebase ანგარიშთან დაკავშირებული არ არის.');
+  if(u.blocked===true||u.authorized!==true)throw new Error('ეს მომხმარებელი დაბლოკილია');
+  localStorage.setItem(USERS_KEY,JSON.stringify(users));await completeLogin(u);
+ }catch(e){
+  console.warn('Firebase login failed:',e);
+  $('loginError').textContent=e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found'?'ელფოსტა ან Firebase პაროლი არასწორია.':String(e.message||'ავტორიზაცია ვერ მოხერხდა');
+  $('loginPassword').value='';$('loginPassword').focus();
+ }
+}
 function renderLoginUsers(){}
 window.addEventListener('DOMContentLoaded',async()=>{
   const aiInput=document.getElementById('aiChatInput');
