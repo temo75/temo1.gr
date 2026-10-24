@@ -379,16 +379,27 @@ async function reconcileNovaReceipts(env, ownerKey) {
       continue;
     }
     const invoice = candidates[0];
-    invoice.paymentStatus = "paid";
-    invoice.paymentDate = receipt.emailDate || new Date(receiptTime).toISOString();
-    invoice.paymentReceiptMessageId = receipt.gmailMessageId;
-    invoice.fetchedAt = new Date().toISOString();
-    receipt.paymentStatus = "paid";
-    receipt.matchedInvoiceMessageId = invoice.gmailMessageId;
-    receipt.paymentDate = receipt.emailDate || new Date(receiptTime).toISOString();
-    receipt.fetchedAt = new Date().toISOString();
-    await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(invoice.gmailMessageId)), JSON.stringify(invoice));
-    await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(receipt.gmailMessageId)), JSON.stringify(receipt));
+    const paymentDate = receipt.emailDate || new Date(receiptTime).toISOString();
+    const invoiceChanged = invoice.paymentStatus !== "paid" ||
+      invoice.paymentDate !== paymentDate ||
+      invoice.paymentReceiptMessageId !== receipt.gmailMessageId;
+    const receiptChanged = receipt.paymentStatus !== "paid" ||
+      receipt.matchedInvoiceMessageId !== invoice.gmailMessageId ||
+      receipt.paymentDate !== paymentDate;
+    if (invoiceChanged) {
+      invoice.paymentStatus = "paid";
+      invoice.paymentDate = paymentDate;
+      invoice.paymentReceiptMessageId = receipt.gmailMessageId;
+      invoice.fetchedAt = new Date().toISOString();
+      await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(invoice.gmailMessageId)), JSON.stringify(invoice));
+    }
+    if (receiptChanged) {
+      receipt.paymentStatus = "paid";
+      receipt.matchedInvoiceMessageId = invoice.gmailMessageId;
+      receipt.paymentDate = paymentDate;
+      receipt.fetchedAt = new Date().toISOString();
+      await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(receipt.gmailMessageId)), JSON.stringify(receipt));
+    }
   }
   return listStoredNovaBills(env, ownerKey);
 }
