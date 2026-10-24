@@ -2580,7 +2580,7 @@ async function refreshT1SiteControl(){
  if(currentUser!==ADMIN_USER){status.textContent='ადმინისტრატორის წვდომაა საჭირო.';button.disabled=true;return;}
  button.disabled=true;document.getElementById('t1SiteSwitchLabel').textContent='⏳ შემოწმება...';
  try{
-  const r=await fetch(T1_SITE_CONTROL_URL+'?check='+Date.now(),{cache:'no-store'});
+  const r=await firebaseAuthorizedFetch('/siteControls/t1.json?check='+Date.now(),{cache:'no-store'});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
   const data=await r.json();
   t1SiteEnabled=!(data&&data.enabled===false);
@@ -2601,9 +2601,9 @@ async function toggleT1Site(){
  const nextEnabled=!t1SiteEnabled;
  button.disabled=true;document.getElementById('t1SiteSwitchLabel').textContent='⏳ შენახვა...';
  try{
-  const r=await fetch(T1_SITE_CONTROL_URL,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:nextEnabled,updatedAt:new Date().toISOString(),updatedBy:'TEMO'})});
+  const r=await firebaseAuthorizedFetch('/siteControls/t1.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:nextEnabled,updatedAt:new Date().toISOString(),updatedBy:'TEMO'})});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-  const verify=await fetch(T1_SITE_CONTROL_URL+'?verify='+Date.now(),{cache:'no-store'});
+  const verify=await firebaseAuthorizedFetch('/siteControls/t1.json?verify='+Date.now(),{cache:'no-store'});
   if(!verify.ok)throw new Error('შენახვის შემდეგ სტატუსის შემოწმება ვერ მოხერხდა (HTTP '+verify.status+')');
   const saved=await verify.json();
   if(!saved||saved.enabled!==nextEnabled)throw new Error('Firebase-ში ახალი სტატუსი არ დადასტურდა. შეამოწმე Firebase Rules.');
@@ -2869,12 +2869,12 @@ async function loadJobsFromFirebase(){
   const id=String(currentUserId||'').trim();if(!id)return null;
   try{
     const key=firebaseUserKey(id);
-    const jr=await fetch(FIREBASE_DB_URL+'/jobs/'+key+'.json',{cache:'no-store'});
+    const jr=await firebaseAuthorizedFetch('/jobs/'+key+'.json',{cache:'no-store'});
     if(!jr.ok)throw new Error('Firebase HTTP '+jr.status);
     const jd=await jr.json();
     const jobsData=jd===null?[]:(Array.isArray(jd)?jd.filter(Boolean):Object.entries(jd||{}).filter(([,j])=>j).map(([key,j])=>({...j,id:String(j.id||key)})));
     if(currentUser===ADMIN_USER)return {jobs:jobsData.map(normalizeJobRecord),deletes:{}};
-    const dr=await fetch(FIREBASE_DB_URL+'/jobDeletes/'+key+'.json',{cache:'no-store'});
+    const dr=await firebaseAuthorizedFetch('/jobDeletes/'+key+'.json',{cache:'no-store'});
     if(!dr.ok)throw new Error('Firebase HTTP '+dr.status);
     const dd=await dr.json();
     const deletes=dd&&typeof dd==='object'&&!Array.isArray(dd)?dd:{};
@@ -2886,7 +2886,7 @@ async function saveJobsToFirebase(snapshot){
   if(currentUser===ADMIN_USER){
     const url=FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json';
     const data=Array.isArray(snapshot)?snapshot.map(normalizeJobRecord):[];
-    firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{try{const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true}catch(e){console.warn('Firebase jobs write failed:',e);return false}});
+    firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{try{const r=await firebaseAuthorizedFetch('/jobs/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true}catch(e){console.warn('Firebase jobs write failed:',e);return false}});
     return firebaseJobsWriteQueue;
   }
   const localSnapshot=(snapshot||[]).map(normalizeJobRecord),localDeletes=getLocalJobDeletes();
@@ -2896,10 +2896,10 @@ async function saveJobsToFirebase(snapshot){
       if(remoteState===null)return false;
       const merged=mergeJobSyncState(localSnapshot,remoteState.jobs,localDeletes,remoteState.deletes);
       if(!sameJobArrays(merged.jobs,remoteState.jobs)){
-        const r=await fetch(FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.jobs),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+        const r=await firebaseAuthorizedFetch('/jobs/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.jobs),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
       }
       if(!sameDeleteMaps(merged.deletes,remoteState.deletes)){
-        const r=await fetch(FIREBASE_DB_URL+'/jobDeletes/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.deletes),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+        const r=await firebaseAuthorizedFetch('/jobDeletes/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.deletes),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
       }
       jobs=merged.jobs;setLocalJobDeletes(merged.deletes);localStorage.setItem('temoJobsId_'+id,JSON.stringify(jobs));return true;
     }catch(e){console.warn('Firebase jobs write failed:',e);return false}
@@ -3099,7 +3099,7 @@ async function saveReceivablePaidToFirebase(snapshot){
   const data=Array.isArray(snapshot)?snapshot.map(normalizeJobRecord):[];
   firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{
     try{
-      const r=await fetch(FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json',{
+      const r=await firebaseAuthorizedFetch('/jobs/'+firebaseUserKey(id)+'.json',{
         method:'PUT',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data),
@@ -4769,7 +4769,7 @@ async function loadChatThread(userId){
   const key=chatUserKey(userId);
   if(!key)return [];
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{cache:'no-store'});
+    const r=await firebaseAuthorizedFetch(CHAT_ROOT+key+'.json',{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();
     if(!data)return [];
@@ -4780,7 +4780,7 @@ async function loadChatThread(userId){
 async function saveChatThread(userId,thread){
   const key=chatUserKey(userId);
   if(!key)throw new Error('მომხმარებელი ჯერ არ არის ავტორიზებული');
-  const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(thread)});
+  const r=await firebaseAuthorizedFetch(CHAT_ROOT+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(thread)});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
 }
 function updateUserChatCount(){
@@ -4866,7 +4866,7 @@ async function markAdminMessagesRead(){
 }
 async function loadAllAdminChats(){
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT.slice(0,-1)+'.json',{cache:'no-store'});
+    const r=await firebaseAuthorizedFetch(CHAT_ROOT.slice(0,-1)+'.json',{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
   }catch(e){console.warn('Firebase admin chat read failed:',e);return null}
@@ -4902,7 +4902,7 @@ async function deleteChatDialog(userId){
   const key=chatUserKey(userId);
   if(!key)return;
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{method:'DELETE'});
+    const r=await firebaseAuthorizedFetch(CHAT_ROOT+key+'.json',{method:'DELETE'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     adminChatRenderKey='';
     await renderAdminMessages();
@@ -7060,14 +7060,14 @@ startNotesReminderWatcher();
     const id=String(window.currentUserId||'').trim();
     if(!id)return;
     try{
-      const r=await fetch(FIREBASE_DB_URL+'/users.json',{cache:'no-store'});
+      const r=await firebaseAuthorizedFetch('/users.json',{cache:'no-store'});
       if(!r.ok)return;
       const data=await r.json();
       let users=Array.isArray(data)?data.filter(Boolean):Object.values(data||{}).filter(Boolean);
       const target=users.find(u=>String(u?.id||'')===id);
       if(!target)return;
       target.language=next;
-      const put=await fetch(FIREBASE_DB_URL+'/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(users)});
+      const put=await firebaseAuthorizedFetch('/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(users)});
       if(!put.ok)throw new Error('Firebase HTTP '+put.status);
       const local=getUsers();const me=local.find(u=>String(u.id)===id);
       if(me){me.language=next;localStorage.setItem(USERS_KEY,JSON.stringify(local));}
