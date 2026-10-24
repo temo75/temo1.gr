@@ -5320,31 +5320,31 @@ function closeForgotPassword(){
   m.classList.remove('show');
   m.setAttribute('aria-hidden','true');
 }
-function submitForgotPassword(){
+async function submitForgotPassword(){
   const name=document.getElementById('forgotPasswordName').value.trim();
   const email=document.getElementById('forgotPasswordEmail').value.trim().toLowerCase();
-  const newPassword=document.getElementById('forgotPasswordNew').value;
   const er=document.getElementById('forgotPasswordError');
   er.textContent='';
   if(!name){er.textContent='შეიყვანე სახელი';return;}
   if(!email){er.textContent='შეიყვანე ელფოსტა';return;}
-  if(!newPassword){er.textContent='შეიყვანე ახალი პაროლი';return;}
-  const users=getUsers();
-  const u=users.find(x=>String(x.name||'')===name && x.email&&String(x.email).toLowerCase()===email);
-  if(!u){er.textContent='სახელი და ელფოსტა ზუსტად უნდა ემთხვეოდეს რეგისტრირებულ მონაცემებს';return;}
-  u.password=newPassword;
-  localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  if(!window.temoFirebaseAuth){er.textContent='Firebase ავტორიზაცია ვერ ჩაიტვირთა. განაახლე გვერდი.';return;}
   const btn=document.getElementById('forgotPasswordSubmit');
-  btn.disabled=true; btn.textContent='ინახება...';
-  saveUsersToFirebase(users).then(()=>{
+  btn.disabled=true;btn.textContent='იგზავნება...';
+  try{
+    const users=await loadUsersFromFirebase();
+    if(!Array.isArray(users)||!users.some(x=>String(x.name||'').toLowerCase()===name.toLowerCase()&&String(x.email||'').toLowerCase()===email)){
+      er.textContent='ეს სახელი და ელფოსტა საიტის მომხმარებელს ვერ დაემთხვა.';return;
+    }
+    await window.temoFirebaseAuth.sendPasswordResetEmail(email);
+    document.getElementById('forgotPasswordNew').value='';
     closeForgotPassword();
     showForgotPasswordSuccess();
-  }).catch(()=>{
-    closeForgotPassword();
-    alert('პაროლი შეიცვალა ამ მოწყობილობაზე, მაგრამ Firebase-ში შენახვა ვერ მოხერხდა');
-  }).finally(()=>{
-    btn.disabled=false; btn.textContent=t('პაროლის შეცვლა');
-  });
+  }catch(e){
+    console.warn('Firebase password reset failed:',e);
+    er.textContent=e.code==='auth/user-not-found'?'ამ ელფოსტაზე Firebase ანგარიში ვერ მოიძებნა.':String(e.message||'პაროლის აღდგენის წერილი ვერ გაიგზავნა.');
+  }finally{
+    btn.disabled=false;btn.textContent=t('პაროლის შეცვლა');
+  }
 }
 
 function showForgotPasswordSuccess(){
@@ -5870,14 +5870,14 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
     <input id="forgotPasswordName" type="text" maxlength="40" placeholder="შეიყვანე შენი სახელი" autocomplete="username">
     <label for="forgotPasswordEmail">რეგისტრირებული ელფოსტა</label>
     <input id="forgotPasswordEmail" type="email" placeholder="მაგ: temo@gmail.com" autocomplete="email">
-    <label for="forgotPasswordNew">ახალი პაროლი</label>
-    <input id="forgotPasswordNew" type="password" maxlength="80" placeholder="შეიყვანე ახალი პაროლი" autocomplete="new-password">
+    <p>პაროლის აღდგენის ბმული ელფოსტაზე გამოგეგზავნება.</p>
+    <input id="forgotPasswordNew" type="hidden" autocomplete="new-password">
     <div id="forgotPasswordError" class="forgotPasswordError"></div>
     <div class="forgotPasswordRow">
       <button type="button" id="forgotPasswordCancel" onclick="closeForgotPassword()">გაუქმება</button>
       <button type="button" id="forgotPasswordSubmit" onclick="submitForgotPassword()" data-i18n-key="პაროლის შეცვლა">შეცვლა</button>
     </div>
-    <p class="forgotPasswordHint">პაროლი შეინახება ამ მოწყობილობასა და Firebase-ში.</p>
+    <p class="forgotPasswordHint">პაროლი უსაფრთხოდ აღდგება Firebase Authentication-ის მეშვეობით.</p>
   </div>
 </div>
 
