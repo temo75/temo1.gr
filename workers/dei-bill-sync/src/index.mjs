@@ -436,12 +436,17 @@ async function syncNovaBills(env, ownerKey) {
         paymentDate: emailDate || previous?.paymentDate || null,
         gmailMessageId: messageId, fetchedAt: new Date().toISOString(), kind: "payment-receipt"
       };
-      await env.DEI_KV.put(key, JSON.stringify(receipt));
-      if (byId.has(messageId)) {
+      const previousReceipt = byId.get(messageId);
+      const receiptChanged = !previousReceipt ||
+        ["subject", "from", "emailDate", "internalDate", "totalEUR", "dueDate", "customerCode", "paymentStatus", "paymentDate", "kind", "matchedInvoiceMessageId"]
+          .some(field => (previousReceipt[field] ?? null) !== (receipt[field] ?? null));
+      if (receiptChanged) {
+        await env.DEI_KV.put(key, JSON.stringify(receipt));
         const index = existing.findIndex(b => String(b.gmailMessageId) === messageId);
         if (index >= 0) existing[index] = receipt;
-      } else existing.push(receipt);
-      byId.set(messageId, receipt);
+        else existing.push(receipt);
+        byId.set(messageId, receipt);
+      }
       continue;
     }
     const bill = {
@@ -462,10 +467,16 @@ async function syncNovaBills(env, ownerKey) {
       } else if (bill.paymentStatus === "unknown" && (same.paymentStatus === "paid" || same.paymentStatus === "due")) {
         repaired.paymentStatus = same.paymentStatus;
       }
-      await env.DEI_KV.put(key, JSON.stringify(repaired));
-      byId.set(messageId, repaired);
-      const index = existing.findIndex(b => String(b.gmailMessageId) === messageId);
-      if (index >= 0) existing[index] = repaired;
+      const fieldsToCompare = ["subject", "from", "emailDate", "internalDate", "totalEUR", "dueDate", "customerCode", "paymentStatus", "paymentDate", "paymentReceiptMessageId", "kind"];
+      const changed = fieldsToCompare.some(field => (same[field] ?? null) !== (repaired[field] ?? null));
+      if (changed) {
+        await env.DEI_KV.put(key, JSON.stringify(repaired));
+        byId.set(messageId, repaired);
+        const index = existing.findIndex(b => String(b.gmailMessageId) === messageId);
+        if (index >= 0) existing[index] = repaired;
+      } else {
+        byId.set(messageId, same);
+      }
     } else {
       // De-duplicate NOVA invoices only; receipt rows never suppress invoices.
       const duplicate = existing.some(b => b.kind !== "payment-receipt" &&
