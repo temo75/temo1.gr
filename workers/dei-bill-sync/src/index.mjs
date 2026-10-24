@@ -827,12 +827,11 @@ export default {
           return json(await syncNovaBills(env, ownerKey));
         } catch (error) {
           const raw = String(error?.message || "");
-          const code = raw === "GMAIL_NOT_CONNECTED" ? "GMAIL_NOT_CONNECTED"
-            : /^GOOGLE_REFRESH_FAILED_\d+$/.test(raw) ? raw
-            : /^GMAIL_API_FAILED_\d+$/.test(raw) ? raw
-            : "NOVA_SYNC_INTERNAL";
-          console.error("NOVA_SYNC_FAILED", JSON.stringify({ code, name: String(error?.name || "Error") }));
-          return json({ ok: false, error: code }, 502);
+          const known = raw === "GMAIL_NOT_CONNECTED" || /^GOOGLE_REFRESH_FAILED_\d+$/.test(raw) || /^GMAIL_API_FAILED_\d+$/.test(raw);
+          const code = known ? raw : "NOVA_SYNC_INTERNAL";
+          const detail = known ? code : String(error?.name || "Error") + ": " + raw.replace(/[\\r\\n\\t]/g, " ").replace(/[^a-zA-Z0-9 _.:/-]/g, "").slice(0, 140);
+          console.error("NOVA_SYNC_FAILED", JSON.stringify({ code, name: String(error?.name || "Error"), detail }));
+          return json({ ok: false, error: code, detail }, 502);
         }
       }
       if (url.pathname === "/api/nova/history") {
