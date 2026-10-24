@@ -1,70 +1,35 @@
 <!doctype html>
-<html lang="en">
+<html lang="ka">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>TEMO Bills — Staging Preview</title>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEMO — ჩემი გადასახადები (სატესტო)</title>
 <style>
-:root{color-scheme:light;--blue:#1769e0;--ink:#172338;--muted:#64748b;--line:#e5eaf2;--bg:#f4f7fb;--green:#16845b;--amber:#9a6700}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
-header{background:#fff;border-bottom:1px solid var(--line);padding:18px max(18px,calc((100% - 1080px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:20px}.logo{background:var(--blue);color:#fff;border-radius:12px;padding:8px 10px;font-weight:900}
-.pill{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:750;background:#fff4d6;color:#7a5200;border:1px solid #f1d98e}
-main{max-width:1080px;margin:26px auto;padding:0 18px}.intro h1{font-size:clamp(26px,4vw,36px);margin:0 0 5px;letter-spacing:-.7px}.intro p{color:var(--muted);margin:0 0 20px}
-.notice{border:1px solid #f0d78d;background:#fff9e8;border-radius:14px;padding:13px 15px;margin:18px 0 22px;color:#684a06}
-.tabs{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:10px 15px;font-weight:750;cursor:pointer}.tab[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
-.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:16px 0}.metric,.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px}.metric span{display:block;color:var(--muted);font-size:13px}.metric strong{display:block;font-size:26px;margin-top:5px;letter-spacing:-.5px}
-.panel h2{font-size:18px;margin:0 0 12px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:13px}.toolbar input,.toolbar select{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;color:var(--ink);font:inherit;min-width:150px}
-.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:610px}th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.04em}tbody tr:last-child td{border-bottom:0}.status{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:750}.due{background:#fff0df;color:#9a4c00}.paid{background:#dcf8eb;color:#08764b}.unknown{background:#edf1f7;color:#526176}.empty{padding:28px;text-align:center;color:var(--muted)}
-footer{color:var(--muted);font-size:12px;margin:18px 0 35px}
-@media(max-width:650px){.metrics{grid-template-columns:1fr}.metric{padding:14px}.metric strong{font-size:23px}header{align-items:flex-start}.panel{padding:13px}}
-</style>
-</head>
-<body>
-<header><div class="brand"><span class="logo">T</span><span>TEMO Bills</span></div><span class="pill">STAGING PREVIEW · DEMO DATA</span></header>
-<main>
-<section class="intro"><h1>Bills & payments</h1><p>A separate test page for checking the future DEI and NOVA experience.</p></section>
-<div class="notice"><strong>Test page only.</strong> The records below are illustrative demo data, not live Gmail data. This page does not connect to Gmail, Cloudflare KV, or Firebase and cannot change real bills.</div>
-<div class="tabs" role="tablist" aria-label="Provider">
-<button class="tab" role="tab" aria-selected="true" data-provider="DEI">DEI electricity</button>
-<button class="tab" role="tab" aria-selected="false" data-provider="NOVA">NOVA</button>
+:root{color-scheme:dark;--bg:#06151b;--card:#0c2028;--line:#294854;--text:#edf7fb;--muted:#9db1ba;--blue:#55bfff;--gold:#ffd36b}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 0,#102b35 0,#06151b 65%);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh}
+header{max-width:760px;margin:auto;padding:30px 22px 0}.logo{font-size:34px;margin-bottom:26px}.pill{display:inline-block;border:1px solid #80672c;border-radius:20px;padding:4px 10px;color:var(--gold);font-size:12px;margin-bottom:18px}
+main{max-width:760px;margin:auto;padding:18px 22px 40px}h1{font-size:clamp(30px,7vw,42px);margin:0;font-weight:800;letter-spacing:-.8px} .sub{color:var(--muted);font-size:21px;margin:8px 0 26px}
+.notice{border:1px solid #80672c;background:#2b2515;color:#f8e7b7;padding:12px 14px;border-radius:14px;font-size:14px;margin:0 0 22px}
+.cards{display:grid;gap:16px}.card{display:flex;align-items:center;gap:18px;width:100%;text-align:left;padding:17px 18px;border:1px solid var(--line);border-radius:27px;background:linear-gradient(120deg,#102932,#0a1c23);color:var(--text);min-height:150px;cursor:pointer;box-shadow:0 8px 25px #0002}.card:focus,.card.active{border-color:var(--blue);outline:none}.ico{display:grid;place-items:center;flex:0 0 76px;height:90px;border-radius:25px;background:#163947;font-size:44px}.words{flex:1;min-width:0}.words strong{display:block;font-size:25px;margin-bottom:5px}.words span{display:block;color:var(--muted);font-size:18px;line-height:1.35}.arrow{color:var(--blue);font-size:30px}
+.detail{margin-top:20px;padding:18px;border:1px solid var(--line);border-radius:20px;background:#0a1e25}.detail h2{margin:0 0 10px;font-size:21px}.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.filters input,.filters select{min-width:0;flex:1;background:#07171d;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px;font:inherit}.record{display:flex;justify-content:space-between;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.record:last-child{border:0}.muted{color:var(--muted);font-size:14px}.amount{font-weight:800;white-space:nowrap}.demo{color:var(--gold);font-size:12px}.bottom{position:sticky;bottom:0;padding:10px 22px 14px;background:linear-gradient(transparent,#06151b 24%);display:flex;justify-content:flex-start}.home{border:1px solid var(--blue);background:#102b38;border-radius:24px;padding:12px 20px;font-size:30px}
+@media(max-width:420px){header{padding-top:26px}main{padding-left:18px;padding-right:18px}.card{gap:13px;padding:15px;min-height:136px}.ico{flex-basis:68px;height:78px;font-size:38px}.words strong{font-size:23px}.words span{font-size:16px}.record{font-size:14px}}
+</style></head>
+<body><header><div class="logo">💶</div><span class="pill">ცალკე სატესტო გვერდი · DEMO</span><h1>ჩემი გადასახადები</h1><div class="sub">აირჩიე კატეგორია</div></header>
+<main><div class="notice"><strong>სატესტო ვერსია:</strong> ქვემოთ ნაჩვენებია მხოლოდ მაგალითები. ეს გვერდი ჯერ არ უკავშირდება Gmail-ს და რეალურ ქვითრებს არ კითხულობს. არსებულ საიტზე გავლენა არ აქვს.</div>
+<div class="cards">
+<button class="card active" data-kind="DEI"><span class="ico">⚡</span><span class="words"><strong>ΔΕΗ — დენი</strong><span>ელექტროენერგიის ქვითრები</span></span><span class="arrow">›</span></button>
+<button class="card" data-kind="NOVA"><span class="ico">📊</span><span class="words"><strong>NOVA</strong><span>ტელეფონი და ინტერნეტი</span></span><span class="arrow">›</span></button>
+<button class="card" data-kind="წყალი"><span class="ico">💧</span><span class="words"><strong>წყალი</strong><span>წყლის გადასახადები</span></span><span class="arrow">›</span></button>
+<button class="card" data-kind="ბანკი"><span class="ico">🏦</span><span class="words"><strong>ბანკი</strong><span>ბანკის გადასახადები</span></span><span class="arrow">›</span></button>
 </div>
-<section class="metrics" aria-label="Summary">
-<div class="metric"><span>Invoices in demo</span><strong id="count">3</strong></div>
-<div class="metric"><span>Amount due in demo</span><strong id="due">€0.00</strong></div>
-<div class="metric"><span>Marked paid in demo</span><strong id="paid">€0.00</strong></div>
-</section>
-<section class="panel">
-<h2 id="listTitle">DEI demo records</h2>
-<div class="toolbar"><input id="search" type="search" placeholder="Search records…" aria-label="Search records"><select id="status" aria-label="Filter by payment status"><option value="all">All statuses</option><option value="due">Due</option><option value="paid">Paid</option><option value="unknown">Unknown</option></select></div>
-<div class="tablewrap"><table><thead><tr><th>Provider / record</th><th>Email date</th><th>Amount</th><th>Due date</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty" hidden>No demo records match this filter.</div></div>
-</section>
-<footer>Isolated prototype · No production data is read or written. Live OAuth and sync require a separately configured staging backend before they can be tested safely.</footer>
-</main>
+<section class="detail"><h2 id="heading">ΔΕΗ — დენი</h2><div class="demo">● სატესტო მონაცემები</div><div class="filters"><input id="q" placeholder="მოძებნე ქვითარი…" aria-label="მოძებნე"><select id="status"><option value="all">ყველა</option><option value="due">გადასახდელი</option><option value="paid">გადახდილი</option></select></div><div id="rows"></div></section>
+</main><div class="bottom"><div class="home">⌂</div></div>
 <script>
-const records={
- DEI:[
-  {provider:"DEI",label:"Electricity bill — sample A",date:"2026-09-14",amount:86.42,due:"2026-10-30",status:"due"},
-  {provider:"DEI",label:"Electricity bill — sample B",date:"2026-08-12",amount:74.10,due:"2026-08-31",status:"paid"},
-  {provider:"DEI",label:"Electricity bill — sample C",date:"2026-07-11",amount:91.60,due:"2026-07-29",status:"unknown"}
- ],
- NOVA:[
-  {provider:"NOVA",label:"Telecom invoice — sample A",date:"2026-10-02",amount:39.90,due:"2026-10-25",status:"due"},
-  {provider:"NOVA",label:"Telecom invoice — sample B",date:"2026-09-02",amount:39.90,due:"2026-09-25",status:"paid"},
-  {provider:"NOVA",label:"Telecom invoice — sample C",date:"2026-08-02",amount:42.50,due:"2026-08-25",status:"paid"}
-]};
-let provider="DEI";
-const euro=n=>new Intl.NumberFormat("en-IE",{style:"currency",currency:"EUR"}).format(n);
-function render(){
- const all=records[provider], filtered=all.filter(r=>(document.getElementById("status").value==="all"||r.status===document.getElementById("status").value)&&(r.label+" "+r.date+" "+r.status).toLowerCase().includes(document.getElementById("search").value.toLowerCase()));
- document.getElementById("count").textContent=all.length;
- document.getElementById("due").textContent=euro(all.filter(r=>r.status==="due").reduce((s,r)=>s+r.amount,0));
- document.getElementById("paid").textContent=euro(all.filter(r=>r.status==="paid").reduce((s,r)=>s+r.amount,0));
- document.getElementById("listTitle").textContent=provider+" demo records";
- document.getElementById("rows").innerHTML=filtered.map(r=>'<tr><td><strong>'+r.label+'</strong></td><td>'+r.date+'</td><td>'+euro(r.amount)+'</td><td>'+r.due+'</td><td><span class="status '+r.status+'">'+({due:"Due",paid:"Paid",unknown:"Unknown"}[r.status])+'</span></td></tr>').join("");
- document.getElementById("empty").hidden=filtered.length!==0;
-}
-document.querySelectorAll("[data-provider]").forEach(b=>b.addEventListener("click",()=>{provider=b.dataset.provider;document.querySelectorAll("[data-provider]").forEach(x=>x.setAttribute("aria-selected",String(x===b)));render()}));
-document.getElementById("search").addEventListener("input",render);document.getElementById("status").addEventListener("change",render);render();
-</script>
-</body></html>
+const data={
+"DEI":[{name:"დენის ქვითარი — მაგალითი A",date:"14.09.2026",amount:86.42,due:"30.10.2026",status:"due"},{name:"დენის ქვითარი — მაგალითი B",date:"12.08.2026",amount:74.10,due:"31.08.2026",status:"paid"}],
+"NOVA":[{name:"NOVA — ინვოისი A",date:"02.10.2026",amount:39.90,due:"25.10.2026",status:"due"},{name:"NOVA — ინვოისი B",date:"02.09.2026",amount:39.90,due:"25.09.2026",status:"paid"}],
+"წყალი":[{name:"წყლის ქვითარი — მაგალითი",date:"01.10.2026",amount:28.50,due:"30.10.2026",status:"due"}],
+"ბანკი":[{name:"ბანკის გადახდა — მაგალითი",date:"05.10.2026",amount:50,due:"05.11.2026",status:"due"}]};
+let kind="DEI";const euro=n=>new Intl.NumberFormat("el-GR",{style:"currency",currency:"EUR"}).format(n);
+function render(){document.getElementById("heading").textContent=({"DEI":"ΔΕΗ — დენი","NOVA":"NOVA","წყალი":"წყალი","ბანკი":"ბანკი"})[kind];const q=document.getElementById("q").value.toLowerCase(),s=document.getElementById("status").value;const list=data[kind].filter(x=>(s==="all"||x.status===s)&&x.name.toLowerCase().includes(q));document.getElementById("rows").innerHTML=list.length?list.map(x=>'<div class="record"><div><strong>'+x.name+'</strong><div class="muted">ელფოსტა: '+x.date+' · ვადა: '+x.due+'</div><div class="muted">'+(x.status==="due"?"გადასახდელია":"გადახდილია")+'</div></div><div class="amount">'+euro(x.amount)+'</div></div>').join(""):'<p class="muted">ამ ფილტრით ჩანაწერი ვერ მოიძებნა.</p>'}
+document.querySelectorAll("[data-kind]").forEach(b=>b.addEventListener("click",()=>{kind=b.dataset.kind;document.querySelectorAll(".card").forEach(x=>x.classList.toggle("active",x===b));render()}));document.getElementById("q").addEventListener("input",render);document.getElementById("status").addEventListener("change",render);render();
+</script></body></html>
