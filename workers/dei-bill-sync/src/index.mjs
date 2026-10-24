@@ -323,6 +323,12 @@ function novaCents(value) {
   return Number.isFinite(amount) ? Math.round(amount * 100) : null;
 }
 
+function extractNovaCustomerCode(text) {
+  const value = String(text || "").normalize("NFC");
+  const match = value.match(/κωδικός\s+πελάτη(?:\s*\/\s*όνομα\s+χρήστη)?\s*:?\s*([0-9]+(?:\.[0-9]+)*)/i);
+  return match ? match[1].replace(/\./g, "") : null;
+}
+
 function novaTimestamp(bill) {
   const value = Number(bill?.internalDate || 0);
   if (value > 0) return value;
@@ -348,12 +354,22 @@ async function reconcileNovaReceipts(env, ownerKey) {
     let candidates = invoices.filter(invoice => {
       if (invoice.paymentStatus === "paid" || novaCents(invoice.totalEUR) !== receiptCents) return false;
       const invoiceTime = novaTimestamp(invoice);
-      return invoiceTime > 0 && invoiceTime <= receiptTime;
+      if (!(invoiceTime > 0 && invoiceTime <= receiptTime)) return false;
+      // Prefer a strong identity match from NOVA's customer code, not amount alone.
+      if (receipt.customerCode && invoice.customerCode !== receipt.customerCode) return false;
+      return true;
     });
     if (receipt.dueDate) {
-      candidates = candidates.filter(invoice => String(invoice.dueDate || "") === String(receipt.dueDate));
+      const exact = candidates.filter(invoice => String(invoice.dueDate || "") === String(receipt.dueDate));
+      if (exact.length) candidates = exact;
     }
-    // An amount alone is insufficient when more than one earlier unpaid invoice fits.
+    if (receipt.customerCode && candidates.length > 1) {
+      // When multiple older bills have the same customer code and amount,
+      // the receipt most plausibly settles the most recently issued eligible bill.
+      const latestTime = Math.max(...candidates.map(novaTimestamp));
+      candidates = candidates.filter(invoice => novaTimestamp(invoice) === latestTime);
+    }
+    // Never mark an invoice paid if the best identity/date match is still ambiguous.
     if (candidates.length !== 1) {
       if (receipt.paymentStatus !== "unknown") {
         receipt.paymentStatus = "unknown";
@@ -414,6 +430,7 @@ async function syncNovaBills(env, ownerKey) {
         found: true, provider: "NOVA", subject, from, emailDate,
         internalDate: timestamp || (Number.isFinite(headerDate) ? headerDate : 0),
         totalEUR: amount, dueDate: dueDate || previous?.dueDate || null,
+        customerCode: extractNovaCustomerCode(bodyText) || previous?.customerCode || null,
         paymentStatus: previous?.matchedInvoiceMessageId ? "paid" : "unknown",
         paymentDate: emailDate || previous?.paymentDate || null,
         gmailMessageId: messageId, fetchedAt: new Date().toISOString(), kind: "payment-receipt"
@@ -430,6 +447,7 @@ async function syncNovaBills(env, ownerKey) {
       found: true, provider: "NOVA", subject, from, emailDate,
       internalDate: timestamp || (Number.isFinite(headerDate) ? headerDate : 0),
       totalEUR: amount, dueDate,
+      customerCode: extractNovaCustomerCode(bodyText),
       paymentStatus: extractPaymentStatus(bodyText) === "unknown" && dueDate ? "due" : extractPaymentStatus(bodyText),
       gmailMessageId: messageId, fetchedAt: new Date().toISOString(), kind: "invoice"
     };
