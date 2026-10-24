@@ -803,7 +803,17 @@ export default {
         if (!env.DEI_KV) return json({ ok: false, error: "DEI_KV binding is not configured" }, 503);
         const ownerKey = await getT1SessionOwner(request, env);
         if (!ownerKey) return json({ ok: false, error: "Unauthorized" }, 401);
-        return json(await syncNovaBills(env, ownerKey));
+        try {
+          return json(await syncNovaBills(env, ownerKey));
+        } catch (error) {
+          const raw = String(error?.message || "");
+          const code = raw === "GMAIL_NOT_CONNECTED" ? "GMAIL_NOT_CONNECTED"
+            : /^GOOGLE_REFRESH_FAILED_\d+$/.test(raw) ? raw
+            : /^GMAIL_API_FAILED_\d+$/.test(raw) ? raw
+            : "NOVA_SYNC_INTERNAL";
+          console.error("NOVA_SYNC_FAILED", JSON.stringify({ code, name: String(error?.name || "Error") }));
+          throw error;
+        }
       }
       if (url.pathname === "/api/nova/history") {
         if (request.method !== "GET") return json({ ok: false, error: "Method not allowed" }, 405, { allow: "GET, OPTIONS" });
