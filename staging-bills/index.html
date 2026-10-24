@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEMO Bills — Staging Preview</title>
+<style>
+:root{color-scheme:light;--blue:#1769e0;--ink:#172338;--muted:#64748b;--line:#e5eaf2;--bg:#f4f7fb;--green:#16845b;--amber:#9a6700}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:#fff;border-bottom:1px solid var(--line);padding:18px max(18px,calc((100% - 1080px)/2));display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.brand{display:flex;align-items:center;gap:11px;font-weight:800;font-size:20px}.logo{background:var(--blue);color:#fff;border-radius:12px;padding:8px 10px;font-weight:900}
+.pill{display:inline-flex;border-radius:999px;padding:5px 10px;font-size:12px;font-weight:750;background:#fff4d6;color:#7a5200;border:1px solid #f1d98e}
+main{max-width:1080px;margin:26px auto;padding:0 18px}.intro h1{font-size:clamp(26px,4vw,36px);margin:0 0 5px;letter-spacing:-.7px}.intro p{color:var(--muted);margin:0 0 20px}
+.notice{border:1px solid #f0d78d;background:#fff9e8;border-radius:14px;padding:13px 15px;margin:18px 0 22px;color:#684a06}
+.tabs{display:flex;gap:8px;margin:18px 0;flex-wrap:wrap}.tab{border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:10px;padding:10px 15px;font-weight:750;cursor:pointer}.tab[aria-selected=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:16px 0}.metric,.panel{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px}.metric span{display:block;color:var(--muted);font-size:13px}.metric strong{display:block;font-size:26px;margin-top:5px;letter-spacing:-.5px}
+.panel h2{font-size:18px;margin:0 0 12px}.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:13px}.toolbar input,.toolbar select{border:1px solid var(--line);border-radius:10px;background:#fff;padding:10px 12px;color:var(--ink);font:inherit;min-width:150px}
+.tablewrap{overflow-x:auto}table{width:100%;border-collapse:collapse;min-width:610px}th,td{text-align:left;padding:13px 10px;border-bottom:1px solid var(--line)}th{font-size:12px;color:var(--muted);font-weight:750;text-transform:uppercase;letter-spacing:.04em}tbody tr:last-child td{border-bottom:0}.status{display:inline-block;padding:4px 9px;border-radius:999px;font-size:12px;font-weight:750}.due{background:#fff0df;color:#9a4c00}.paid{background:#dcf8eb;color:#08764b}.unknown{background:#edf1f7;color:#526176}.empty{padding:28px;text-align:center;color:var(--muted)}
+footer{color:var(--muted);font-size:12px;margin:18px 0 35px}
+@media(max-width:650px){.metrics{grid-template-columns:1fr}.metric{padding:14px}.metric strong{font-size:23px}header{align-items:flex-start}.panel{padding:13px}}
+</style>
+</head>
+<body>
+<header><div class="brand"><span class="logo">T</span><span>TEMO Bills</span></div><span class="pill">STAGING PREVIEW · DEMO DATA</span></header>
+<main>
+<section class="intro"><h1>Bills & payments</h1><p>A separate test page for checking the future DEI and NOVA experience.</p></section>
+<div class="notice"><strong>Test page only.</strong> The records below are illustrative demo data, not live Gmail data. This page does not connect to Gmail, Cloudflare KV, or Firebase and cannot change real bills.</div>
+<div class="tabs" role="tablist" aria-label="Provider">
+<button class="tab" role="tab" aria-selected="true" data-provider="DEI">DEI electricity</button>
+<button class="tab" role="tab" aria-selected="false" data-provider="NOVA">NOVA</button>
+</div>
+<section class="metrics" aria-label="Summary">
+<div class="metric"><span>Invoices in demo</span><strong id="count">3</strong></div>
+<div class="metric"><span>Amount due in demo</span><strong id="due">€0.00</strong></div>
+<div class="metric"><span>Marked paid in demo</span><strong id="paid">€0.00</strong></div>
+</section>
+<section class="panel">
+<h2 id="listTitle">DEI demo records</h2>
+<div class="toolbar"><input id="search" type="search" placeholder="Search records…" aria-label="Search records"><select id="status" aria-label="Filter by payment status"><option value="all">All statuses</option><option value="due">Due</option><option value="paid">Paid</option><option value="unknown">Unknown</option></select></div>
+<div class="tablewrap"><table><thead><tr><th>Provider / record</th><th>Email date</th><th>Amount</th><th>Due date</th><th>Status</th></tr></thead><tbody id="rows"></tbody></table><div id="empty" class="empty" hidden>No demo records match this filter.</div></div>
+</section>
+<footer>Isolated prototype · No production data is read or written. Live OAuth and sync require a separately configured staging backend before they can be tested safely.</footer>
+</main>
+<script>
+const records={
+ DEI:[
+  {provider:"DEI",label:"Electricity bill — sample A",date:"2026-09-14",amount:86.42,due:"2026-10-30",status:"due"},
+  {provider:"DEI",label:"Electricity bill — sample B",date:"2026-08-12",amount:74.10,due:"2026-08-31",status:"paid"},
+  {provider:"DEI",label:"Electricity bill — sample C",date:"2026-07-11",amount:91.60,due:"2026-07-29",status:"unknown"}
+ ],
+ NOVA:[
+  {provider:"NOVA",label:"Telecom invoice — sample A",date:"2026-10-02",amount:39.90,due:"2026-10-25",status:"due"},
+  {provider:"NOVA",label:"Telecom invoice — sample B",date:"2026-09-02",amount:39.90,due:"2026-09-25",status:"paid"},
+  {provider:"NOVA",label:"Telecom invoice — sample C",date:"2026-08-02",amount:42.50,due:"2026-08-25",status:"paid"}
+]};
+let provider="DEI";
+const euro=n=>new Intl.NumberFormat("en-IE",{style:"currency",currency:"EUR"}).format(n);
+function render(){
+ const all=records[provider], filtered=all.filter(r=>(document.getElementById("status").value==="all"||r.status===document.getElementById("status").value)&&(r.label+" "+r.date+" "+r.status).toLowerCase().includes(document.getElementById("search").value.toLowerCase()));
+ document.getElementById("count").textContent=all.length;
+ document.getElementById("due").textContent=euro(all.filter(r=>r.status==="due").reduce((s,r)=>s+r.amount,0));
+ document.getElementById("paid").textContent=euro(all.filter(r=>r.status==="paid").reduce((s,r)=>s+r.amount,0));
+ document.getElementById("listTitle").textContent=provider+" demo records";
+ document.getElementById("rows").innerHTML=filtered.map(r=>'<tr><td><strong>'+r.label+'</strong></td><td>'+r.date+'</td><td>'+euro(r.amount)+'</td><td>'+r.due+'</td><td><span class="status '+r.status+'">'+({due:"Due",paid:"Paid",unknown:"Unknown"}[r.status])+'</span></td></tr>').join("");
+ document.getElementById("empty").hidden=filtered.length!==0;
+}
+document.querySelectorAll("[data-provider]").forEach(b=>b.addEventListener("click",()=>{provider=b.dataset.provider;document.querySelectorAll("[data-provider]").forEach(x=>x.setAttribute("aria-selected",String(x===b)));render()}));
+document.getElementById("search").addEventListener("input",render);document.getElementById("status").addEventListener("change",render);render();
+</script>
+</body></html>
