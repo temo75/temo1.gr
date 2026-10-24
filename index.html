@@ -12,6 +12,29 @@
 <meta name="google-site-verification" content="vPkaq57GkbGCufy6hasdsXrRhcvq6gQ_SXYJk8t7JG0" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- Firebase Authentication bootstrap for the isolated fix branch -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script id="temo-firebase-auth-bootstrap">
+window.temoFirebaseConfig = {
+  apiKey: "AIzaSyAQqkrE6BweLfFEI179irLpkc6OVmIHArc",
+  authDomain: "temo-75.firebaseapp.com",
+  databaseURL: "https://temo-75-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "temo-75",
+  storageBucket: "temo-75.firebasestorage.app",
+  messagingSenderId: "966586658574",
+  appId: "1:966586658574:web:4537c8b2b3e13b5615b15f",
+  measurementId: "G-G7J1FBF18Y"
+};
+try {
+  if (window.firebase && !firebase.apps.length) firebase.initializeApp(window.temoFirebaseConfig);
+  window.temoFirebaseAuth = window.firebase ? firebase.auth() : null;
+  window.temoFirebaseDatabase = window.firebase ? firebase.database() : null;
+} catch (e) {
+  console.error("TEMO Firebase initialization failed:", e);
+}
+</script>
 <style id="temo-auth-boot-style">
 html.auth-booting body{visibility:hidden!important}
 html.auth-booting{background:#071117!important}
