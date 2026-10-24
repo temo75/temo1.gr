@@ -2633,10 +2633,14 @@ function waitForTEMOFirebaseAuth(){
  if(auth.currentUser)return Promise.resolve(auth.currentUser);
  if(!temoFirebaseAuthReadyPromise){
   temoFirebaseAuthReadyPromise=new Promise((resolve,reject)=>{
-   let unsub=null;
-   const timeout=setTimeout(()=>{if(unsub)unsub();reject(new Error('Firebase ავტორიზაციის შემოწმება დრო ამოიწურა. ხელახლა შედი ანგარიშში.'));},10000);
-   unsub=auth.onAuthStateChanged(user=>{clearTimeout(timeout);if(unsub)unsub();if(user)resolve(user);else reject(new Error('Firebase-ში ავტორიზაცია არ არის აქტიური. გამოდი და შედი ელფოსტითა და Firebase პაროლით.'));},error=>{clearTimeout(timeout);if(unsub)unsub();reject(error);});
-  });
+   let unsub=null,settled=false;
+   const finish=(fn,value)=>{if(settled)return;settled=true;clearTimeout(timeout);if(unsub)unsub();fn(value);};
+   const timeout=setTimeout(()=>finish(reject,new Error('Firebase ავტორიზაციის შემოწმება დრო ამოიწურა. ხელახლა შედი ანგარიშში.')),10000);
+   unsub=auth.onAuthStateChanged(user=>{
+    if(user)finish(resolve,user);
+    else finish(reject,new Error('Firebase-ში ავტორიზაცია არ არის აქტიური. შედი ელფოსტითა და Firebase პაროლით.'));
+   },error=>finish(reject,error));
+  }).catch(error=>{temoFirebaseAuthReadyPromise=null;throw error;});
  }
  return temoFirebaseAuthReadyPromise;
 }
