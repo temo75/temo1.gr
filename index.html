@@ -5390,7 +5390,7 @@ async function registerNewUser(){
   if(!n||!email||!p){alert('სახელი, ელფოსტა და ახალი პაროლი სამივე შეავსე');return;}
   if(p.length<6){alert('პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო.');passEl.focus();return;}
   if(!/^[A-Za-z]+$/.test(n)){alert('სახელი უნდა შეიცავდეს მხოლოდ ლათინურ ასოებს (A-Z, a-z)');nameEl.value=n.replace(/[^A-Za-z]/g,'');return;}
-  if(!/^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/.test(email)){alert('შეიყვანე სწორი ელფოსტა');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('შეიყვანე სწორი ელფოსტა');return;}
   if(n.toUpperCase()===ADMIN_USER){alert('ეს სახელი ადმინისტრატორისთვისაა');return;}
   if(!window.temoFirebaseAuth){alert('Firebase Authentication ვერ ჩაიტვირთა.');return;}
   const localUsers=getUsers();
