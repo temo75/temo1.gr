@@ -1,5 +1,6 @@
 /**
  * TEMO DEI bill sync — Cloudflare Worker
+ * Deployment check: NOVA sync errors now return a diagnostic code.
  * Required binding: DEI_KV (KV namespace)
  * Required variables/secrets:
  *   GOOGLE_CLIENT_ID       (text variable)
