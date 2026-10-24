@@ -812,7 +812,7 @@ export default {
             : /^GMAIL_API_FAILED_\d+$/.test(raw) ? raw
             : "NOVA_SYNC_INTERNAL";
           console.error("NOVA_SYNC_FAILED", JSON.stringify({ code, name: String(error?.name || "Error") }));
-          throw error;
+          return json({ ok: false, error: code }, 502);
         }
       }
       if (url.pathname === "/api/nova/history") {
