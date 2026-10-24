@@ -2633,6 +2633,12 @@ async function firebaseAuthorizedFetch(path,options={}){
  const url=FIREBASE_DB_URL+path+(path.includes('?')?'&':'?')+(token?'auth='+encodeURIComponent(token):'');
  return fetch(url,{...options,cache:options.cache||'no-store'});
 }
+async function firebaseAuthorizedFetchUrl(url,options={}){
+ const raw=String(url||'');
+ if(!raw.startsWith(FIREBASE_DB_URL+'/'))return fetch(url,options);
+ const parsed=new URL(raw);
+ return firebaseAuthorizedFetch(parsed.pathname+parsed.search,options);
+}
 async function loadUsersFromFirebase(){try{const r=await firebaseAuthorizedFetch('/users.json',{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data===null)return null;if(Array.isArray(data))return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));return Object.entries(data||{}).filter(([,u])=>u).map(([key,u])=>normalizeUser({...u,_firebaseKey:key})).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Firebase users read failed:',e);return null}}
 function normalizeUser(raw){const u=(raw&&typeof raw==='object')?raw:{};const name=String(u.name||'').trim(),email=String(u.email||'').trim(),password=String(u.password??'');const admin=(name.toUpperCase()===ADMIN_USER)||u.admin===true;const blocked=admin?false:(typeof u.blocked==='boolean'?u.blocked:u.authorized===false);const id=String(u.id||'').trim()||makeLegacyUserId(name,password);return {id,name,email,password,admin,authorized:admin?true:!blocked,blocked,_firebaseKey:u._firebaseKey||''};}
 function isRemovedUser(u){return REMOVED_USER_NAMES.includes(String(u?.name||'').trim().toUpperCase());}
@@ -3424,8 +3430,8 @@ function expenseStorageKey(){return 'temoExpenses_'+String(currentUserId||curren
 function normalizeExpense(e){return {id:String(e?.id||makeUserId()),category:String(e?.category||EXPENSE_CATEGORIES[0]),place:String(e?.place||''),amount:Number(e?.amount||0),date:String(e?.date||'').slice(0,10),createdAt:Number(e?.createdAt||Date.now())};}
 function loadLocalExpenses(){try{const raw=JSON.parse(localStorage.getItem(expenseStorageKey())||'[]');return Array.isArray(raw)?raw.map(normalizeExpense).filter(e=>e.amount>0&&e.date):[];}catch(e){return [];}}
 function saveLocalExpenses(){localStorage.setItem(expenseStorageKey(),JSON.stringify(expenses));}
-async function saveExpensesToFirebase(){const url=expenseFirebaseUrl();if(!url)return false;try{const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(expenses)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase expenses write failed:',e);return false;}}
-async function syncExpensesFromFirebase(){const url=expenseFirebaseUrl();if(!url)return;try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data!==null){const arr=Array.isArray(data)?data.filter(Boolean):Object.entries(data||{}).map(([id,e])=>({...e,id:String(e?.id||id)}));expenses=arr.map(normalizeExpense).filter(e=>e.amount>0&&e.date);saveLocalExpenses();renderExpenses();}}catch(e){console.warn('Firebase expenses read failed:',e);}}
+async function saveExpensesToFirebase(){const url=expenseFirebaseUrl();if(!url)return false;try{const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(expenses)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase expenses write failed:',e);return false;}}
+async function syncExpensesFromFirebase(){const url=expenseFirebaseUrl();if(!url)return;try{const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data!==null){const arr=Array.isArray(data)?data.filter(Boolean):Object.entries(data||{}).map(([id,e])=>({...e,id:String(e?.id||id)}));expenses=arr.map(normalizeExpense).filter(e=>e.amount>0&&e.date);saveLocalExpenses();renderExpenses();}}catch(e){console.warn('Firebase expenses read failed:',e);}}
 function expenseCategoryParts(c){const m=String(c||'').match(/^(\S+)\s*(.*)$/);return {icon:m?.[1]||'✓',text:m?.[2]||String(c||'')};}
 function expenseTranslate(text){return typeof window.temoTranslateMessage==='function'?window.temoTranslateMessage(text):String(text??'');}
 function fillExpenseCategories(selected=''){const s=document.getElementById('expenseCategory'),menu=document.getElementById('expenseCategoryMenu');if(!s||!menu)return;s.innerHTML=EXPENSE_CATEGORIES.map(c=>`<option value="${esc(c)}">${esc(expenseTranslate(c))}</option>`).join('');menu.innerHTML=EXPENSE_CATEGORIES.map(c=>{const p=expenseCategoryParts(expenseTranslate(c));return `<button type="button" class="expenseCategoryOption${String(c)===String(selected)?' selected':''}" data-value="${esc(c)}"><span class="catIcon">${esc(p.icon)}</span><span class="catText">${esc(p.text)}</span><span class="catCheck">✓</span></button>`;}).join('');menu.querySelectorAll('.expenseCategoryOption').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();selectExpenseCategory(b.dataset.value);}));updateExpenseCategoryDisplay(selected);}
@@ -3539,7 +3545,7 @@ async function saveDailyRemote(entries,deletes){
   const url=dailyUrl();
   if(!url)return false;
   const payload={entries:Array.isArray(entries)?entries:[],deletes:deletes&&typeof deletes==='object'?deletes:{}};
-  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true});
+  const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
   return true;
 }
@@ -3550,7 +3556,7 @@ async function syncDailyFromFirebase(){
   try{
     const localEntries=loadDailyEntries();
     const localDel=loadDailyDeletes();
-    const r=await fetch(url,{cache:'no-store'});
+    const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();
     const remoteEntries=Array.isArray(data)?data:(Array.isArray(data?.entries)?data.entries:[]);
@@ -4487,14 +4493,14 @@ function aiToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMon
 function aiMemoryUrl(){const key=firebaseUserKey(currentUserId);return key?FIREBASE_DB_URL+'/aiMemory/'+key+'.json':'';}
 async function loadAIMemory(){
   const url=aiMemoryUrl();if(!url){aiMemoryCache=[];return;}
-  try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();aiMemoryCache=Array.isArray(data)?data.filter(Boolean).map(x=>String(x).slice(0,1000)).slice(-50):[];}catch(e){console.warn('AI memory read failed:',e);aiMemoryCache=[];}
+  try{const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();aiMemoryCache=Array.isArray(data)?data.filter(Boolean).map(x=>String(x).slice(0,1000)).slice(-50):[];}catch(e){console.warn('AI memory read failed:',e);aiMemoryCache=[];}
 }
 async function saveAIMemory(text){
   const clean=String(text||'').trim();if(!clean)return false;
   if(!aiMemoryCache.includes(clean))aiMemoryCache.push(clean);
   aiMemoryCache=aiMemoryCache.slice(-50);
   const url=aiMemoryUrl();if(!url)return false;
-  try{const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(aiMemoryCache)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('AI memory write failed:',e);return false;}
+  try{const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(aiMemoryCache)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('AI memory write failed:',e);return false;}
 }
 function aiExtractReminderCommand(message){
   const raw=String(message||'').trim();
@@ -6324,7 +6330,7 @@ async function loadNotes(){
     if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){
       window.AndroidReminder.setNotesEndpoint(url);
     }
-    const r=await fetch(url,{cache:'no-store'});
+    const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();
     notesCache=Array.isArray(data)?data.filter(Boolean):Object.entries(data||{}).map(([id,n])=>({...n,id}));
@@ -6498,7 +6504,7 @@ function editNote(id){
 async function saveNotesRemote(){
   const url=notesUrl();
   if(!url)throw new Error('მომხმარებელი ჯერ არ არის ავტორიზებული');
-  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(notesCache)});
+  const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(notesCache)});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
 }
 async function saveNote(){
