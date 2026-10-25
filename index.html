@@ -6139,8 +6139,9 @@ function toggleNoteReminderFields(){
 async function loadNotes(){
   const list=$('notesList');
   if(!list)return;
+  const path=notesBridgePath();
+  if(!path){renderNotes();return;}
   const url=notesUrl();
-  if(!url){renderNotes();return;}
   try{
     if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){
       window.AndroidReminder.setNotesEndpoint(url);
