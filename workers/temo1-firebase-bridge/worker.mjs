@@ -1,6 +1,6 @@
-const FIREBASE_API_KEY = "AIzaSyAQqkrE6BweLfFEI179irLpkc6OVmIHArc";
-const FIREBASE_DB = "https://temo-75-default-rtdb.europe-west1.firebasedatabase.app";
-const ALLOWED_ORIGIN = "https://temo1.gr";
+const DEFAULT_FIREBASE_API_KEY = "AIzaSyAQqkrE6BweLfFEI179irLpkc6OVmIHArc";
+const DEFAULT_FIREBASE_DB = "https://temo-75-default-rtdb.europe-west1.firebasedatabase.app";
+const DEFAULT_ALLOWED_ORIGIN = "https://temo1.gr";
 const ADMIN_USER = "TEMO";
 const SESSION_TTL_SECONDS = 12 * 60 * 60;
 const encoder = new TextEncoder();
@@ -8,9 +8,9 @@ let cachedServiceToken = "";
 let cachedServiceTokenUntil = 0;
 let cachedServiceIdentity = "";
 
-function cors(origin) {
+function cors(origin, allowedOrigin = DEFAULT_ALLOWED_ORIGIN) {
   const headers = {
-    "Access-Control-Allow-Origin": ALLOWED_ORIGIN,
+    "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Methods": "POST, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "600",
@@ -18,10 +18,10 @@ function cors(origin) {
     "Cache-Control": "no-store",
     "Vary": "Origin"
   };
-  return origin === ALLOWED_ORIGIN ? headers : { ...headers, "Access-Control-Allow-Origin": "null" };
+  return origin === allowedOrigin ? headers : { ...headers, "Access-Control-Allow-Origin": "null" };
 }
-function reply(data, status, origin) {
-  return new Response(JSON.stringify(data), { status, headers: cors(origin) });
+function reply(data, status, origin, allowedOrigin = DEFAULT_ALLOWED_ORIGIN) {
+  return new Response(JSON.stringify(data), { status, headers: cors(origin, allowedOrigin) });
 }
 function base64url(bytes) {
   let binary = "";
@@ -105,10 +105,13 @@ function constantTimeEqual(a, b) {
 async function firebaseIdToken(env) {
   if (!env.FIREBASE_EMAIL || !env.FIREBASE_PASSWORD) throw new Error("backend_auth_unavailable");
   const now = Date.now();
-  const identityDigest = await crypto.subtle.digest("SHA-256", encoder.encode(String(env.FIREBASE_EMAIL) + "\u0000" + String(env.FIREBASE_PASSWORD)));
+  const identityMaterial = JSON.stringify([env.FIREBASE_EMAIL, env.FIREBASE_PASSWORD, env.FIREBASE_API_KEY || DEFAULT_FIREBASE_API_KEY, env.FIREBASE_AUTH_URL || "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword", env.FIREBASE_DB_URL || DEFAULT_FIREBASE_DB, env.FIREBASE_DB_NAMESPACE || ""]);
+  const identityDigest = await crypto.subtle.digest("SHA-256", encoder.encode(identityMaterial));
   const identity = base64url(identityDigest);
   if (cachedServiceToken && cachedServiceTokenUntil > now + 60_000 && cachedServiceIdentity === identity) return cachedServiceToken;
-  const response = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FIREBASE_API_KEY, {
+  const authUrl = new URL(env.FIREBASE_AUTH_URL || "https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword");
+  authUrl.searchParams.set("key", env.FIREBASE_API_KEY || DEFAULT_FIREBASE_API_KEY);
+  const response = await fetch(authUrl, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: env.FIREBASE_EMAIL, password: env.FIREBASE_PASSWORD, returnSecureToken: true }),
     signal: AbortSignal.timeout(10_000)
@@ -122,7 +125,11 @@ async function firebaseIdToken(env) {
 }
 async function firebaseRequest(env, path, method, data) {
   const idToken = await firebaseIdToken(env);
-  const url = FIREBASE_DB + "/" + path + ".json?auth=" + encodeURIComponent(idToken);
+  const dbBase = String(env.FIREBASE_DB_URL || DEFAULT_FIREBASE_DB).replace(/\/+$/, "");
+  const dbPath = path.split("/").map(encodeURIComponent).join("/");
+  const url = new URL(dbBase + "/" + dbPath + ".json");
+  url.searchParams.set("auth", idToken);
+  if (env.FIREBASE_DB_NAMESPACE) url.searchParams.set("ns", String(env.FIREBASE_DB_NAMESPACE));
   const response = await fetch(url, {
     method, headers: { "Content-Type": "application/json" },
     ...(method === "PUT" ? { body: JSON.stringify(data) } : {}),
@@ -188,66 +195,69 @@ function parseBridgePath(path) {
 export default {
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
-    if (origin !== ALLOWED_ORIGIN) return reply({ error: "Origin not allowed" }, 403, origin);
-    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin) });
-    if (request.method !== "POST") return reply({ error: "Method not allowed" }, 405, origin);
+    const allowedOrigin = env.ALLOWED_ORIGIN || DEFAULT_ALLOWED_ORIGIN;
+    const respond = (data, status) => reply(data, status, origin, allowedOrigin);
+    if (origin !== allowedOrigin) return respond({ error: "Origin not allowed" }, 403);
+    if (request.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(origin, allowedOrigin) });
+    if (request.method !== "POST") return respond({ error: "Method not allowed" }, 405);
     const length = Number(request.headers.get("Content-Length") || 0);
-    if (length > 1_048_576) return reply({ error: "Request too large" }, 413, origin);
+    if (length > 1_048_576) return respond({ error: "Request too large" }, 413);
     let input;
-    try { const body = await request.text(); if (encoder.encode(body).byteLength > 1_048_576) return reply({ error: "Request too large" }, 413, origin); input = JSON.parse(body); } catch { return reply({ error: "Invalid request" }, 400, origin); }
-    if (!input || typeof input !== "object" || Array.isArray(input)) return reply({ error: "Invalid request" }, 400, origin);
-    if (!sessionSecretUsable(env)) return reply({ error: "Authentication unavailable" }, 503, origin);
+    try { const body = await request.text(); if (encoder.encode(body).byteLength > 1_048_576) return respond({ error: "Request too large" }, 413); input = JSON.parse(body); } catch { return respond({ error: "Invalid request" }, 400); }
+    if (!input || typeof input !== "object" || Array.isArray(input)) return respond({ error: "Invalid request" }, 400);
+    if (!sessionSecretUsable(env)) return respond({ error: "Authentication unavailable" }, 503);
 
     if (input.action === "login") {
       const username = String(input.username || "").trim();
       const password = typeof input.password === "string" ? input.password : "";
-      if (!username || username.length > 128 || !password || password.length > 1024) return reply({ error: "Invalid credentials" }, 401, origin);
+      if (!username || username.length > 128 || !password || password.length > 1024) return respond({ error: "Invalid credentials" }, 401);
       try {
         const users = normalizedUsers(await firebaseRequest(env, "users", "GET"));
         const matched = users.find(u => String(u.name || "").trim().toLowerCase() === username.toLowerCase() &&
           constantTimeEqual(u.password ?? "", password) && String(u.name || "").trim().toUpperCase() !== "TEMOADMIN");
-        if (!matched) return reply({ error: "Invalid credentials" }, 401, origin);
+        if (!matched) return respond({ error: "Invalid credentials" }, 401);
         const user = safeUser(matched);
-        if (!user.authorized || user.blocked) return reply({ error: "Invalid credentials" }, 401, origin);
+        if (!user.authorized || user.blocked) return respond({ error: "Invalid credentials" }, 401);
         const sessionToken = await issueSession(env, user, matched.password);
-        return reply({ user, sessionToken }, 200, origin);
-      } catch { return reply({ error: "Authentication service unavailable" }, 503, origin); }
+        return respond({ user, sessionToken }, 200);
+      } catch { return respond({ error: "Authentication service unavailable" }, 503); }
     }
 
     const claims = await verifySession(env, input.sessionToken);
-    if (!claims) return reply({ error: "Authentication required" }, 401, origin);
+    if (!claims) return respond({ error: "Authentication required" }, 401);
     let activeUser;
     try { activeUser = await validateCurrentUser(env, claims); }
-    catch { return reply({ error: "Authentication service unavailable" }, 503, origin); }
-    if (!activeUser) return reply({ error: "Authentication required" }, 401, origin);
-    if (input.action === "session") return reply({ user: activeUser }, 200, origin);
-    if (input.action !== "db") return reply({ error: "Invalid action" }, 400, origin);
+    catch { return respond({ error: "Authentication service unavailable" }, 503); }
+    if (!activeUser) return respond({ error: "Authentication required" }, 401);
+    if (input.action === "session") return respond({ user: activeUser }, 200);
+    if (input.action !== "db") return respond({ error: "Invalid action" }, 400);
 
     const route = parseBridgePath(input.path);
     const method = String(input.method || "").toUpperCase();
-    if (!route || !["GET", "PUT"].includes(method)) return reply({ error: "Invalid path or method" }, 400, origin);
-    if (route.kind === "notes" && route.id !== firebaseUserKey(claims.sub)) return reply({ error: "Forbidden" }, 403, origin);
+    if (!route || !["GET", "PUT"].includes(method)) return respond({ error: "Invalid path or method" }, 400);
+    if (route.kind === "notes" && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
     if (route.kind === "adminMessages") {
-      if (!route.id && (!claims.admin || method !== "GET")) return reply({ error: "Forbidden" }, 403, origin);
-      if (route.id && !claims.admin && route.id !== firebaseUserKey(claims.sub)) return reply({ error: "Forbidden" }, 403, origin);
+      if (!route.id && (!claims.admin || method !== "GET")) return respond({ error: "Forbidden" }, 403);
+      if (route.id && !claims.admin && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
     }
-    if (method === "PUT" && !Object.prototype.hasOwnProperty.call(input, "data")) return reply({ error: "Missing data" }, 400, origin);
+    if (method === "PUT" && !Object.prototype.hasOwnProperty.call(input, "data")) return respond({ error: "Missing data" }, 400);
 
     const dbPath = route.id ? (route.kind + "/" + route.id) : route.kind;
     try {
-      if (method === "GET") return reply(await firebaseRequest(env, dbPath, "GET"), 200, origin);
-      if (route.kind === "adminMessages" && !route.id) return reply({ error: "Forbidden" }, 403, origin);
+      if (method === "GET") return respond(await firebaseRequest(env, dbPath, "GET"), 200);
+      if (route.kind === "adminMessages" && !route.id) return respond({ error: "Forbidden" }, 403);
       if (route.kind === "adminMessages") {
         const existing = await firebaseRequest(env, dbPath, "GET");
         const sanitized = claims.admin
           ? sanitizeAdminThread(input.data, existing)
           : sanitizeUserThread(input.data, existing, claims);
-        return reply(await firebaseRequest(env, dbPath, "PUT", sanitized), 200, origin);
+        return respond(await firebaseRequest(env, dbPath, "PUT", sanitized), 200);
       }
-      return reply(await firebaseRequest(env, dbPath, "PUT", input.data), 200, origin);
+      return respond(await firebaseRequest(env, dbPath, "PUT", input.data), 200);
     } catch (error) {
-      if (error?.message === "invalid_thread") return reply({ error: "Invalid message data" }, 400, origin);
-      return reply({ error: "Firebase request failed" }, 502, origin);
+      if (error?.message === "invalid_thread") return respond({ error: "Invalid message data" }, 400);
+      return respond({ error: "Firebase request failed" }, 502);
     }
   }
 };
+
