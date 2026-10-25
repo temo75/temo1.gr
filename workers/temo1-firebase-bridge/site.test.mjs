@@ -87,3 +87,12 @@ test('admin chat deletion uses the signed bridge and targets only one thread', (
   assert.ok(block.includes("bridgeRequest('db',{path:'adminMessages/'+key,method:'DELETE'})"));
   assert.doesNotMatch(block, /fetch\(FIREBASE_DB_URL/);
 });
+
+
+test('admin user block waits for the authenticated bridge before changing local state', () => {
+  const block = html.slice(html.indexOf('async function toggleUserBlock('), html.indexOf('async function deleteManagedUser('));
+  assert.ok(block.includes("bridgeRequest('userBlock',{userId:String(u.id),blocked:willBlock})"));
+  assert.ok(block.indexOf("await bridgeRequest('userBlock'") < block.indexOf('u.blocked=willBlock'));
+  assert.doesNotMatch(block, /saveUsersToFirebase|FIREBASE_DB_URL/);
+  assert.ok(block.includes('Firebase-ში ვერ განახლდა'));
+});
