@@ -27,6 +27,14 @@ test.beforeEach(() => {
       target[path[path.length - 1]] = JSON.parse(init.body);
       return new Response(JSON.stringify(target[path[path.length - 1]]), { status: 200 });
     }
+    if (init.method === 'PATCH') {
+      let target = database;
+      for (const part of path.slice(0, -1)) target = target[part];
+      const key = path[path.length - 1];
+      const index = Array.isArray(target) ? Number(key) : key;
+      target[index] = { ...target[index], ...JSON.parse(init.body) };
+      return new Response(JSON.stringify(target[index]), { status: 200 });
+    }
     if (init.method === 'DELETE') {
       let target = database;
       for (const part of path.slice(0, -1)) target = target?.[part];
@@ -97,6 +105,68 @@ test('only TEMO can delete an individual admin message thread through Firebase a
   assert.equal(database.adminMessages['user-1'], undefined);
   assert.deepEqual(database.users, originalUsersSnapshot);
   assert.equal((await call({ action: 'db', path: 'adminMessages', method: 'DELETE' }, adminSession.sessionToken)).status, 400);
+});
+
+test('only TEMO can block or unblock one non-admin user', async () => {
+  const { body: aliceSession } = await login('Alice', 'user-pass');
+  const forbidden = await call({ action: 'userBlock', userId: 'user-1', blocked: true }, aliceSession.sessionToken);
+  assert.equal(forbidden.status, 403);
+  assert.equal(database.users[0].blocked, false);
+
+  const { body: adminSession } = await login('TEMO', 'admin-pass');
+  const blocked = await call({ action: 'userBlock', userId: 'user-1', blocked: true }, adminSession.sessionToken);
+  assert.equal(blocked.status, 200);
+  assert.deepEqual(await blocked.json(), { userId: 'user-1', blocked: true, authorized: false });
+  assert.equal(database.users[0].blocked, true);
+  assert.equal(database.users[0].authorized, false);
+  assert.equal(database.users[0].name, originalUsers[0].name);
+  assert.equal(database.users[0].password, originalUsers[0].password);
+  assert.equal(database.users[1].name, 'TEMO');
+
+  assert.equal((await call({ action: 'session' }, aliceSession.sessionToken)).status, 401);
+  const unblocked = await call({ action: 'userBlock', userId: 'user-1', blocked: false }, adminSession.sessionToken);
+  assert.equal(unblocked.status, 200);
+  assert.equal(database.users[0].blocked, false);
+  assert.equal(database.users[0].authorized, true);
+
+  assert.equal((await call({ action: 'userBlock', userId: 'admin-1', blocked: true }, adminSession.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'userBlock', userId: '../users', blocked: true }, adminSession.sessionToken)).status, 400);
+  assert.equal((await call({ action: 'userBlock', userId: 'user-1', blocked: 'true' }, adminSession.sessionToken)).status, 400);
+  assert.deepEqual(database.users[1], originalUsers[1]);
+});
+
+test('Firebase rejection leaves a user unblocked and returns a safe failure', async () => {
+  const { body: adminSession } = await login('TEMO', 'admin-pass');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(String(input));
+    if (url.hostname === 'temo-75-default-rtdb.europe-west1.firebasedatabase.app' &&
+        init.method === 'PATCH' && url.pathname.includes('/users/0.json')) {
+      return new Response('permission denied', { status: 401 });
+    }
+    return originalFetch(input, init);
+  };
+  try {
+    const response = await call({ action: 'userBlock', userId: 'user-1', blocked: true }, adminSession.sessionToken);
+    assert.equal(response.status, 502);
+    assert.equal((await response.json()).error, 'Firebase user update failed');
+    assert.equal(database.users[0].blocked, false);
+    assert.equal(database.users[0].authorized, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('admin user block locates object-keyed users without replacing sibling accounts', async () => {
+  database.users = { aliceKey: structuredClone(originalUsers[0]), temoKey: structuredClone(originalUsers[1]) };
+  originalUsersSnapshot = structuredClone(database.users);
+  const { body: adminSession } = await login('TEMO', 'admin-pass');
+  const response = await call({ action: 'userBlock', userId: 'user-1', blocked: true }, adminSession.sessionToken);
+  assert.equal(response.status, 200);
+  assert.equal(database.users.aliceKey.blocked, true);
+  assert.equal(database.users.aliceKey.authorized, false);
+  assert.equal(database.users.aliceKey.password, 'user-pass');
+  assert.deepEqual(database.users.temoKey, originalUsers[1]);
 });
 
 test('site and bridge user-key encoding agree for non-UUID legacy IDs', async () => {
