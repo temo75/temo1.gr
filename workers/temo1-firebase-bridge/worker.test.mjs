@@ -135,6 +135,28 @@ test('only TEMO can block or unblock one non-admin user', async () => {
   assert.deepEqual(database.users[1], originalUsers[1]);
 });
 
+test('Firebase rejection leaves a user unblocked and returns a safe failure', async () => {
+  const { body: adminSession } = await login('TEMO', 'admin-pass');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(String(input));
+    if (url.hostname === 'temo-75-default-rtdb.europe-west1.firebasedatabase.app' &&
+        init.method === 'PATCH' && url.pathname.includes('/users/0.json')) {
+      return new Response('permission denied', { status: 401 });
+    }
+    return originalFetch(input, init);
+  };
+  try {
+    const response = await call({ action: 'userBlock', userId: 'user-1', blocked: true }, adminSession.sessionToken);
+    assert.equal(response.status, 502);
+    assert.equal((await response.json()).error, 'Firebase user update failed');
+    assert.equal(database.users[0].blocked, false);
+    assert.equal(database.users[0].authorized, true);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
 test('admin user block locates object-keyed users without replacing sibling accounts', async () => {
   database.users = { aliceKey: structuredClone(originalUsers[0]), temoKey: structuredClone(originalUsers[1]) };
   originalUsersSnapshot = structuredClone(database.users);
