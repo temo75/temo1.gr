@@ -4812,10 +4812,13 @@ async function markAdminMessagesRead(){
 }
 async function loadAllAdminChats(){
   try{
-    const r=await fetch('https://temo1-firebase-bridge.temo75elia.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:'adminMessages',method:'GET'})});
-    const data=await r.json().catch(()=>null);
-    if(!r.ok)throw new Error(data?.details||data?.error||('Worker HTTP '+r.status));
-    return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
+    const users=getUsers().filter(u=>u.name&&u.name.toUpperCase()!==ADMIN_USER&&!isRemovedUser(u));
+    const entries=await Promise.all(users.map(async u=>{
+      const thread=await loadChatThread(u.id);
+      if(thread===null)throw new Error('Worker-იდან შეტყობინებების ჩატვირთვა ვერ მოხერხდა');
+      return [chatUserKey(u.id),thread];
+    }));
+    return Object.fromEntries(entries);
   }catch(e){console.warn('Firebase admin chat read failed:',e);return null}
 }
 async function renderAdminMessages(){
