@@ -11,7 +11,7 @@ let database;
 let originalUsersSnapshot;
 
 test.beforeEach(() => {
-  database = { users: structuredClone(originalUsers), adminMessages: { 'user-1': [{ id: 'msg-1', userId: 'user-1', userName: 'Alice', text: 'Hello', createdAt: 10, reply: '', replyAt: 0, readByAdmin: false, replyReadByUser: true }] }, expenses: { 'user-1': [{ id: 'exp-1', category: '🛒 მაღაზია', amount: 12.5, date: '2026-10-26', createdAt: 1 }] } };
+  database = { users: structuredClone(originalUsers), adminMessages: { 'user-1': [{ id: 'msg-1', userId: 'user-1', userName: 'Alice', text: 'Hello', createdAt: 10, reply: '', replyAt: 0, readByAdmin: false, replyReadByUser: true }] }, expenses: { 'user-1': [{ id: 'exp-1', category: '🛒 მაღაზია', amount: 12.5, date: '2026-10-26', createdAt: 1 }] }, jobs: { 'user-1': [{ id: 'job-1', date: '2026-10-01', place: 'local', money: 100, paid: false, updatedAt: 1 }] }, jobDeletes: { 'user-1': { old: 2 } } };
   originalUsersSnapshot = structuredClone(database.users);
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(String(input));
@@ -253,5 +253,36 @@ test('expenses require a signed-in session and are limited to the caller\'s own 
   assert.equal((await call({ action: 'db', path: 'expenses/admin-1', method: 'GET' }, body.sessionToken)).status, 403);
   assert.equal((await call({ action: 'db', path: 'expenses/admin-1', method: 'PUT', data: [] }, body.sessionToken)).status, 403);
   assert.equal((await call({ action: 'db', path: 'expenses/user-1/extra', method: 'GET' }, body.sessionToken)).status, 400);
+  assert.deepEqual(database.users, originalUsersSnapshot);
+});
+
+test('jobs and deletion markers require a signed-in session and stay within the caller\'s user path', async () => {
+  assert.equal((await call({ action: 'db', path: 'jobs/user-1', method: 'GET' })).status, 401);
+
+  const { body } = await login('Alice', 'user-pass');
+  const jobs = await call({ action: 'db', path: 'jobs/user-1', method: 'GET' }, body.sessionToken);
+  assert.equal(jobs.status, 200);
+  assert.equal((await jobs.json())[0].id, 'job-1');
+
+  const deletes = await call({ action: 'db', path: 'jobDeletes/user-1', method: 'GET' }, body.sessionToken);
+  assert.equal(deletes.status, 200);
+  assert.deepEqual(await deletes.json(), { old: 2 });
+
+  const savedJobs = await call({ action: 'db', path: 'jobs/user-1', method: 'PUT', data: [
+    { id: 'job-1', date: '2026-10-01', place: 'local', money: 125, paid: true, updatedAt: 3 },
+    { id: 'job-2', date: '2026-10-02', place: 'new browser', money: 50, paid: false, updatedAt: 4 }
+  ] }, body.sessionToken);
+  assert.equal(savedJobs.status, 200);
+  assert.equal(database.jobs['user-1'].length, 2);
+  assert.equal(database.jobs['user-1'][0].money, 125);
+
+  const savedDeletes = await call({ action: 'db', path: 'jobDeletes/user-1', method: 'PUT', data: { old: 2, removed: 5 } }, body.sessionToken);
+  assert.equal(savedDeletes.status, 200);
+  assert.deepEqual(database.jobDeletes['user-1'], { old: 2, removed: 5 });
+
+  assert.equal((await call({ action: 'db', path: 'jobs/admin-1', method: 'GET' }, body.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path: 'jobs/admin-1', method: 'PUT', data: [] }, body.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path: 'jobDeletes/admin-1', method: 'GET' }, body.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path: 'jobDeletes/user-1/extra', method: 'GET' }, body.sessionToken)).status, 400);
   assert.deepEqual(database.users, originalUsersSnapshot);
 });

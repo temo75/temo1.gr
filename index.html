@@ -2757,24 +2757,27 @@ async function loadJobsFromFirebase(){
   const id=String(currentUserId||'').trim();if(!id)return null;
   try{
     const key=firebaseUserKey(id);
-    const jr=await fetch(FIREBASE_DB_URL+'/jobs/'+key+'.json',{cache:'no-store'});
-    if(!jr.ok)throw new Error('Firebase HTTP '+jr.status);
-    const jd=await jr.json();
-    const jobsData=jd===null?[]:(Array.isArray(jd)?jd.filter(Boolean):Object.entries(jd||{}).filter(([,j])=>j).map(([key,j])=>({...j,id:String(j.id||key)})));
-    if(currentUser===ADMIN_USER)return {jobs:jobsData.map(normalizeJobRecord),deletes:{}};
-    const dr=await fetch(FIREBASE_DB_URL+'/jobDeletes/'+key+'.json',{cache:'no-store'});
-    if(!dr.ok)throw new Error('Firebase HTTP '+dr.status);
-    const dd=await dr.json();
+    const jobsPromise=bridgeRequest('db',{path:'jobs/'+key,method:'GET'});
+    if(currentUser===ADMIN_USER){
+      const jobsData=await jobsPromise;
+      const arr=jobsData===null?[]:(Array.isArray(jobsData)?jobsData.filter(Boolean):Object.entries(jobsData||{}).filter(([,j])=>j).map(([recordId,j])=>({...j,id:String(j.id||recordId)})));
+      return {jobs:arr.map(normalizeJobRecord),deletes:{}};
+    }
+    const [jobsData,dd]=await Promise.all([
+      jobsPromise,
+      bridgeRequest('db',{path:'jobDeletes/'+key,method:'GET'})
+    ]);
+    const arr=jobsData===null?[]:(Array.isArray(jobsData)?jobsData.filter(Boolean):Object.entries(jobsData||{}).filter(([,j])=>j).map(([recordId,j])=>({...j,id:String(j.id||recordId)})));
     const deletes=dd&&typeof dd==='object'&&!Array.isArray(dd)?dd:{};
-    return {jobs:jobsData.map(normalizeJobRecord),deletes};
+    return {jobs:arr.map(normalizeJobRecord),deletes};
   }catch(e){console.warn('Firebase jobs read failed:',e);return null}
 }
 async function saveJobsToFirebase(snapshot){
   const id=String(currentUserId||'').trim();if(!id)return false;
   if(currentUser===ADMIN_USER){
-    const url=FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json';
+    const path='jobs/'+firebaseUserKey(id);
     const data=Array.isArray(snapshot)?snapshot.map(normalizeJobRecord):[];
-    firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{try{const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true}catch(e){console.warn('Firebase jobs write failed:',e);return false}});
+    firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{try{await bridgeRequest('db',{path,method:'PUT',data});return true}catch(e){console.warn('Firebase jobs write failed:',e);return false}});
     return firebaseJobsWriteQueue;
   }
   const localSnapshot=(snapshot||[]).map(normalizeJobRecord),localDeletes=getLocalJobDeletes();
@@ -2783,12 +2786,9 @@ async function saveJobsToFirebase(snapshot){
       const remoteState=await loadJobsFromFirebase();
       if(remoteState===null)return false;
       const merged=mergeJobSyncState(localSnapshot,remoteState.jobs,localDeletes,remoteState.deletes);
-      if(!sameJobArrays(merged.jobs,remoteState.jobs)){
-        const r=await fetch(FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.jobs),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-      }
-      if(!sameDeleteMaps(merged.deletes,remoteState.deletes)){
-        const r=await fetch(FIREBASE_DB_URL+'/jobDeletes/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.deletes),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-      }
+      const path='jobs/'+firebaseUserKey(id),deletePath='jobDeletes/'+firebaseUserKey(id);
+      if(!sameJobArrays(merged.jobs,remoteState.jobs))await bridgeRequest('db',{path,method:'PUT',data:merged.jobs});
+      if(!sameDeleteMaps(merged.deletes,remoteState.deletes))await bridgeRequest('db',{path:deletePath,method:'PUT',data:merged.deletes});
       jobs=merged.jobs;setLocalJobDeletes(merged.deletes);localStorage.setItem('temoJobsId_'+id,JSON.stringify(jobs));return true;
     }catch(e){console.warn('Firebase jobs write failed:',e);return false}
   });
@@ -2987,13 +2987,7 @@ async function saveReceivablePaidToFirebase(snapshot){
   const data=Array.isArray(snapshot)?snapshot.map(normalizeJobRecord):[];
   firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{
     try{
-      const r=await fetch(FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json',{
-        method:'PUT',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify(data),
-        keepalive:true
-      });
-      if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+      await bridgeRequest('db',{path:'jobs/'+firebaseUserKey(id),method:'PUT',data});
       jobs=data.map(normalizeJobRecord);
       localStorage.setItem('temoJobsId_'+id,JSON.stringify(jobs));
       if(currentUser===ADMIN_USER)localStorage.setItem('temoJobs',JSON.stringify(jobs));
