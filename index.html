@@ -4836,21 +4836,18 @@ async function toggleUserBlock(id){
   const willBlock=u.blocked!==true;
   if(!confirm((willBlock?'დავბლოკოთ ':'განვბლოკოთ ')+u.name+'?'))return;
 
-  u.blocked=willBlock;
-  u.authorized=!willBlock;
-  localStorage.setItem(USERS_KEY,JSON.stringify(users));
-
-  managedUsersRenderKey='';
-  await renderManagedUsers();
-  renderLoginUsers();
-
   try{
-    await saveUsersToFirebase(users);
+    await bridgeRequest('userBlock',{userId:String(u.id),blocked:willBlock});
+    u.blocked=willBlock;
+    u.authorized=!willBlock;
+    localStorage.setItem(USERS_KEY,JSON.stringify(users));
+    managedUsersRenderKey='';
+    renderLoginUsers();
+    await renderManagedUsers();
   }catch(e){
     console.warn('Firebase user block update failed:',e);
+    alert('მომხმარებლის სტატუსი Firebase-ში ვერ განახლდა.\n\n'+(e?.message||''));
   }
-  managedUsersRenderKey='';
-  await renderManagedUsers();
 }
 
 async function deleteManagedUser(id){
