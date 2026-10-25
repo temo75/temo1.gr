@@ -186,3 +186,24 @@ test('Firebase Auth and Realtime Database failures return safe errors and never 
   assert.doesNotMatch(await dbFailure.text(), /private database detail/);
   globalThis.fetch = previousFetch;
 });
+
+test('emulator overrides isolate Auth, RTDB namespace, and allowed Origin from production', async () => {
+  const isolated = { ...env, FIREBASE_EMAIL: 'emulator-service@example.invalid', FIREBASE_PASSWORD: 'emulator-only', FIREBASE_API_KEY: 'fake-api-key', FIREBASE_AUTH_URL: 'http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithPassword', FIREBASE_DB_URL: 'http://127.0.0.1:9000', FIREBASE_DB_NAMESPACE: 'demo-temo1-bridge', ALLOWED_ORIGIN: 'http://localhost:5500' };
+  const previousFetch = globalThis.fetch;
+  const seen = [];
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(String(input));
+    seen.push({ host: url.host, key: url.searchParams.get('key'), namespace: url.searchParams.get('ns'), auth: url.searchParams.get('auth'), method: init.method || 'GET' });
+    if (url.host === '127.0.0.1:9099') return new Response(JSON.stringify({ idToken: 'emulator-id-token', expiresIn: '3600' }), { status: 200 });
+    if (url.host === '127.0.0.1:9000' && url.searchParams.get('auth') === 'emulator-id-token' && url.searchParams.get('ns') === isolated.FIREBASE_DB_NAMESPACE) return new Response(JSON.stringify(originalUsers), { status: 200 });
+    throw new Error('Unexpected non-emulator endpoint');
+  };
+  const response = await worker.fetch(new Request('http://127.0.0.1:8787/', { method: 'POST', headers: { Origin: isolated.ALLOWED_ORIGIN, 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'login', username: 'Alice', password: 'user-pass' }) }), isolated);
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).user.id, 'user-1');
+  assert.ok(seen.some(x => x.host === '127.0.0.1:9099' && x.key === 'fake-api-key'));
+  assert.ok(seen.some(x => x.host === '127.0.0.1:9000' && x.namespace === 'demo-temo1-bridge' && x.auth === 'emulator-id-token'));
+  assert.equal(seen.some(x => x.host === 'temo-75-default-rtdb.europe-west1.firebasedatabase.app'), false);
+  globalThis.fetch = previousFetch;
+});
+
