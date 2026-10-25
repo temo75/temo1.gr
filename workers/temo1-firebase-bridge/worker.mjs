@@ -176,12 +176,17 @@ function sanitizeAdminThread(incoming, existing) {
     const id = String(item.id || ""), old = oldById.get(id);
     if (!old || !/^[A-Za-z0-9_-]{1,128}$/.test(id) || seen.has(id)) return [];
     seen.add(id);
+    const reply = String(item.reply || "").trim().slice(0, 4000);
+    const replyReadByUser = reply === String(old.reply || "")
+      ? old.replyReadByUser === true
+      : false;
     return [{
       ...old, id,
-      reply: String(item.reply || "").trim().slice(0, 4000),
+      reply,
       replyAt: Number.isFinite(Number(item.replyAt)) ? Number(item.replyAt) : 0,
       readByAdmin: item.readByAdmin === true,
-      replyReadByUser: old.replyReadByUser === true
+      // A changed response is unread; only the user can mark it read.
+      replyReadByUser
     }];
   });
 }
