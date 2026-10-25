@@ -53,7 +53,7 @@ test('job records and deletion markers synchronize only through the authenticate
   assert.ok(load.includes("bridgeRequest('db',{path:'jobDeletes/'+key,method:'GET'})"));
   assert.match(save, /bridgeRequest\('db',\{path,method:'PUT',data\}\)/);
   assert.match(save, /bridgeRequest\('db',\{path:deletePath,method:'PUT',data:merged\.deletes\}\)/);
-  assert.match(receivable, /bridgeRequest\('db',\{path:'jobs\/'+firebaseUserKey\(id\),method:'PUT',data\}\)/);
+  assert.ok(receivable.includes("bridgeRequest('db',{path:'jobs/'+firebaseUserKey(id),method:'PUT',data})"));
   assert.doesNotMatch(load + save + receivable, /fetch\(FIREBASE_DB_URL/);
   assert.match(save, /if\(remoteState===null\)return false/);
 });
