@@ -179,7 +179,7 @@ test('sessions expire, signatures cannot be tampered with, and unauthenticated/u
   const expiredSignature = Buffer.from(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(expiredPayload))).toString('base64url');
   assert.equal((await call({ action: 'session' }, expiredPayload + '.' + expiredSignature)).status, 401);
   assert.equal((await call({ action: 'db', path: 'users', method: 'GET' }, body.sessionToken)).status, 400);
-  assert.equal((await call({ action: 'db', path: 'adminMessages/user-1', method: 'DELETE' }, body.sessionToken)).status, 400);
+  assert.equal((await call({ action: 'db', path: 'adminMessages/user-1', method: 'DELETE' }, body.sessionToken)).status, 403);
   assert.deepEqual(database.users, originalUsersSnapshot);
 });
 
