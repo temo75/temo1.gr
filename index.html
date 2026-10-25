@@ -4849,15 +4849,13 @@ async function renderAdminMessages(){
 async function deleteChatDialog(userId){
   if(currentUser!==ADMIN_USER)return;
   if(!confirm('ეს მომხმარებელთან მთელი დიალოგი წაიშლება. წავშალოთ?'))return;
-  const key=chatUserKey(userId);
-  if(!key)return;
+  if(!chatUserKey(userId))return;
   try{
     await saveChatThread(userId,[]);
     adminChatRenderKey='';
     await renderAdminMessages();
-    await updateMessagesNavDot();
   }catch(e){
-    alert('დიალოგი ვერ წაიშალა.\n\n'+(e?.message||''));
+    alert('დიალოგი ვერ წაიშალა.\\n\\n'+(e?.message||''));
   }
 }
 async function replyToUser(userId,messageId){
