@@ -190,14 +190,13 @@ test('wrong Origin and missing/weak session secret fail closed', async () => {
   assert.equal(weak.status, 503);
 });
 
-test('deleteChatDialog remains unchanged and no destructive DB request is used by the requested flows', async () => {
+test('deleteChatDialog sends only its thread deletion through the bridge', async () => {
   const fs = await import('node:fs/promises');
   const path = new URL('../../index.html', import.meta.url);
   const html = await fs.readFile(path, 'utf8');
   const deleteBlock = html.slice(html.indexOf('async function deleteChatDialog('), html.indexOf('async function replyToUser('));
-  assert.match(deleteBlock, /method:'DELETE'/);
-  const requestedBlock = html.slice(html.indexOf('const CHAT_ROOT='), html.indexOf('let managedUsersRenderKey='));
-  assert.doesNotMatch(requestedBlock.replace(deleteBlock, ''), /method:['\"]DELETE/);
+  assert.ok(deleteBlock.includes("bridgeRequest('db',{path:'adminMessages/'+key,method:'DELETE'})"));
+  assert.doesNotMatch(deleteBlock, /fetch\(FIREBASE_DB_URL/);
 });
 
 test('malformed and oversized requests fail before database access', async () => {
