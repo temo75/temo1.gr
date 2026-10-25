@@ -44,3 +44,39 @@ test('expense reads and writes use the authenticated bridge and render the home 
   assert.match(render, /expenseMonthTotalMain/);
   assert.match(html, /syncExpensesFromFirebase\(\);/);
 });
+
+test('job records and deletion markers synchronize only through the authenticated bridge', () => {
+  const load = html.slice(html.indexOf('async function loadJobsFromFirebase('), html.indexOf('async function saveJobsToFirebase('));
+  const save = html.slice(html.indexOf('async function saveJobsToFirebase('), html.indexOf('async function syncJobsFromFirebase('));
+  const receivable = html.slice(html.indexOf('async function saveReceivablePaidToFirebase('), html.indexOf('function setReceivablePaid('));
+  assert.match(load, /bridgeRequest\('db',\{path:'jobs\/'+key,method:'GET'\}\)/);
+  assert.match(load, /bridgeRequest\('db',\{path:'jobDeletes\/'+key,method:'GET'\}\)/);
+  assert.match(save, /bridgeRequest\('db',\{path,method:'PUT',data\}\)/);
+  assert.match(save, /bridgeRequest\('db',\{path:deletePath,method:'PUT',data:merged\.deletes\}\)/);
+  assert.match(receivable, /bridgeRequest\('db',\{path:'jobs\/'+firebaseUserKey\(id\),method:'PUT',data\}\)/);
+  assert.doesNotMatch(load + save + receivable, /fetch\(FIREBASE_DB_URL/);
+  assert.match(save, /if\(remoteState===null\)return false/);
+});
+
+test('cross-browser job merge keeps unique records and applies deletion timestamps', () => {
+  const start = html.indexOf('const JOB_DELETES_KEY=');
+  const end = html.indexOf('async function loadJobsFromFirebase(', start);
+  const helpers = html.slice(start, end);
+  const mergeJobSyncState = new Function(helpers + '; return mergeJobSyncState;')();
+  const merged = mergeJobSyncState(
+    [
+      { id: 'local-only', date: '2026-10-02', money: 20, updatedAt: 3 },
+      { id: 'shared', date: '2026-10-01', money: 12, updatedAt: 10 }
+    ],
+    [
+      { id: 'remote-only', date: '2026-10-03', money: 30, updatedAt: 4 },
+      { id: 'shared', date: '2026-10-01', money: 10, updatedAt: 5 },
+      { id: 'removed', date: '2026-10-04', money: 40, updatedAt: 1 }
+    ],
+    {},
+    { removed: 2 }
+  );
+  assert.deepEqual(merged.jobs.map(job => job.id), ['local-only', 'remote-only', 'shared']);
+  assert.equal(merged.jobs.find(job => job.id === 'shared').money, 12);
+  assert.deepEqual(merged.deletes, { removed: 2 });
+});
