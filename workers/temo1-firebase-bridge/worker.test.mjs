@@ -50,6 +50,7 @@ test('existing user and TEMO administrator credentials create signed sessions wi
   assert.equal(claims.exp > Math.floor(Date.now() / 1000), true);
   assert.equal(claims.password, undefined);
   assert.equal(typeof claims.credential, 'string');
+  assert.notEqual(claims.credential, 'user-pass');
   assert.equal(admin.response.status, 200);
   assert.equal(admin.body.user.admin, true);
   assert.equal(admin.body.user.name, 'TEMO');
@@ -63,6 +64,7 @@ test('user reads and sends only own messages; client cannot forge admin replies'
   assert.equal(read.status, 200);
   assert.equal((await read.json())[0].text, 'Hello');
   assert.equal((await call({ action: 'db', path: 'adminMessages/admin-1', method: 'GET' }, body.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path: 'adminMessages/admin-1', method: 'PUT', data: [] }, body.sessionToken)).status, 403);
   assert.equal((await call({ action: 'db', path: 'adminMessages', method: 'GET' }, body.sessionToken)).status, 403);
   const write = await call({ action: 'db', path: 'adminMessages/user-1', method: 'PUT', data: [
     { id: 'msg-1', userId: 'admin-1', userName: 'Fake', text: 'Hello', reply: 'forged admin reply', replyAt: 20, createdAt: 10 },
@@ -90,6 +92,14 @@ test('admin reads inbox and replies without overwriting user content or account 
   assert.equal(saved.reply, 'We will help.');
   assert.equal(saved.replyAt, 25);
   assert.deepEqual(database.users, originalUsersSnapshot);
+});
+
+test('an arbitrary admin flag cannot elevate a non-TEMO account', async () => {
+  database.users.push({ id: 'user-2', name: 'Bob', password: 'bob-pass', admin: true, authorized: true, blocked: false });
+  const { response, body } = await login('Bob', 'bob-pass');
+  assert.equal(response.status, 200);
+  assert.equal(body.user.admin, false);
+  assert.equal((await call({ action: 'db', path: 'adminMessages', method: 'GET' }, body.sessionToken)).status, 403);
 });
 
 test('blocked, removed, renamed, or password-changed accounts lose their active session', async () => {
