@@ -7,7 +7,9 @@ const root = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
 let html;
 test.before(async () => { html = await readFile(resolve(root, 'index.html'), 'utf8'); });
 test('site login and session restoration use the signed bridge session', () => {
-  assert.match(html, /FIREBASE_BRIDGE_URL='https:\/\/temo1-firebase-bridge\.temo75elia\.workers\.dev'/);
+  assert.match(html, /https:\/\/temo1-firebase-bridge\.temo75elia\.workers\.dev/);
+  assert.match(html, /location\.hostname==='localhost'/);
+  assert.match(html, /http:\/\/127\.0\.0\.1:8787/);
   assert.match(html, /bridgeRequest\('login',\{username:name,password:pass\},''\)/);
   assert.match(html, /bridgeRequest\('session',\{\},savedBridgeToken\)/);
   assert.match(html, /localStorage\.setItem\(BRIDGE_SESSION_KEY,sessionToken\)/);
@@ -28,3 +30,4 @@ test('the login handler no longer reads users directly from unauthenticated Fire
   const login = html.slice(html.indexOf('async function login()'), html.indexOf('function renderLoginUsers()'));
   assert.doesNotMatch(login, /loadUsersFromFirebase|FIREBASE_DB_URL/);
 });
+
