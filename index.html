@@ -4716,8 +4716,7 @@ async function deleteChatDialog(userId){
   const key=chatUserKey(userId);
   if(!key)return;
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{method:'DELETE'});
-    if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+    await bridgeRequest('db',{path:'adminMessages/'+key,method:'DELETE'});
     adminChatRenderKey='';
     await renderAdminMessages();
   }catch(e){

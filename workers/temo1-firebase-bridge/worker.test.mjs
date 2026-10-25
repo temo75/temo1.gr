@@ -27,6 +27,12 @@ test.beforeEach(() => {
       target[path[path.length - 1]] = JSON.parse(init.body);
       return new Response(JSON.stringify(target[path[path.length - 1]]), { status: 200 });
     }
+    if (init.method === 'DELETE') {
+      let target = database;
+      for (const part of path.slice(0, -1)) target = target?.[part];
+      if (target && typeof target === 'object') delete target[path[path.length - 1]];
+      return new Response('null', { status: 200 });
+    }
     return new Response('method not allowed', { status: 405 });
   };
 });
@@ -76,6 +82,21 @@ test('user reads and sends only own messages; client cannot forge admin replies'
   assert.equal(database.adminMessages['user-1'][0].reply, '');
   assert.equal(database.adminMessages['user-1'][1].reply, '');
   assert.deepEqual(database.users, originalUsersSnapshot);
+});
+
+test('only TEMO can delete an individual admin message thread through Firebase auth', async () => {
+  const { body: userSession } = await login('Alice', 'user-pass');
+  const path = 'adminMessages/user-1';
+  assert.equal((await call({ action: 'db', path, method: 'DELETE' }, userSession.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path, method: 'DELETE' })).status, 401);
+  assert.equal(database.adminMessages['user-1'].length, 1);
+
+  const { body: adminSession } = await login('TEMO', 'admin-pass');
+  const deleted = await call({ action: 'db', path, method: 'DELETE' }, adminSession.sessionToken);
+  assert.equal(deleted.status, 200);
+  assert.equal(database.adminMessages['user-1'], undefined);
+  assert.deepEqual(database.users, originalUsersSnapshot);
+  assert.equal((await call({ action: 'db', path: 'adminMessages', method: 'DELETE' }, adminSession.sessionToken)).status, 400);
 });
 
 test('site and bridge user-key encoding agree for non-UUID legacy IDs', async () => {
@@ -158,7 +179,7 @@ test('sessions expire, signatures cannot be tampered with, and unauthenticated/u
   const expiredSignature = Buffer.from(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(expiredPayload))).toString('base64url');
   assert.equal((await call({ action: 'session' }, expiredPayload + '.' + expiredSignature)).status, 401);
   assert.equal((await call({ action: 'db', path: 'users', method: 'GET' }, body.sessionToken)).status, 400);
-  assert.equal((await call({ action: 'db', path: 'adminMessages/user-1', method: 'DELETE' }, body.sessionToken)).status, 400);
+  assert.equal((await call({ action: 'db', path: 'adminMessages/user-1', method: 'DELETE' }, body.sessionToken)).status, 403);
   assert.deepEqual(database.users, originalUsersSnapshot);
 });
 
@@ -169,14 +190,13 @@ test('wrong Origin and missing/weak session secret fail closed', async () => {
   assert.equal(weak.status, 503);
 });
 
-test('deleteChatDialog remains unchanged and no destructive DB request is used by the requested flows', async () => {
+test('deleteChatDialog sends only its thread deletion through the bridge', async () => {
   const fs = await import('node:fs/promises');
   const path = new URL('../../index.html', import.meta.url);
   const html = await fs.readFile(path, 'utf8');
   const deleteBlock = html.slice(html.indexOf('async function deleteChatDialog('), html.indexOf('async function replyToUser('));
-  assert.match(deleteBlock, /method:'DELETE'/);
-  const requestedBlock = html.slice(html.indexOf('const CHAT_ROOT='), html.indexOf('let managedUsersRenderKey='));
-  assert.doesNotMatch(requestedBlock.replace(deleteBlock, ''), /method:['\"]DELETE/);
+  assert.ok(deleteBlock.includes("bridgeRequest('db',{path:'adminMessages/'+key,method:'DELETE'})"));
+  assert.doesNotMatch(deleteBlock, /fetch\(FIREBASE_DB_URL/);
 });
 
 test('malformed and oversized requests fail before database access', async () => {

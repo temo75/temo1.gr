@@ -80,3 +80,10 @@ test('cross-browser job merge keeps unique records and applies deletion timestam
   assert.equal(merged.jobs.find(job => job.id === 'shared').money, 12);
   assert.deepEqual(merged.deletes, { removed: 2 });
 });
+
+
+test('admin chat deletion uses the signed bridge and targets only one thread', () => {
+  const block = html.slice(html.indexOf('async function deleteChatDialog('), html.indexOf('async function replyToUser('));
+  assert.ok(block.includes("bridgeRequest('db',{path:'adminMessages/'+key,method:'DELETE'})"));
+  assert.doesNotMatch(block, /fetch\(FIREBASE_DB_URL/);
+});
