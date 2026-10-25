@@ -2541,6 +2541,8 @@ const FRESH_USER_IDS_KEY='temoFreshUserIds';
 const ADMIN_USER='TEMO';
 const REMOVED_USER_NAMES=['TEMOADMIN'];
 const FIREBASE_DB_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app';
+const FIREBASE_BRIDGE_URL='https://temo1-firebase-bridge.temo75elia.workers.dev';
+const BRIDGE_SESSION_KEY='temoFirebaseBridgeSession';
 let currentUser=localStorage.getItem(SESSION_USER_KEY)||'';
 let currentUserId=localStorage.getItem(SESSION_USER_ID_KEY)||'';
 let temoLoggingOut=false;
@@ -2549,6 +2551,7 @@ let firebaseWriteQueue=Promise.resolve();
 function makeUserId(){return window.crypto&&crypto.randomUUID?crypto.randomUUID():'u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);}
 function makeLegacyUserId(name,password){const str=String(name||'').trim().toLowerCase()+'\u0000'+String(password??'');let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return 'legacy_'+(h>>>0).toString(16);}
 function firebaseUserKey(id){return encodeURIComponent(String(id)).replace(/%/g,'_');}
+async function bridgeRequest(action,payload={},sessionToken){const token=sessionToken===undefined?(localStorage.getItem(BRIDGE_SESSION_KEY)||''):sessionToken;const response=await fetch(FIREBASE_BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload,sessionToken:token})});const result=await response.json().catch(()=>({error:'Invalid bridge response'}));if(!response.ok)throw Object.assign(new Error(result?.error||'Bridge request failed'),{status:response.status});return result;}
 async function loadUsersFromFirebase(){try{const r=await fetch(FIREBASE_DB_URL+'/users.json',{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data===null)return null;if(Array.isArray(data))return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));return Object.entries(data||{}).filter(([,u])=>u).map(([key,u])=>normalizeUser({...u,_firebaseKey:key})).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Firebase users read failed:',e);return null}}
 function normalizeUser(raw){const u=(raw&&typeof raw==='object')?raw:{};const name=String(u.name||'').trim(),email=String(u.email||'').trim(),password=String(u.password??'');const admin=(name.toUpperCase()===ADMIN_USER)||u.admin===true;const blocked=admin?false:(typeof u.blocked==='boolean'?u.blocked:u.authorized===false);const id=String(u.id||'').trim()||makeLegacyUserId(name,password);return {id,name,email,password,admin,authorized:admin?true:!blocked,blocked,_firebaseKey:u._firebaseKey||''};}
 function isRemovedUser(u){return REMOVED_USER_NAMES.includes(String(u?.name||'').trim().toUpperCase());}
@@ -2566,8 +2569,8 @@ function enablePasswordOnlyLogin(){
   $('loginName').focus();
 }
 function enableNameLogin(){enablePasswordOnlyLogin()}
-async function completeLogin(u){const user=normalizeUser(u);if(user.blocked===true||user.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;localStorage.setItem(USERS_KEY,JSON.stringify(getUsers()));localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
-async function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value;let users=getUsers();$('loginError').textContent='';try{const remote=await loadUsersFromFirebase();if(remote!==null){users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!users.some(u=>u.name.toUpperCase()===ADMIN_USER))users.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(users));}}catch(e){console.warn('Login user refresh failed:',e);}const u=users.find(x=>x.name.toLowerCase()===name.toLowerCase()&&x.password===pass);if(!u){$('loginError').textContent='სახელი ან პაროლი არასწორია. თუ ეს მონაცემები სწორია, მომხმარებლების სია Firebase-ში შესამოწმებელია.';$('loginPassword').value='';$('loginPassword').focus();return;}if(u.blocked===true||u.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';$('loginPassword').focus();return;}await completeLogin(u);}
+async function completeLogin(u,sessionToken){const user=normalizeUser(u);if(user.blocked===true||user.authorized!==true||typeof sessionToken!=='string'||!sessionToken){$('loginError').textContent='შესვლა ვერ მოხერხდა';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;localStorage.setItem(USERS_KEY,JSON.stringify(getUsers()));localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(BRIDGE_SESSION_KEY,sessionToken);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
+async function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value;$('loginError').textContent='';if(!name||!pass){$('loginError').textContent='შეიყვანე სახელი და პაროლი';return;}try{const result=await bridgeRequest('login',{username:name,password:pass},'');if(!result?.user||!result?.sessionToken)throw new Error('Invalid authentication response');await completeLogin(result.user,result.sessionToken);}catch(error){$('loginError').textContent=error?.status===401?'სახელი ან პაროლი არასწორია ან მომხმარებელი დაბლოკილია':'შესვლა დროებით მიუწვდომელია. სცადე მოგვიანებით.';$('loginPassword').value='';$('loginPassword').focus();}}
 function renderLoginUsers(){}
 window.addEventListener('DOMContentLoaded',async()=>{
   const aiInput=document.getElementById('aiChatInput');
@@ -2581,10 +2584,11 @@ window.addEventListener('DOMContentLoaded',async()=>{
     },{passive:false});
   }
 
-  await syncUsersFromFirebase();
   const savedUserId=currentUserId;
-  const matched=findUserById(savedUserId);
-  const sessionValid=localStorage.getItem(AUTH_KEY)==='yes' && !!savedUserId && !!matched && matched.authorized===true && matched.blocked===false;
+  const savedBridgeToken=localStorage.getItem(BRIDGE_SESSION_KEY)||'';
+  let matched=null;
+  if(savedBridgeToken){try{matched=(await bridgeRequest('session',{},savedBridgeToken)).user||null;}catch{matched=null;}}
+  const sessionValid=localStorage.getItem(AUTH_KEY)==='yes' && !!savedUserId && !!matched && String(matched.id)===String(savedUserId) && matched.authorized===true && matched.blocked===false;
   if(sessionValid){
     currentUser=matched.name;currentUserId=matched.id;
     try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}
@@ -2597,7 +2601,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     startJobsSyncWatcher();
     syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));
   }else{
-    localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);currentUser='';currentUserId='';
+    localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);localStorage.removeItem(BRIDGE_SESSION_KEY);currentUser='';currentUserId='';
     // ავტორიზაციის გვერდზეც შევინარჩუნოთ ბოლოს არჩეული ფონის ფერი.
     // მომხმარებლის ID-მდე ხელმისაწვდომია მოწყობილობის საერთო fallback.
     const savedBackground=localStorage.getItem('temoSiteBackground');
@@ -4586,9 +4590,7 @@ async function loadChatThread(userId){
   const key=chatUserKey(userId);
   if(!key)return [];
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{cache:'no-store'});
-    if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-    const data=await r.json();
+    const data=await bridgeRequest('db',{path:'adminMessages/'+key,method:'GET'});
     if(!data)return [];
     const arr=Array.isArray(data)?data.filter(Boolean):Object.entries(data).map(([id,m])=>({...m,id:String(m?.id||id)})).filter(Boolean);
     return arr.map(m=>({id:String(m.id||''),userId:String(m.userId||userId),userName:String(m.userName||''),text:String(m.text||''),createdAt:Number(m.createdAt||0),reply:String(m.reply||''),replyAt:Number(m.replyAt||0)})).sort((a,b)=>a.createdAt-b.createdAt);
@@ -4597,8 +4599,7 @@ async function loadChatThread(userId){
 async function saveChatThread(userId,thread){
   const key=chatUserKey(userId);
   if(!key)throw new Error('მომხმარებელი ჯერ არ არის ავტორიზებული');
-  const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(thread)});
-  if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+  await bridgeRequest('db',{path:'adminMessages/'+key,method:'PUT',data:thread});
 }
 function updateUserChatCount(){
   const el=$('userChatCount'),ta=$('userChatText');if(!el||!ta)return;
@@ -4683,9 +4684,7 @@ async function markAdminMessagesRead(){
 }
 async function loadAllAdminChats(){
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT.slice(0,-1)+'.json',{cache:'no-store'});
-    if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-    const data=await r.json();return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
+    const data=await bridgeRequest('db',{path:'adminMessages',method:'GET'});return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
   }catch(e){console.warn('Firebase admin chat read failed:',e);return null}
 }
 async function renderAdminMessages(){
@@ -4913,7 +4912,7 @@ function closeTEMOExitConfirm(){
 }
 function confirmTEMOExit(){
   temoLoggingOut=true;
-  localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);
+  localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);localStorage.removeItem(BRIDGE_SESSION_KEY);
   window.location.reload();
 }
 function logout(){openTEMOExitConfirm()}
