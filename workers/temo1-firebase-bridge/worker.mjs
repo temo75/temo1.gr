@@ -242,17 +242,20 @@ export default {
 
     const route = parseBridgePath(input.path);
     const method = String(input.method || "").toUpperCase();
-    if (!route || !["GET", "PUT"].includes(method)) return respond({ error: "Invalid path or method" }, 400);
+    if (!route || !["GET", "PUT", "DELETE"].includes(method) ||
+        (method === "DELETE" && (route.kind !== "adminMessages" || !route.id))) return respond({ error: "Invalid path or method" }, 400);
     if ((route.kind === "notes" || route.kind === "expenses" || route.kind === "jobs" || route.kind === "jobDeletes") && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
     if (route.kind === "adminMessages") {
       if (!route.id && (!claims.admin || method !== "GET")) return respond({ error: "Forbidden" }, 403);
       if (route.id && !claims.admin && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
+      if (method === "DELETE" && !claims.admin) return respond({ error: "Forbidden" }, 403);
     }
     if (method === "PUT" && !Object.prototype.hasOwnProperty.call(input, "data")) return respond({ error: "Missing data" }, 400);
 
     const dbPath = route.id ? (route.kind + "/" + route.id) : route.kind;
     try {
       if (method === "GET") return respond(await firebaseRequest(env, dbPath, "GET"), 200);
+      if (method === "DELETE") return respond(await firebaseRequest(env, dbPath, "DELETE"), 200);
       if (route.kind === "adminMessages" && !route.id) return respond({ error: "Forbidden" }, 403);
       if (route.kind === "adminMessages") {
         const existing = await firebaseRequest(env, dbPath, "GET");
