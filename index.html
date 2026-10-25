@@ -4812,9 +4812,10 @@ async function markAdminMessagesRead(){
 }
 async function loadAllAdminChats(){
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT.slice(0,-1)+'.json',{cache:'no-store'});
-    if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-    const data=await r.json();return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
+    const r=await fetch('https://temo1-firebase-bridge.temo75elia.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:'adminMessages',method:'GET'})});
+    const data=await r.json().catch(()=>null);
+    if(!r.ok)throw new Error(data?.details||data?.error||('Worker HTTP '+r.status));
+    return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
   }catch(e){console.warn('Firebase admin chat read failed:',e);return null}
 }
 async function renderAdminMessages(){
