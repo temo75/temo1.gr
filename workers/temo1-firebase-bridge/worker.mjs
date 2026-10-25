@@ -194,6 +194,7 @@ function firebaseUserKey(id) { return encodeURIComponent(String(id)).replace(/%/
 function parseBridgePath(path) {
   if (typeof path !== "string" || path.length > 256) return null;
   if (/^notes\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "notes", id: path.slice("notes/".length) };
+  if (/^expenses\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "expenses", id: path.slice("expenses/".length) };
   const match = path.match(/^adminMessages(?:\/([A-Za-z0-9_-]{1,128}))?$/);
   return match ? { kind: "adminMessages", id: match[1] || "" } : null;
 }
@@ -240,7 +241,7 @@ export default {
     const route = parseBridgePath(input.path);
     const method = String(input.method || "").toUpperCase();
     if (!route || !["GET", "PUT"].includes(method)) return respond({ error: "Invalid path or method" }, 400);
-    if (route.kind === "notes" && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
+    if ((route.kind === "notes" || route.kind === "expenses") && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
     if (route.kind === "adminMessages") {
       if (!route.id && (!claims.admin || method !== "GET")) return respond({ error: "Forbidden" }, 403);
       if (route.id && !claims.admin && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
