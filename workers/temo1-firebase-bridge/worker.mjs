@@ -6,6 +6,7 @@ const SESSION_TTL_SECONDS = 12 * 60 * 60;
 const encoder = new TextEncoder();
 let cachedServiceToken = "";
 let cachedServiceTokenUntil = 0;
+let cachedServiceIdentity = "";
 
 function cors(origin) {
   const headers = {
@@ -37,9 +38,14 @@ function sessionKey(secret) {
 function sessionSecretUsable(env) {
   return typeof env.SESSION_SECRET === "string" && encoder.encode(env.SESSION_SECRET).byteLength >= 32;
 }
-async function issueSession(env, user) {
+async function credentialFingerprint(env, password) {
+  const signature = await crypto.subtle.sign("HMAC", await sessionKey(env.SESSION_SECRET), encoder.encode("credential\u0000" + String(password ?? "")));
+  return base64url(signature);
+}
+async function issueSession(env, user, password) {
   const payload = base64url(encoder.encode(JSON.stringify({
     sub: user.id, name: user.name, admin: user.admin,
+    credential: await credentialFingerprint(env, password),
     exp: Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS
   })));
   const signature = await crypto.subtle.sign("HMAC", await sessionKey(env.SESSION_SECRET), encoder.encode(payload));
@@ -55,9 +61,20 @@ async function verifySession(env, token) {
     const claims = JSON.parse(new TextDecoder().decode(decodeBase64url(parts[0])));
     if (typeof claims.sub !== "string" || !claims.sub || typeof claims.name !== "string" ||
         typeof claims.admin !== "boolean" || !Number.isInteger(claims.exp) ||
+        typeof claims.credential !== "string" || claims.credential.length > 128 ||
         claims.exp <= Math.floor(Date.now() / 1000)) return null;
     return claims;
   } catch { return null; }
+}
+async function validateCurrentUser(env, claims) {
+  const records = normalizedUsers(await firebaseRequest(env, "users", "GET"));
+  const record = records.find(item => safeUser(item).id === claims.sub);
+  if (!record) return null;
+  const user = safeUser(record);
+  if (!user.authorized || user.blocked || user.name !== claims.name || user.admin !== claims.admin) return null;
+  const fingerprint = await credentialFingerprint(env, record.password);
+  if (!constantTimeEqual(fingerprint, claims.credential)) return null;
+  return user;
 }
 function legacyUserId(name, password) {
   const value = String(name || "").trim().toLowerCase() + "\u0000" + String(password ?? "");
@@ -88,7 +105,9 @@ function constantTimeEqual(a, b) {
 async function firebaseIdToken(env) {
   if (!env.FIREBASE_EMAIL || !env.FIREBASE_PASSWORD) throw new Error("backend_auth_unavailable");
   const now = Date.now();
-  if (cachedServiceToken && cachedServiceTokenUntil > now + 60_000) return cachedServiceToken;
+  const identityDigest = await crypto.subtle.digest("SHA-256", encoder.encode(String(env.FIREBASE_EMAIL) + "\u0000" + String(env.FIREBASE_PASSWORD)));
+  const identity = base64url(identityDigest);
+  if (cachedServiceToken && cachedServiceTokenUntil > now + 60_000 && cachedServiceIdentity === identity) return cachedServiceToken;
   const response = await fetch("https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=" + FIREBASE_API_KEY, {
     method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email: env.FIREBASE_EMAIL, password: env.FIREBASE_PASSWORD, returnSecureToken: true }),
@@ -97,6 +116,7 @@ async function firebaseIdToken(env) {
   const auth = await response.json().catch(() => null);
   if (!response.ok || !auth?.idToken) throw new Error("backend_auth_unavailable");
   cachedServiceToken = auth.idToken;
+  cachedServiceIdentity = identity;
   cachedServiceTokenUntil = now + Math.max(60, Number(auth.expiresIn) || 3600) * 1000;
   return cachedServiceToken;
 }
@@ -189,14 +209,18 @@ export default {
         if (!matched) return reply({ error: "Invalid credentials" }, 401, origin);
         const user = safeUser(matched);
         if (!user.authorized || user.blocked) return reply({ error: "Invalid credentials" }, 401, origin);
-        const sessionToken = await issueSession(env, user);
+        const sessionToken = await issueSession(env, user, matched.password);
         return reply({ user, sessionToken }, 200, origin);
       } catch { return reply({ error: "Authentication service unavailable" }, 503, origin); }
     }
 
     const claims = await verifySession(env, input.sessionToken);
     if (!claims) return reply({ error: "Authentication required" }, 401, origin);
-    if (input.action === "session") return reply({ user: { id: claims.sub, name: claims.name, admin: claims.admin, authorized: true, blocked: false } }, 200, origin);
+    let activeUser;
+    try { activeUser = await validateCurrentUser(env, claims); }
+    catch { return reply({ error: "Authentication service unavailable" }, 503, origin); }
+    if (!activeUser) return reply({ error: "Authentication required" }, 401, origin);
+    if (input.action === "session") return reply({ user: activeUser }, 200, origin);
     if (input.action !== "db") return reply({ error: "Invalid action" }, 400, origin);
 
     const route = parseBridgePath(input.path);
