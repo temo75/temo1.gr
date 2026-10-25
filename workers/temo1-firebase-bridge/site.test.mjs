@@ -49,7 +49,7 @@ test('job records and deletion markers synchronize only through the authenticate
   const load = html.slice(html.indexOf('async function loadJobsFromFirebase('), html.indexOf('async function saveJobsToFirebase('));
   const save = html.slice(html.indexOf('async function saveJobsToFirebase('), html.indexOf('async function syncJobsFromFirebase('));
   const receivable = html.slice(html.indexOf('async function saveReceivablePaidToFirebase('), html.indexOf('function setReceivablePaid('));
-  assert.match(load, /bridgeRequest\('db',\{path:'jobs\/'+key,method:'GET'\}\)/);
+  assert.match(load, /jobsPromise=bridgeRequest\('db',\{path:'jobs\/'+key,method:'GET'\}\)/);
   assert.match(load, /bridgeRequest\('db',\{path:'jobDeletes\/'+key,method:'GET'\}\)/);
   assert.match(save, /bridgeRequest\('db',\{path,method:'PUT',data\}\)/);
   assert.match(save, /bridgeRequest\('db',\{path:deletePath,method:'PUT',data:merged\.deletes\}\)/);
