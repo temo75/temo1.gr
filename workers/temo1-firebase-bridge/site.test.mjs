@@ -11,6 +11,7 @@ test('site login and session restoration use the signed bridge session', () => {
   assert.match(html, /bridgeRequest\('login',\{username:name,password:pass\},''\)/);
   assert.match(html, /bridgeRequest\('session',\{\},savedBridgeToken\)/);
   assert.match(html, /localStorage\.setItem\(BRIDGE_SESSION_KEY,sessionToken\)/);
+  assert.match(html, /localStorage\.removeItem\(BRIDGE_SESSION_KEY\)/);
 });
 test('message reads, writes, inbox view, and admin replies use the bridge', () => {
   const load = html.slice(html.indexOf('async function loadChatThread('), html.indexOf('async function saveChatThread('));
