@@ -29,5 +29,7 @@ test('message reads, writes, inbox view, and admin replies use the bridge', () =
 test('the login handler no longer reads users directly from unauthenticated Firebase REST', () => {
   const login = html.slice(html.indexOf('async function login()'), html.indexOf('function renderLoginUsers()'));
   assert.doesNotMatch(login, /loadUsersFromFirebase|FIREBASE_DB_URL/);
+  assert.match(html, /response\.status===401&&action!=='login'&&token\)expireBridgeSession\(\)/);
+  assert.match(html, /function expireBridgeSession\(\).*removeItem\(BRIDGE_SESSION_KEY\).*currentUser='';currentUserId=''/);
 });
 
