@@ -388,6 +388,30 @@ export default {
           }))
         : [];
 
+      const rawBillContext =
+        userContext.billContext && typeof userContext.billContext === "object"
+          ? userContext.billContext
+          : {};
+      const safeBillRow = b => ({
+        provider: String(b?.provider ?? "").slice(0, 80),
+        kind: String(b?.kind ?? "invoice").slice(0, 40),
+        subject: String(b?.subject ?? "").slice(0, 250),
+        amount: b?.amount != null && b?.amount !== "" && Number.isFinite(Number(b.amount)) ? Number(b.amount) : null,
+        currency: String(b?.currency ?? "EUR").slice(0, 8),
+        date: String(b?.date ?? "").slice(0, 50),
+        dueDate: String(b?.dueDate ?? "").slice(0, 30),
+        paymentDate: String(b?.paymentDate ?? "").slice(0, 50),
+        paymentStatus: String(b?.paymentStatus ?? "unknown").slice(0, 40),
+        from: String(b?.from ?? "").slice(0, 160),
+        receiptFor: String(b?.receiptFor ?? "").slice(0, 160)
+      });
+      const safeBillContext = {
+        connected: rawBillContext.connected === true,
+        error: rawBillContext.error ? String(rawBillContext.error).slice(0, 200) : null,
+        deiBills: Array.isArray(rawBillContext.deiBills) ? rawBillContext.deiBills.slice(0, 100).map(safeBillRow) : [],
+        novaBills: Array.isArray(rawBillContext.novaBills) ? rawBillContext.novaBills.slice(0, 100).map(safeBillRow) : []
+      };
+
       let history = Array.isArray(body.history) ? body.history : [];
       history = history
         .filter(item =>
@@ -465,6 +489,18 @@ ${JSON.stringify(safeExpenses)}
 
 USER'S OWN NOTES:
 ${JSON.stringify(safeNotes)}
+
+USER'S REAL BILL HISTORY FROM THE SITE:
+${JSON.stringify(safeBillContext)}
+
+BILL HISTORY RULES:
+- When asked about NOVA, DEI, bills, invoices, receipts, payment confirmations, due dates, or bill totals, use only USER'S REAL BILL HISTORY FROM THE SITE above.
+- Review ALL supplied matching rows, not only the first or newest row. List each relevant invoice/receipt with its actual provider, amount, date, due date, and payment status when those fields are present.
+- Distinguish invoices from payment receipts. A receipt is evidence of a payment message, not automatically a separate unpaid invoice. Do not count receipt rows as invoices or add their amounts into invoice totals.
+- Never invent an invoice, amount, date, due date, or payment status. If a field is missing, say it is not shown.
+- Only call an invoice paid if its supplied paymentStatus is "paid". If it says "unknown", "due", or there is no matching record, state that clearly.
+- If billContext.connected is false, say bill history is not connected in this session. If billContext.error is present, explain that bill history could not be loaded; do not guess.
+- If the relevant history contains multiple rows, summarize them all or state how many matching rows were found. Do not answer with just one receipt when multiple matching records are supplied.
 
 IMPORTANT PRIVACY RULES:
 - Use only the supplied data belonging to the current logged-in user.

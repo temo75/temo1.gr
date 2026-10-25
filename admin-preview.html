@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087fc1">
+<title>TEMO ADMIN • Control Center</title>
+<style>
+:root{color-scheme:light;--blue:#087fc1;--blue2:#27b8ef;--ink:#17283a;--muted:#718198;--line:#dce8f2;--bg:#f3f8fc;--card:#fff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+header{background:linear-gradient(125deg,#0769a8,#29b9ef);color:white;padding:25px 18px 28px}
+.wrap{max-width:1080px;margin:auto}.eyebrow{font-size:11px;letter-spacing:.16em;font-weight:800;opacity:.9}
+h1{font-size:clamp(26px,5vw,38px);margin:8px 0 4px;letter-spacing:-.03em}header p{margin:0;opacity:.93}
+main{max-width:1080px;margin:20px auto;padding:0 14px 38px}
+.preview{border:1px solid #f0d38d;background:#fff8e8;color:#785313;padding:11px 13px;border-radius:12px;font-size:12px;margin-bottom:18px}
+.section-head{display:flex;align-items:center;justify-content:space-between;margin:22px 2px 12px;gap:12px}
+h2{font-size:18px;margin:0}.hint{font-size:12px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat( auto-fit,minmax(215px,1fr));gap:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:17px;padding:17px;box-shadow:0 5px 20px #163c5a0a;min-width:0}
+.project{min-height:160px}.icon{width:43px;height:43px;display:grid;place-items:center;border-radius:13px;background:#e8f5ff;color:var(--blue);font-size:22px;margin-bottom:12px}
+.card h3{margin:0 0 5px;font-size:16px}.card p{margin:0;color:var(--muted);font-size:13px}
+.pill{display:inline-block;margin-top:13px;border-radius:99px;background:#eaf5fc;color:#0877b6;padding:5px 9px;font-size:11px;font-weight:750}
+.tools .card{min-height:122px}.topline{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.status{display:inline-flex;align-items:center;gap:6px;color:#64758a;font-size:11px}.dot{width:7px;height:7px;border-radius:50%;background:#e8a33a}
+footer{text-align:center;color:var(--muted);font-size:11px;padding:20px}
+@media(max-width:420px){header{padding-top:21px}.card{padding:15px}.grid{grid-template-columns:1fr 1fr;gap:9px}.project{min-height:174px}.card p{font-size:12px}.icon{width:38px;height:38px}}
+</style>
+</head>
+<body>
+<header><div class="wrap"><div class="eyebrow">TEMO • ADMIN WORKSPACE</div><h1>CONTROL CENTER</h1><p>ყველა პროექტი ერთ სივრცეში</p></div></header>
+<main>
+<div class="preview"><strong>სატესტო დიზაინი.</strong> ეს გვერდი ახლა მხოლოდ სანახავია. ადმინისტრატორის დაცული შესვლა ჯერ არ არის ჩართული.</div>
+<div class="section-head"><h2>ჩემი პროექტები</h2><span class="hint">4 პროექტი</span></div>
+<section class="grid" aria-label="ჩემი პროექტები">
+<article class="card project"><div class="icon">◎</div><h3>temo1.gr</h3><p>მთავარი საიტი, ანგარიში და მომხმარებლები.</p><span class="pill">მთავარი პროექტი</span></article>
+<article class="card project"><div class="icon">⌘</div><h3>T1</h3><p>ცალკე პროექტი და მისი მართვის სივრცე.</p><span class="pill">ცალკე პროექტი</span></article>
+<article class="card project"><div class="icon">⌖</div><h3>Kreta</h3><p>კრეტას ადგილობრივი სერვისები და ინფორმაცია.</p><span class="pill">ვებ-საიტი</span></article>
+<article class="card project"><div class="icon">⚖</div><h3>TEMO WEIGHT</h3><p>წონის დღიური, კამერა და OCR.</p><span class="pill">ცალკე პროექტი</span></article>
+</section>
+<div class="section-head"><h2>მართვის ხელსაწყოები</h2><span class="hint">მომავალი ფუნქციები</span></div>
+<section class="grid tools">
+<article class="card"><div class="topline"><div class="icon">♙</div><span class="status"><i class="dot"></i> დაგეგმილია</span></div><h3>მომხმარებლები</h3><p>ანგარიშების ნახვა და მართვა.</p></article>
+<article class="card"><div class="topline"><div class="icon">⌁</div><span class="status"><i class="dot"></i> დაგეგმილია</span></div><h3>სისტემის სტატუსი</h3><p>პროექტების მდგომარეობის შემოწმება.</p></article>
+<article class="card"><div class="topline"><div class="icon">⛨</div><span class="status"><i class="dot"></i> დაგეგმილია</span></div><h3>უსაფრთხოება</h3><p>ადმინისტრატორის უფლებების დაცული შემოწმება.</p></article>
+<article class="card"><div class="topline"><div class="icon">✦</div><span class="status"><i class="dot"></i> დაგეგმილია</span></div><h3>TEMO AI</h3><p>AI-სა და სხვა ხელსაწყოების ინტეგრაცია.</p></article>
+</section>
+</main>
+<footer>TEMO CONTROL CENTER • სატესტო დიზაინი</footer>
+</body>
+</html>

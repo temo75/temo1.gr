@@ -1,5 +1,7 @@
 /**
  * TEMO DEI bill sync — Cloudflare Worker
+ * Deployment check: NOVA sync errors now return a diagnostic code.
+ * NOVA receipt matching also uses the customer code when available.
  * Required binding: DEI_KV (KV namespace)
  * Required variables/secrets:
  *   GOOGLE_CLIENT_ID       (text variable)
@@ -322,6 +324,12 @@ function novaCents(value) {
   return Number.isFinite(amount) ? Math.round(amount * 100) : null;
 }
 
+function extractNovaCustomerCode(text) {
+  const value = String(text || "").normalize("NFC");
+  const match = value.match(/κωδικός\s+πελάτη(?:\s*\/\s*όνομα\s+χρήστη)?\s*:?\s*([0-9]+(?:\.[0-9]+)*)/i);
+  return match ? match[1].replace(/\./g, "") : null;
+}
+
 function novaTimestamp(bill) {
   const value = Number(bill?.internalDate || 0);
   if (value > 0) return value;
@@ -347,12 +355,22 @@ async function reconcileNovaReceipts(env, ownerKey) {
     let candidates = invoices.filter(invoice => {
       if (invoice.paymentStatus === "paid" || novaCents(invoice.totalEUR) !== receiptCents) return false;
       const invoiceTime = novaTimestamp(invoice);
-      return invoiceTime > 0 && invoiceTime <= receiptTime;
+      if (!(invoiceTime > 0 && invoiceTime <= receiptTime)) return false;
+      // Prefer a strong identity match from NOVA's customer code, not amount alone.
+      if (receipt.customerCode && invoice.customerCode !== receipt.customerCode) return false;
+      return true;
     });
     if (receipt.dueDate) {
-      candidates = candidates.filter(invoice => String(invoice.dueDate || "") === String(receipt.dueDate));
+      const exact = candidates.filter(invoice => String(invoice.dueDate || "") === String(receipt.dueDate));
+      if (exact.length) candidates = exact;
     }
-    // An amount alone is insufficient when more than one earlier unpaid invoice fits.
+    if (receipt.customerCode && candidates.length > 1) {
+      // When multiple older bills have the same customer code and amount,
+      // the receipt most plausibly settles the most recently issued eligible bill.
+      const latestTime = Math.max(...candidates.map(novaTimestamp));
+      candidates = candidates.filter(invoice => novaTimestamp(invoice) === latestTime);
+    }
+    // Never mark an invoice paid if the best identity/date match is still ambiguous.
     if (candidates.length !== 1) {
       if (receipt.paymentStatus !== "unknown") {
         receipt.paymentStatus = "unknown";
@@ -361,16 +379,27 @@ async function reconcileNovaReceipts(env, ownerKey) {
       continue;
     }
     const invoice = candidates[0];
-    invoice.paymentStatus = "paid";
-    invoice.paymentDate = receipt.emailDate || new Date(receiptTime).toISOString();
-    invoice.paymentReceiptMessageId = receipt.gmailMessageId;
-    invoice.fetchedAt = new Date().toISOString();
-    receipt.paymentStatus = "paid";
-    receipt.matchedInvoiceMessageId = invoice.gmailMessageId;
-    receipt.paymentDate = receipt.emailDate || new Date(receiptTime).toISOString();
-    receipt.fetchedAt = new Date().toISOString();
-    await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(invoice.gmailMessageId)), JSON.stringify(invoice));
-    await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(receipt.gmailMessageId)), JSON.stringify(receipt));
+    const paymentDate = receipt.emailDate || new Date(receiptTime).toISOString();
+    const invoiceChanged = invoice.paymentStatus !== "paid" ||
+      invoice.paymentDate !== paymentDate ||
+      invoice.paymentReceiptMessageId !== receipt.gmailMessageId;
+    const receiptChanged = receipt.paymentStatus !== "paid" ||
+      receipt.matchedInvoiceMessageId !== invoice.gmailMessageId ||
+      receipt.paymentDate !== paymentDate;
+    if (invoiceChanged) {
+      invoice.paymentStatus = "paid";
+      invoice.paymentDate = paymentDate;
+      invoice.paymentReceiptMessageId = receipt.gmailMessageId;
+      invoice.fetchedAt = new Date().toISOString();
+      await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(invoice.gmailMessageId)), JSON.stringify(invoice));
+    }
+    if (receiptChanged) {
+      receipt.paymentStatus = "paid";
+      receipt.matchedInvoiceMessageId = invoice.gmailMessageId;
+      receipt.paymentDate = paymentDate;
+      receipt.fetchedAt = new Date().toISOString();
+      await env.DEI_KV.put(NOVA_BILL_PREFIX + ownerKey + ":" + encodeURIComponent(String(receipt.gmailMessageId)), JSON.stringify(receipt));
+    }
   }
   return listStoredNovaBills(env, ownerKey);
 }
@@ -413,22 +442,29 @@ async function syncNovaBills(env, ownerKey) {
         found: true, provider: "NOVA", subject, from, emailDate,
         internalDate: timestamp || (Number.isFinite(headerDate) ? headerDate : 0),
         totalEUR: amount, dueDate: dueDate || previous?.dueDate || null,
+        customerCode: extractNovaCustomerCode(bodyText) || previous?.customerCode || null,
         paymentStatus: previous?.matchedInvoiceMessageId ? "paid" : "unknown",
         paymentDate: emailDate || previous?.paymentDate || null,
         gmailMessageId: messageId, fetchedAt: new Date().toISOString(), kind: "payment-receipt"
       };
-      await env.DEI_KV.put(key, JSON.stringify(receipt));
-      if (byId.has(messageId)) {
+      const previousReceipt = byId.get(messageId);
+      const receiptChanged = !previousReceipt ||
+        ["subject", "from", "emailDate", "internalDate", "totalEUR", "dueDate", "customerCode", "paymentStatus", "paymentDate", "kind", "matchedInvoiceMessageId"]
+          .some(field => (previousReceipt[field] ?? null) !== (receipt[field] ?? null));
+      if (receiptChanged) {
+        await env.DEI_KV.put(key, JSON.stringify(receipt));
         const index = existing.findIndex(b => String(b.gmailMessageId) === messageId);
         if (index >= 0) existing[index] = receipt;
-      } else existing.push(receipt);
-      byId.set(messageId, receipt);
+        else existing.push(receipt);
+        byId.set(messageId, receipt);
+      }
       continue;
     }
     const bill = {
       found: true, provider: "NOVA", subject, from, emailDate,
       internalDate: timestamp || (Number.isFinite(headerDate) ? headerDate : 0),
       totalEUR: amount, dueDate,
+      customerCode: extractNovaCustomerCode(bodyText),
       paymentStatus: extractPaymentStatus(bodyText) === "unknown" && dueDate ? "due" : extractPaymentStatus(bodyText),
       gmailMessageId: messageId, fetchedAt: new Date().toISOString(), kind: "invoice"
     };
@@ -442,10 +478,16 @@ async function syncNovaBills(env, ownerKey) {
       } else if (bill.paymentStatus === "unknown" && (same.paymentStatus === "paid" || same.paymentStatus === "due")) {
         repaired.paymentStatus = same.paymentStatus;
       }
-      await env.DEI_KV.put(key, JSON.stringify(repaired));
-      byId.set(messageId, repaired);
-      const index = existing.findIndex(b => String(b.gmailMessageId) === messageId);
-      if (index >= 0) existing[index] = repaired;
+      const fieldsToCompare = ["subject", "from", "emailDate", "internalDate", "totalEUR", "dueDate", "customerCode", "paymentStatus", "paymentDate", "paymentReceiptMessageId", "kind"];
+      const changed = fieldsToCompare.some(field => (same[field] ?? null) !== (repaired[field] ?? null));
+      if (changed) {
+        await env.DEI_KV.put(key, JSON.stringify(repaired));
+        byId.set(messageId, repaired);
+        const index = existing.findIndex(b => String(b.gmailMessageId) === messageId);
+        if (index >= 0) existing[index] = repaired;
+      } else {
+        byId.set(messageId, same);
+      }
     } else {
       // De-duplicate NOVA invoices only; receipt rows never suppress invoices.
       const duplicate = existing.some(b => b.kind !== "payment-receipt" &&
@@ -803,7 +845,16 @@ export default {
         if (!env.DEI_KV) return json({ ok: false, error: "DEI_KV binding is not configured" }, 503);
         const ownerKey = await getT1SessionOwner(request, env);
         if (!ownerKey) return json({ ok: false, error: "Unauthorized" }, 401);
-        return json(await syncNovaBills(env, ownerKey));
+        try {
+          return json(await syncNovaBills(env, ownerKey));
+        } catch (error) {
+          const raw = String(error?.message || "");
+          const known = raw === "GMAIL_NOT_CONNECTED" || /^GOOGLE_REFRESH_FAILED_\d+$/.test(raw) || /^GMAIL_API_FAILED_\d+$/.test(raw);
+          const code = known ? raw : "NOVA_SYNC_INTERNAL";
+          const detail = known ? code : String(error?.name || "Error") + ": " + raw.replace(/[\\r\\n\\t]/g, " ").replace(/[^a-zA-Z0-9 _.:/-]/g, "").slice(0, 140);
+          console.error("NOVA_SYNC_FAILED", JSON.stringify({ code, name: String(error?.name || "Error"), detail }));
+          return json({ ok: false, error: code, detail }, 502);
+        }
       }
       if (url.pathname === "/api/nova/history") {
         if (request.method !== "GET") return json({ ok: false, error: "Method not allowed" }, 405, { allow: "GET, OPTIONS" });

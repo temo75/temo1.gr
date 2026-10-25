@@ -12,6 +12,29 @@
 <meta name="google-site-verification" content="vPkaq57GkbGCufy6hasdsXrRhcvq6gQ_SXYJk8t7JG0" />
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<!-- Firebase Authentication bootstrap for the isolated fix branch -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-database-compat.js"></script>
+<script id="temo-firebase-auth-bootstrap">
+window.temoFirebaseConfig = {
+  apiKey: "AIzaSyAQqkrE6BweLfFEI179irLpkc6OVmIHArc",
+  authDomain: "temo-75.firebaseapp.com",
+  databaseURL: "https://temo-75-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "temo-75",
+  storageBucket: "temo-75.firebasestorage.app",
+  messagingSenderId: "966586658574",
+  appId: "1:966586658574:web:4537c8b2b3e13b5615b15f",
+  measurementId: "G-G7J1FBF18Y"
+};
+try {
+  if (window.firebase && !firebase.apps.length) firebase.initializeApp(window.temoFirebaseConfig);
+  window.temoFirebaseAuth = window.firebase ? firebase.auth() : null;
+  window.temoFirebaseDatabase = window.firebase ? firebase.database() : null;
+} catch (e) {
+  console.error("TEMO Firebase initialization failed:", e);
+}
+</script>
 <style id="temo-auth-boot-style">
 html.auth-booting body{visibility:hidden!important}
 html.auth-booting{background:#071117!important}
@@ -184,7 +207,7 @@ footer{display:none!important;}
 .neonControlled{border-color:var(--neon-control)!important;}
 .neonControlled .label,.neonControlled span{color:#dfffe6!important;}
 .neonControlled .amount,.neonControlled b{ }
-.neonControlBox{margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,var(--panel),var(--panel2))}
+.neonControlBox{margin-top:8px;padding:10px;border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,var(--panel),var(--panel2))}
 .backgroundControlRow{display:flex;gap:12px;align-items:center;margin-top:12px;flex-wrap:wrap}
 .backgroundColorBtn{width:42px;height:42px;border-radius:9px;border:2px solid #777;cursor:pointer;padding:0;position:relative;box-shadow:0 0 6px rgba(255,255,255,.18)}
 .backgroundColorBtn.white{background:#fff;border-color:#222}
@@ -2363,12 +2386,22 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 <div class="neonControlBox">
 <div>ფერი</div>
 <div class="neonControlRow"><button type="button" class="neonColorOpen" id="neonColorOpen" onclick="openNeonPicker()" aria-label="ნეონის ფერის არჩევა"><span id="neonColorPreview"></span></button><input id="neonColor" type="color" value="#49d86a" aria-label="ნეონის ფერი"></div>
-<div style="margin-top:14px">სიმძლავრე</div>
+<div style="margin-top:8px">სიმძლავრე</div>
 <div class="neonControlRow"><input id="neonStrength" type="range" min="0" max="100" value="65" step="1" aria-label="ნეონის სიმძლავრე"><span id="neonStrengthValue" class="neonValue">65%</span></div>
-<div style="margin-top:14px">ფონის ფერი</div>
+<div style="margin-top:8px">ფონის ფერი</div>
 <div class="backgroundControlRow" aria-label="ფონის ფერი">
 <button type="button" class="backgroundColorBtn white" id="backgroundWhiteBtn" onclick="setSiteBackground('white')" aria-label="თეთრი ფონი" title="თეთრი"> </button>
 <button type="button" class="backgroundColorBtn black" id="backgroundBlackBtn" onclick="setSiteBackground('black')" aria-label="შავი ფონი" title="შავი"> </button>
+</div>
+</div>
+</div>
+<div class="section" id="t1SiteControlSection">
+<h2>🌐 T1 საიტის ჩართვა / გამორთვა</h2>
+<div class="section" id="t1SiteControl" style="margin:0;padding:12px;border:1px solid #285269">
+
+<div id="t1SiteControlStatus" class="meta" role="status">სტატუსის შემოწმება...</div>
+<button type="button" id="t1SiteControlButton" class="t1Switch" onclick="toggleT1Site()" role="switch" aria-checked="false" aria-label="T1 საიტის ჩართვა ან გამორთვა" style="margin-top:10px"><span class="t1SwitchTrack"><span class="t1SwitchThumb"></span></span><span id="t1SiteSwitchLabel">⏳ შემოწმება...</span></button>
+<div class="meta" style="margin-top:8px">მართავს https://temo75.github.io/t1/ საიტის ხელმისაწვდომობას.</div>
 </div>
 </div>
 <div class="section" id="websiteUpdateSection">
@@ -2383,14 +2416,14 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 <div class="meta" style="margin-top:12px">ატვირთული ფაილი უნდა იყოს index.html. Token მხოლოდ ამ ტელეფონში ინახება.</div>
 
-<div class="section" id="workerUpdateSection" style="margin-top:14px">
+</div>
+<div class="section" id="workerUpdateSection">
 <h2>⚙️ Worker-ის განახლება</h2>
 <div class="tools">
 <input id="workerUpdateFile" type="file" accept=".js,text/javascript,application/javascript" onchange="workerFileSelected()" style="display:none">
 <button type="button" class="backupBtn" id="workerFileBtn" onclick="handleWorkerFileButton()">📁 აირჩიე worker.js</button>
 </div>
 <div class="meta" style="margin-top:12px">ატვირთე worker.js GitHub-ის იმავე Repository-ში. გამოიყენება იგივე Repository / Token.</div>
-</div>
 </div>
 
 <div class="section" id="dataExportSection">
@@ -2400,8 +2433,6 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 <button type="button" class="backupBtn" onclick="exportMyDataPdf()">📄 PDF</button>
 </div>
 <div class="meta" style="margin-top:12px">სამუშაოები, მიღებული თანხები, გასავლები და ჯამები.</div>
-</div>
-
 </div>
 
 </div>
@@ -2515,7 +2546,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 <div class="aiChatModal" id="aiChatModal" onclick="if(event.target===this)closeAIChat()">
   <div class="aiChatBox" role="dialog" aria-modal="true" aria-labelledby="aiChatTitle">
-    <div class="aiChatHeader"><h2 id="aiChatTitle">🤖 TEMO AI</h2><button type="button" class="aiChatClose" onclick="closeAIChat()" aria-label="დახურვა">✕</button></div>
+    <div class="aiChatHeader"><h2 id="aiChatTitle">🤖 TEMO AI</h2><div class="aiHeaderActions"><button type="button" id="aiVoiceToggle" class="aiVoiceToggle" onclick="toggleTEMOAIVoice()" aria-label="ხმოვანი პასუხების ჩართვა/გამორთვა" title="ხმოვანი პასუხები">🔇</button><button type="button" class="aiChatClose" onclick="closeAIChat()" aria-label="დახურვა">✕</button></div></div>
     <div class="aiChatMessages" id="aiChatMessages"></div>
     <div class="aiChatInputRow"><textarea id="aiChatInput" class="aiChatInput" rows="1" placeholder="ჰკითხე"></textarea><button type="button" id="aiChatMic" class="aiChatMic" onclick="toggleTEMOAIListening()" aria-label="მიკროფონი">🎤</button><button type="button" id="aiChatSend" class="aiChatSend" onclick="sendAIMessage()" aria-label="გაგზავნა">➤</button></div>
   </div>
@@ -2541,6 +2572,52 @@ const FRESH_USER_IDS_KEY='temoFreshUserIds';
 const ADMIN_USER='TEMO';
 const REMOVED_USER_NAMES=['TEMOADMIN'];
 const FIREBASE_DB_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app';
+const T1_SITE_CONTROL_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app/siteControls/t1.json';
+let t1SiteEnabled=true;
+async function refreshT1SiteControl(){
+ const status=document.getElementById('t1SiteControlStatus'),button=document.getElementById('t1SiteControlButton');
+ if(!status||!button)return;
+ if(currentUser!==ADMIN_USER){status.textContent='ადმინისტრატორის წვდომაა საჭირო.';button.disabled=true;return;}
+ button.disabled=true;document.getElementById('t1SiteSwitchLabel').textContent='⏳ შემოწმება...';
+ try{
+  const r=await firebaseAuthorizedFetch('/siteControls/t1.json?check='+Date.now(),{cache:'no-store'});
+  if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+  const data=await r.json();
+  t1SiteEnabled=!(data&&data.enabled===false);
+  status.textContent='';
+  button.setAttribute('aria-checked',String(t1SiteEnabled));
+  button.classList.toggle('is-on',t1SiteEnabled);
+  document.getElementById('t1SiteSwitchLabel').textContent=t1SiteEnabled?'T1 ჩართულია':'T1 გამორთულია';
+  button.disabled=false;
+ }catch(e){
+  status.textContent='სტატუსის წაკითხვა ვერ მოხერხდა: '+String(e.message||e);
+  document.getElementById('t1SiteSwitchLabel').textContent='ხელახლა შემოწმება';button.disabled=false;
+ }
+}
+async function toggleT1Site(){
+ if(currentUser!==ADMIN_USER){alert('მხოლოდ ადმინისტრატორს შეუძლია T1-ის მართვა.');return;}
+ const button=document.getElementById('t1SiteControlButton'),status=document.getElementById('t1SiteControlStatus');
+ if(!button||button.disabled)return;
+ const nextEnabled=!t1SiteEnabled;
+ button.disabled=true;document.getElementById('t1SiteSwitchLabel').textContent='⏳ შენახვა...';
+ try{
+  const r=await firebaseAuthorizedFetch('/siteControls/t1.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:nextEnabled,updatedAt:new Date().toISOString(),updatedBy:'TEMO'})});
+  if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+  const verify=await firebaseAuthorizedFetch('/siteControls/t1.json?verify='+Date.now(),{cache:'no-store'});
+  if(!verify.ok)throw new Error('შენახვის შემდეგ სტატუსის შემოწმება ვერ მოხერხდა (HTTP '+verify.status+')');
+  const saved=await verify.json();
+  if(!saved||saved.enabled!==nextEnabled)throw new Error('Firebase-ში ახალი სტატუსი არ დადასტურდა. შეამოწმე Firebase Rules.');
+  t1SiteEnabled=saved.enabled;
+  status.textContent='';
+  button.setAttribute('aria-checked',String(t1SiteEnabled));
+  button.classList.toggle('is-on',t1SiteEnabled);
+  document.getElementById('t1SiteSwitchLabel').textContent=t1SiteEnabled?'T1 ჩართულია':'T1 გამორთულია';
+  button.disabled=false;
+ }catch(e){
+  status.textContent='';alert('T1 სტატუსის შეცვლა ვერ მოხერხდა: '+String(e.message||e)+' — შეამოწმე Firebase Rules.');
+  document.getElementById('t1SiteSwitchLabel').textContent='ხელახლა სცადე';button.disabled=false;
+ }
+}
 let currentUser=localStorage.getItem(SESSION_USER_KEY)||'';
 let currentUserId=localStorage.getItem(SESSION_USER_ID_KEY)||'';
 let temoLoggingOut=false;
@@ -2549,10 +2626,47 @@ let firebaseWriteQueue=Promise.resolve();
 function makeUserId(){return window.crypto&&crypto.randomUUID?crypto.randomUUID():'u_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,10);}
 function makeLegacyUserId(name,password){const str=String(name||'').trim().toLowerCase()+'\u0000'+String(password??'');let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return 'legacy_'+(h>>>0).toString(16);}
 function firebaseUserKey(id){return encodeURIComponent(String(id)).replace(/%/g,'_');}
-async function loadUsersFromFirebase(){try{const r=await fetch(FIREBASE_DB_URL+'/users.json',{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data===null)return null;if(Array.isArray(data))return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));return Object.entries(data||{}).filter(([,u])=>u).map(([key,u])=>normalizeUser({...u,_firebaseKey:key})).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Firebase users read failed:',e);return null}}
+let temoFirebaseAuthReadyPromise=null;
+function waitForTEMOFirebaseAuth(){
+ const auth=window.temoFirebaseAuth;
+ if(!auth)return Promise.reject(new Error('Firebase Authentication ვერ ჩაიტვირთა.'));
+ if(auth.currentUser)return Promise.resolve(auth.currentUser);
+ if(!temoFirebaseAuthReadyPromise){
+  temoFirebaseAuthReadyPromise=new Promise((resolve,reject)=>{
+   let unsub=null,settled=false;
+   const finish=(fn,value)=>{if(settled)return;settled=true;clearTimeout(timeout);if(unsub)unsub();fn(value);};
+   const timeout=setTimeout(()=>finish(reject,new Error('Firebase ავტორიზაციის შემოწმება დრო ამოიწურა. ხელახლა შედი ანგარიშში.')),10000);
+   unsub=auth.onAuthStateChanged(user=>{
+    if(user)finish(resolve,user);
+    else finish(reject,new Error('Firebase-ში ავტორიზაცია არ არის აქტიური. შედი ელფოსტითა და Firebase პაროლით.'));
+   },error=>finish(reject,error));
+  }).catch(error=>{temoFirebaseAuthReadyPromise=null;throw error;});
+ }
+ return temoFirebaseAuthReadyPromise;
+}
+async function firebaseAuthorizedFetch(path,options={}){
+ const auth=window.temoFirebaseAuth;
+ const write=!!(options.method&& !['GET','HEAD'].includes(String(options.method).toUpperCase()));
+ let tokenUser=auth&&auth.currentUser;
+ if(!tokenUser){
+  if(write)tokenUser=await waitForTEMOFirebaseAuth();
+  else if(auth)tokenUser=await waitForTEMOFirebaseAuth();
+ }
+ if(!tokenUser)throw new Error('Firebase-ში ავტორიზაცია არ არის აქტიური.');
+ const token=await tokenUser.getIdToken();
+ const url=FIREBASE_DB_URL+path+(path.includes('?')?'&':'?')+'auth='+encodeURIComponent(token);
+ return fetch(url,{...options,cache:options.cache||'no-store'});
+}
+async function firebaseAuthorizedFetchUrl(url,options={}){
+ const raw=String(url||'');
+ if(!raw.startsWith(FIREBASE_DB_URL+'/'))return fetch(url,options);
+ const parsed=new URL(raw);
+ return firebaseAuthorizedFetch(parsed.pathname+parsed.search,options);
+}
+async function loadUsersFromFirebase(){try{const r=await firebaseAuthorizedFetch('/users.json',{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data===null)return [];if(Array.isArray(data))return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));return Object.entries(data||{}).filter(([,u])=>u).map(([key,u])=>normalizeUser({...u,_firebaseKey:key})).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Firebase users read failed:',e);return null}}
 function normalizeUser(raw){const u=(raw&&typeof raw==='object')?raw:{};const name=String(u.name||'').trim(),email=String(u.email||'').trim(),password=String(u.password??'');const admin=(name.toUpperCase()===ADMIN_USER)||u.admin===true;const blocked=admin?false:(typeof u.blocked==='boolean'?u.blocked:u.authorized===false);const id=String(u.id||'').trim()||makeLegacyUserId(name,password);return {id,name,email,password,admin,authorized:admin?true:!blocked,blocked,_firebaseKey:u._firebaseKey||''};}
 function isRemovedUser(u){return REMOVED_USER_NAMES.includes(String(u?.name||'').trim().toUpperCase());}
-async function saveUsersToFirebase(users){const snapshot=users.filter(u=>u&&u.name&&!isRemovedUser(u)).map(normalizeUser);firebaseWriteQueue=firebaseWriteQueue.then(async()=>{try{const r=await fetch(FIREBASE_DB_URL+'/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase users write failed:',e);return false}});return firebaseWriteQueue;}
+async function saveUsersToFirebase(users){const snapshot=users.filter(u=>u&&u.name&&!isRemovedUser(u)).map(raw=>{const u=normalizeUser(raw);const {password,...safeUser}=u;return safeUser;});firebaseWriteQueue=firebaseWriteQueue.then(async()=>{try{const r=await firebaseAuthorizedFetch('/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase users write failed:',e);return false}});return firebaseWriteQueue;}
 async function syncUsersFromFirebase(){if(firebaseSyncBusy)return;firebaseSyncBusy=true;try{await firebaseWriteQueue;const remote=await loadUsersFromFirebase();if(remote!==null){let clean=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!clean.some(u=>u.name.toUpperCase()===ADMIN_USER))clean.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(clean));return clean;}console.warn('Firebase users could not be read; local users were preserved and no cloud write was attempted.');return getUsers().filter(u=>!isRemovedUser(u));}finally{firebaseSyncBusy=false}}
 function getUsers(){let users;try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'null')}catch(e){users=null}if(!Array.isArray(users)||!users.length)users=[normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false})];const normalized=users.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));localStorage.setItem(USERS_KEY,JSON.stringify(normalized));return normalized;}
 function findUserById(id){return getUsers().find(u=>String(u.id)===String(id));}
@@ -2567,7 +2681,41 @@ function enablePasswordOnlyLogin(){
 }
 function enableNameLogin(){enablePasswordOnlyLogin()}
 async function completeLogin(u){const user=normalizeUser(u);if(user.blocked===true||user.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;localStorage.setItem(USERS_KEY,JSON.stringify(getUsers()));localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
-async function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value;let users=getUsers();$('loginError').textContent='';try{const remote=await loadUsersFromFirebase();if(remote!==null){users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!users.some(u=>u.name.toUpperCase()===ADMIN_USER))users.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(users));}}catch(e){console.warn('Login user refresh failed:',e);}const u=users.find(x=>x.name.toLowerCase()===name.toLowerCase()&&x.password===pass);if(!u){$('loginError').textContent='სახელი ან პაროლი არასწორია. თუ ეს მონაცემები სწორია, მომხმარებლების სია Firebase-ში შესამოწმებელია.';$('loginPassword').value='';$('loginPassword').focus();return;}if(u.blocked===true||u.authorized!==true){$('loginError').textContent='ეს მომხმარებელი დაბლოკილია';$('loginPassword').value='';$('loginPassword').focus();return;}await completeLogin(u);}
+async function login(){
+ const name=$('loginName').value.trim(),pass=$('loginPassword').value;
+ let users=getUsers();$('loginError').textContent='';
+ if(!window.temoFirebaseAuth){$('loginError').textContent='Firebase ავტორიზაცია ვერ ჩაიტვირთა. განაახლე გვერდი.';return;}
+ try{
+  // Email-based Firebase sign-in is the only credential flow that can safely obtain an ID token.
+  if(name.includes('@')){
+   await window.temoFirebaseAuth.signInWithEmailAndPassword(name.toLowerCase(),pass);
+   const remote=await loadUsersFromFirebase();
+   if(remote===null)throw new Error('Firebase მონაცემებზე წვდომა უარყოფილია. შეამოწმე Realtime Database Rules.');
+   users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));
+   const u=users.find(x=>x.email.toLowerCase()===name.toLowerCase());
+   if(!u)throw new Error('ამ ელფოსტისთვის საიტის მომხმარებელი ვერ მოიძებნა. ადმინისტრატორმა უნდა დააკავშიროს ანგარიში.');
+   if(u.blocked===true||u.authorized!==true)throw new Error('ეს მომხმარებელი დაბლოკილია');
+   localStorage.setItem(USERS_KEY,JSON.stringify(users));
+   await completeLogin(u);return;
+  }
+  // Keep legacy username login only for a session that already has Firebase Auth.
+  if(!window.temoFirebaseAuth.currentUser){
+   $('loginError').textContent='Firebase-ის შესასვლელად შეიყვანე რეგისტრირებული ელფოსტა და Firebase Authentication-ის პაროლი.';
+   $('loginPassword').value='';$('loginPassword').focus();return;
+  }
+  const remote=await loadUsersFromFirebase();
+  if(remote===null)throw new Error('Firebase მონაცემებზე წვდომა უარყოფილია. შეამოწმე Realtime Database Rules.');
+  users=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));
+  const u=users.find(x=>x.name.toLowerCase()===name.toLowerCase()&&x.email.toLowerCase()===window.temoFirebaseAuth.currentUser.email.toLowerCase());
+  if(!u)throw new Error('მომხმარებელი ამ Firebase ანგარიშთან დაკავშირებული არ არის.');
+  if(u.blocked===true||u.authorized!==true)throw new Error('ეს მომხმარებელი დაბლოკილია');
+  localStorage.setItem(USERS_KEY,JSON.stringify(users));await completeLogin(u);
+ }catch(e){
+  console.warn('Firebase login failed:',e);
+  $('loginError').textContent=e.code==='auth/invalid-credential'||e.code==='auth/wrong-password'||e.code==='auth/user-not-found'?'ელფოსტა ან Firebase პაროლი არასწორია.':String(e.message||'ავტორიზაცია ვერ მოხერხდა');
+  $('loginPassword').value='';$('loginPassword').focus();
+ }
+}
 function renderLoginUsers(){}
 window.addEventListener('DOMContentLoaded',async()=>{
   const aiInput=document.getElementById('aiChatInput');
@@ -2751,12 +2899,12 @@ async function loadJobsFromFirebase(){
   const id=String(currentUserId||'').trim();if(!id)return null;
   try{
     const key=firebaseUserKey(id);
-    const jr=await fetch(FIREBASE_DB_URL+'/jobs/'+key+'.json',{cache:'no-store'});
+    const jr=await firebaseAuthorizedFetch('/jobs/'+key+'.json',{cache:'no-store'});
     if(!jr.ok)throw new Error('Firebase HTTP '+jr.status);
     const jd=await jr.json();
     const jobsData=jd===null?[]:(Array.isArray(jd)?jd.filter(Boolean):Object.entries(jd||{}).filter(([,j])=>j).map(([key,j])=>({...j,id:String(j.id||key)})));
     if(currentUser===ADMIN_USER)return {jobs:jobsData.map(normalizeJobRecord),deletes:{}};
-    const dr=await fetch(FIREBASE_DB_URL+'/jobDeletes/'+key+'.json',{cache:'no-store'});
+    const dr=await firebaseAuthorizedFetch('/jobDeletes/'+key+'.json',{cache:'no-store'});
     if(!dr.ok)throw new Error('Firebase HTTP '+dr.status);
     const dd=await dr.json();
     const deletes=dd&&typeof dd==='object'&&!Array.isArray(dd)?dd:{};
@@ -2768,7 +2916,7 @@ async function saveJobsToFirebase(snapshot){
   if(currentUser===ADMIN_USER){
     const url=FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json';
     const data=Array.isArray(snapshot)?snapshot.map(normalizeJobRecord):[];
-    firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{try{const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true}catch(e){console.warn('Firebase jobs write failed:',e);return false}});
+    firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{try{const r=await firebaseAuthorizedFetch('/jobs/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true}catch(e){console.warn('Firebase jobs write failed:',e);return false}});
     return firebaseJobsWriteQueue;
   }
   const localSnapshot=(snapshot||[]).map(normalizeJobRecord),localDeletes=getLocalJobDeletes();
@@ -2778,10 +2926,10 @@ async function saveJobsToFirebase(snapshot){
       if(remoteState===null)return false;
       const merged=mergeJobSyncState(localSnapshot,remoteState.jobs,localDeletes,remoteState.deletes);
       if(!sameJobArrays(merged.jobs,remoteState.jobs)){
-        const r=await fetch(FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.jobs),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+        const r=await firebaseAuthorizedFetch('/jobs/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.jobs),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
       }
       if(!sameDeleteMaps(merged.deletes,remoteState.deletes)){
-        const r=await fetch(FIREBASE_DB_URL+'/jobDeletes/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.deletes),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+        const r=await firebaseAuthorizedFetch('/jobDeletes/'+firebaseUserKey(id)+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(merged.deletes),keepalive:true});if(!r.ok)throw new Error('Firebase HTTP '+r.status);
       }
       jobs=merged.jobs;setLocalJobDeletes(merged.deletes);localStorage.setItem('temoJobsId_'+id,JSON.stringify(jobs));return true;
     }catch(e){console.warn('Firebase jobs write failed:',e);return false}
@@ -2981,7 +3129,7 @@ async function saveReceivablePaidToFirebase(snapshot){
   const data=Array.isArray(snapshot)?snapshot.map(normalizeJobRecord):[];
   firebaseJobsWriteQueue=firebaseJobsWriteQueue.then(async()=>{
     try{
-      const r=await fetch(FIREBASE_DB_URL+'/jobs/'+firebaseUserKey(id)+'.json',{
+      const r=await firebaseAuthorizedFetch('/jobs/'+firebaseUserKey(id)+'.json',{
         method:'PUT',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify(data),
@@ -3107,7 +3255,7 @@ function temoNavigatePage(pageId){
 }
 
 function goHome(){temoNavigatePage('mainPage')}
-function goSettings(){temoNavigatePage('settingsPage');if(typeof window.loadNeonSettings==='function')window.loadNeonSettings()}
+function goSettings(){temoNavigatePage('settingsPage');if(typeof window.loadNeonSettings==='function')window.loadNeonSettings();if(currentUser===ADMIN_USER)refreshT1SiteControl()}
 function goUsers(){if(currentUser)temoNavigatePage('userManagementPage')}
 function goWallet(){temoNavigatePage('walletPage')}
 function goExpenses(){if(currentUser)temoNavigatePage('expensesPage')}
@@ -3290,7 +3438,8 @@ function exportMyDataPdf(){
   <tbody>${rowsExp||`<tr><td colspan="4">${esc(t.noData)}</td></tr>`}</tbody></table>
   <button type="button" class="noPrint" id="temoPdfPrintBtn" style="margin-top:20px;padding:10px 16px">${esc(t.print)}</button>
   <script>document.getElementById("temoPdfPrintBtn").addEventListener("click",function(){setTimeout(function(){window.focus();window.print();},50);});<\/script>
-  </body></html>`);
+  if(currentUser===ADMIN_USER){window.addEventListener('load',refreshT1SiteControl,{once:true});}
+</body></html>`);
   w.document.close();
   w.focus();
 }
@@ -3305,8 +3454,8 @@ function expenseStorageKey(){return 'temoExpenses_'+String(currentUserId||curren
 function normalizeExpense(e){return {id:String(e?.id||makeUserId()),category:String(e?.category||EXPENSE_CATEGORIES[0]),place:String(e?.place||''),amount:Number(e?.amount||0),date:String(e?.date||'').slice(0,10),createdAt:Number(e?.createdAt||Date.now())};}
 function loadLocalExpenses(){try{const raw=JSON.parse(localStorage.getItem(expenseStorageKey())||'[]');return Array.isArray(raw)?raw.map(normalizeExpense).filter(e=>e.amount>0&&e.date):[];}catch(e){return [];}}
 function saveLocalExpenses(){localStorage.setItem(expenseStorageKey(),JSON.stringify(expenses));}
-async function saveExpensesToFirebase(){const url=expenseFirebaseUrl();if(!url)return false;try{const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(expenses)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase expenses write failed:',e);return false;}}
-async function syncExpensesFromFirebase(){const url=expenseFirebaseUrl();if(!url)return;try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data!==null){const arr=Array.isArray(data)?data.filter(Boolean):Object.entries(data||{}).map(([id,e])=>({...e,id:String(e?.id||id)}));expenses=arr.map(normalizeExpense).filter(e=>e.amount>0&&e.date);saveLocalExpenses();renderExpenses();}}catch(e){console.warn('Firebase expenses read failed:',e);}}
+async function saveExpensesToFirebase(){const url=expenseFirebaseUrl();if(!url)return false;try{const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(expenses)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase expenses write failed:',e);return false;}}
+async function syncExpensesFromFirebase(){const url=expenseFirebaseUrl();if(!url)return;try{const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data!==null){const arr=Array.isArray(data)?data.filter(Boolean):Object.entries(data||{}).map(([id,e])=>({...e,id:String(e?.id||id)}));expenses=arr.map(normalizeExpense).filter(e=>e.amount>0&&e.date);saveLocalExpenses();renderExpenses();}}catch(e){console.warn('Firebase expenses read failed:',e);}}
 function expenseCategoryParts(c){const m=String(c||'').match(/^(\S+)\s*(.*)$/);return {icon:m?.[1]||'✓',text:m?.[2]||String(c||'')};}
 function expenseTranslate(text){return typeof window.temoTranslateMessage==='function'?window.temoTranslateMessage(text):String(text??'');}
 function fillExpenseCategories(selected=''){const s=document.getElementById('expenseCategory'),menu=document.getElementById('expenseCategoryMenu');if(!s||!menu)return;s.innerHTML=EXPENSE_CATEGORIES.map(c=>`<option value="${esc(c)}">${esc(expenseTranslate(c))}</option>`).join('');menu.innerHTML=EXPENSE_CATEGORIES.map(c=>{const p=expenseCategoryParts(expenseTranslate(c));return `<button type="button" class="expenseCategoryOption${String(c)===String(selected)?' selected':''}" data-value="${esc(c)}"><span class="catIcon">${esc(p.icon)}</span><span class="catText">${esc(p.text)}</span><span class="catCheck">✓</span></button>`;}).join('');menu.querySelectorAll('.expenseCategoryOption').forEach(b=>b.addEventListener('click',e=>{e.stopPropagation();selectExpenseCategory(b.dataset.value);}));updateExpenseCategoryDisplay(selected);}
@@ -3420,7 +3569,7 @@ async function saveDailyRemote(entries,deletes){
   const url=dailyUrl();
   if(!url)return false;
   const payload={entries:Array.isArray(entries)?entries:[],deletes:deletes&&typeof deletes==='object'?deletes:{}};
-  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true});
+  const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
   return true;
 }
@@ -3431,7 +3580,7 @@ async function syncDailyFromFirebase(){
   try{
     const localEntries=loadDailyEntries();
     const localDel=loadDailyDeletes();
-    const r=await fetch(url,{cache:'no-store'});
+    const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();
     const remoteEntries=Array.isArray(data)?data:(Array.isArray(data?.entries)?data.entries:[]);
@@ -3886,6 +4035,30 @@ let aiPendingWorkEntry=null;
 let aiBusy=false;
 let aiMemoryCache=[];
 
+const TEMO_AI_VOICE_KEY='temoAIVoiceEnabled';
+function temoAIVoiceEnabled(){
+  try{return localStorage.getItem(TEMO_AI_VOICE_KEY)==='on';}catch(e){return false;}
+}
+function updateTEMOAIVoiceButton(){
+  const b=document.getElementById('aiVoiceToggle');
+  if(!b)return;
+  const enabled=temoAIVoiceEnabled();
+  b.textContent=enabled?'🔊':'🔇';
+  b.classList.toggle('enabled',enabled);
+  const lang=aiCurrentLanguage();
+  const label=enabled
+    ?(lang==='el'?'Απενεργοποίηση φωνής':lang==='en'?'Turn voice off':'ხმის გამორთვა')
+    :(lang==='el'?'Ενεργοποίηση φωνής':lang==='en'?'Turn voice on':'ხმის ჩართვა');
+  b.title=label;b.setAttribute('aria-label',label);
+}
+function toggleTEMOAIVoice(){
+  const enabled=!temoAIVoiceEnabled();
+  try{localStorage.setItem(TEMO_AI_VOICE_KEY,enabled?'on':'off');}catch(e){}
+  if(!enabled && 'speechSynthesis' in window){
+    try{window.speechSynthesis.cancel();temoAISpeechRunId++;}catch(e){}
+  }
+  updateTEMOAIVoiceButton();
+}
 function aiAddMessage(role,text){
   const box=document.getElementById('aiChatMessages');
   if(!box)return;
@@ -3894,6 +4067,9 @@ function aiAddMessage(role,text){
   div.textContent=String(text||'');
   box.appendChild(div);
   if(role==='assistant' && String(text||'').trim()){
+    if(temoAIVoiceEnabled()){
+      window.setTimeout(()=>{if(temoAIVoiceEnabled())aiSpeakReply(String(text||''),null);},80);
+    }
     const speak=document.createElement('button');
     const lang=aiCurrentLanguage();
     speak.type='button';
@@ -4142,12 +4318,12 @@ function aiSpeakReply(text,button){
       const prefix=targetLang.slice(0,2).toLowerCase();
       const matching=voices.find(v=>String(v.lang||'').toLowerCase()===targetLang.toLowerCase())
         ||voices.find(v=>String(v.lang||'').toLowerCase().startsWith(prefix));
-      const fallback=matching||voices.find(v=>v.default)||voices[0]||null;
       const utterance=new SpeechSynthesisUtterance(clean);
       temoAISpeechUtterance=utterance;
-      utterance.lang=matching?targetLang:(fallback?.lang||targetLang);
-      if(fallback)utterance.voice=fallback;
-      utterance.rate=0.88;
+      /* Do not force an unrelated default voice (for example English) to pronounce Georgian. */
+      utterance.lang=targetLang;
+      if(matching)utterance.voice=matching;
+      utterance.rate=0.78;
       utterance.pitch=1;
       utterance.volume=1;
       let started=false;
@@ -4326,6 +4502,7 @@ function openAIChat(){
   if(!modal)return;
   modal.classList.add('show');
   const input=document.getElementById('aiChatInput');
+  updateTEMOAIVoiceButton();
   aiUpdateLanguageUI();
   if(!document.getElementById('aiChatMessages').children.length){
     aiAddMessage('assistant',aiLangText('greeting'));
@@ -4340,14 +4517,14 @@ function aiToday(){const d=new Date();return d.getFullYear()+'-'+String(d.getMon
 function aiMemoryUrl(){const key=firebaseUserKey(currentUserId);return key?FIREBASE_DB_URL+'/aiMemory/'+key+'.json':'';}
 async function loadAIMemory(){
   const url=aiMemoryUrl();if(!url){aiMemoryCache=[];return;}
-  try{const r=await fetch(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();aiMemoryCache=Array.isArray(data)?data.filter(Boolean).map(x=>String(x).slice(0,1000)).slice(-50):[];}catch(e){console.warn('AI memory read failed:',e);aiMemoryCache=[];}
+  try{const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();aiMemoryCache=Array.isArray(data)?data.filter(Boolean).map(x=>String(x).slice(0,1000)).slice(-50):[];}catch(e){console.warn('AI memory read failed:',e);aiMemoryCache=[];}
 }
 async function saveAIMemory(text){
   const clean=String(text||'').trim();if(!clean)return false;
   if(!aiMemoryCache.includes(clean))aiMemoryCache.push(clean);
   aiMemoryCache=aiMemoryCache.slice(-50);
   const url=aiMemoryUrl();if(!url)return false;
-  try{const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(aiMemoryCache)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('AI memory write failed:',e);return false;}
+  try{const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(aiMemoryCache)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('AI memory write failed:',e);return false;}
 }
 function aiExtractReminderCommand(message){
   const raw=String(message||'').trim();
@@ -4446,6 +4623,40 @@ async function deleteAIChatReminderCommand(message){
   }
 }
 
+async function temoAILoadBillContext(){
+  const API='https://dei-bill-sync.temo75elia.workers.dev';
+  const KEY='t1.deiBillSession.v1';
+  const empty={connected:false,deiBills:[],novaBills:[],error:null};
+  let session=null;
+  try{
+    session=JSON.parse(sessionStorage.getItem(KEY)||'null');
+    if(!session?.token||!session?.expiresAt||Date.parse(session.expiresAt)<=Date.now())return empty;
+  }catch(e){return empty;}
+  async function read(path){
+    const response=await fetch(API+path,{headers:{Accept:'application/json',Authorization:'Bearer '+session.token},cache:'no-store'});
+    const data=await response.json().catch(()=>({}));
+    if(!response.ok)throw new Error(data.error||('HTTP '+response.status));
+    return data;
+  }
+  try{
+    const [dei,nova]=await Promise.all([read('/api/history'),read('/api/nova/history')]);
+    const pick=(b)=>({
+      provider:String(b?.provider||b?.utility||b?.company||'').slice(0,80),
+      kind:String(b?.kind||'invoice').slice(0,40),
+      subject:String(b?.subject||b?.title||'').slice(0,250),
+      amount:b?.totalEUR!=null&&b?.totalEUR!==""&&Number.isFinite(Number(b.totalEUR))?Number(b.totalEUR):null,
+      currency:String(b?.currency||'EUR').slice(0,8),
+      date:String(b?.emailDate||b?.date||b?.issuedAt||'').slice(0,50),
+      dueDate:String(b?.dueDate||'').slice(0,30),
+      paymentDate:String(b?.paymentDate||'').slice(0,50),
+      paymentStatus:String(b?.paymentStatus||'unknown').slice(0,40),
+      from:String(b?.from||'').slice(0,160),
+      receiptFor:String(b?.receiptFor||'').slice(0,160)
+    });
+    return {connected:true,deiBills:(Array.isArray(dei?.bills)?dei.bills:dei?.bill?[dei.bill]:[]).slice(-100).map(pick),novaBills:(Array.isArray(nova?.bills)?nova.bills:[]).slice(-100).map(pick),error:null};
+  }catch(e){return {...empty,connected:true,error:String(e?.message||e).slice(0,200)};}
+}
+
 async function sendAIMessage(){
   if(!currentUser||aiBusy)return;
   const input=document.getElementById('aiChatInput');
@@ -4470,8 +4681,10 @@ async function sendAIMessage(){
   try{
     const language=typeof window.getCurrentLanguage==='function'?String(window.getCurrentLanguage()||'ka'):'ka';
     const history=aiHistory.slice(-12);
+    const billContext=await temoAILoadBillContext();
     const userContext={
       name:String(currentUser||''),
+      billContext,
       jobs:Array.isArray(jobs)?jobs.slice(-200).map(j=>({
         date:j?.date??null,
         place:String(j?.place??''),
@@ -4586,7 +4799,7 @@ async function loadChatThread(userId){
   const key=chatUserKey(userId);
   if(!key)return [];
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{cache:'no-store'});
+    const r=await firebaseAuthorizedFetch(CHAT_ROOT+key+'.json',{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();
     if(!data)return [];
@@ -4597,7 +4810,7 @@ async function loadChatThread(userId){
 async function saveChatThread(userId,thread){
   const key=chatUserKey(userId);
   if(!key)throw new Error('მომხმარებელი ჯერ არ არის ავტორიზებული');
-  const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(thread)});
+  const r=await firebaseAuthorizedFetch(CHAT_ROOT+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(thread)});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
 }
 function updateUserChatCount(){
@@ -4683,7 +4896,7 @@ async function markAdminMessagesRead(){
 }
 async function loadAllAdminChats(){
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT.slice(0,-1)+'.json',{cache:'no-store'});
+    const r=await firebaseAuthorizedFetch(CHAT_ROOT.slice(0,-1)+'.json',{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();return data&&typeof data==='object'&&!Array.isArray(data)?data:{};
   }catch(e){console.warn('Firebase admin chat read failed:',e);return null}
@@ -4719,7 +4932,7 @@ async function deleteChatDialog(userId){
   const key=chatUserKey(userId);
   if(!key)return;
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{method:'DELETE'});
+    const r=await firebaseAuthorizedFetch(CHAT_ROOT+key+'.json',{method:'DELETE'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     adminChatRenderKey='';
     await renderAdminMessages();
@@ -4781,7 +4994,7 @@ async function renderManagedUsers(){
     b.onclick=()=>toggleUserDetails(row,u);
     const details=document.createElement('div');
     details.className='userDetailsPopover';
-    details.innerHTML='<div><b>სახელი:</b> '+esc(u.name)+'</div><div><b>პაროლი:</b> '+esc(u.password)+'</div><div><b>📧 ემაილი:</b> '+esc(u.email||'—')+'</div>';
+    details.innerHTML='<div><b>სახელი:</b> '+esc(u.name)+'</div><div><b>პაროლი:</b> ••••••••</div><div><b>📧 ემაილი:</b> '+esc(u.email||'—')+'</div>';
     if(u.admin||u.name.toUpperCase()===ADMIN_USER){
       b.textContent='👑 '+u.name+' — ადმინი';
       b.title='ადმინისტრატორის ანგარიში';
@@ -5131,31 +5344,31 @@ function closeForgotPassword(){
   m.classList.remove('show');
   m.setAttribute('aria-hidden','true');
 }
-function submitForgotPassword(){
+async function submitForgotPassword(){
   const name=document.getElementById('forgotPasswordName').value.trim();
   const email=document.getElementById('forgotPasswordEmail').value.trim().toLowerCase();
-  const newPassword=document.getElementById('forgotPasswordNew').value;
   const er=document.getElementById('forgotPasswordError');
   er.textContent='';
   if(!name){er.textContent='შეიყვანე სახელი';return;}
   if(!email){er.textContent='შეიყვანე ელფოსტა';return;}
-  if(!newPassword){er.textContent='შეიყვანე ახალი პაროლი';return;}
-  const users=getUsers();
-  const u=users.find(x=>String(x.name||'')===name && x.email&&String(x.email).toLowerCase()===email);
-  if(!u){er.textContent='სახელი და ელფოსტა ზუსტად უნდა ემთხვეოდეს რეგისტრირებულ მონაცემებს';return;}
-  u.password=newPassword;
-  localStorage.setItem(USERS_KEY,JSON.stringify(users));
+  if(!window.temoFirebaseAuth){er.textContent='Firebase ავტორიზაცია ვერ ჩაიტვირთა. განაახლე გვერდი.';return;}
   const btn=document.getElementById('forgotPasswordSubmit');
-  btn.disabled=true; btn.textContent='ინახება...';
-  saveUsersToFirebase(users).then(()=>{
+  btn.disabled=true;btn.textContent='იგზავნება...';
+  try{
+    const users=await loadUsersFromFirebase();
+    if(!Array.isArray(users)||!users.some(x=>String(x.name||'').toLowerCase()===name.toLowerCase()&&String(x.email||'').toLowerCase()===email)){
+      er.textContent='ეს სახელი და ელფოსტა საიტის მომხმარებელს ვერ დაემთხვა.';return;
+    }
+    await window.temoFirebaseAuth.sendPasswordResetEmail(email);
+    document.getElementById('forgotPasswordNew').value='';
     closeForgotPassword();
     showForgotPasswordSuccess();
-  }).catch(()=>{
-    closeForgotPassword();
-    alert('პაროლი შეიცვალა ამ მოწყობილობაზე, მაგრამ Firebase-ში შენახვა ვერ მოხერხდა');
-  }).finally(()=>{
-    btn.disabled=false; btn.textContent=t('პაროლის შეცვლა');
-  });
+  }catch(e){
+    console.warn('Firebase password reset failed:',e);
+    er.textContent=e.code==='auth/user-not-found'?'ამ ელფოსტაზე Firebase ანგარიში ვერ მოიძებნა.':String(e.message||'პაროლის აღდგენის წერილი ვერ გაიგზავნა.');
+  }finally{
+    btn.disabled=false;btn.textContent=t('პაროლის შეცვლა');
+  }
 }
 
 function showForgotPasswordSuccess(){
@@ -5173,30 +5386,42 @@ function closeForgotPasswordSuccess(){
 function showNewUserAuth(){document.getElementById('loginScreen').classList.add('hidden');document.getElementById('newUserAuthModal').classList.add('show')}
 async function registerNewUser(){
   const nameEl=document.getElementById('newUserAuthName'),emailEl=document.getElementById('newUserAuthEmail'),passEl=document.getElementById('newUserAuthPassword');
-  const n=nameEl.value.trim(),email=emailEl.value.trim().toLowerCase(),p=passEl.value;
+  const n=nameEl.value.trim(),email=nameEl?document.getElementById('newUserAuthEmail').value.trim().toLowerCase():'',p=passEl.value;
   if(!n||!email||!p){alert('სახელი, ელფოსტა და ახალი პაროლი სამივე შეავსე');return;}
   if(p.length<6){alert('პაროლი უნდა იყოს მინიმუმ 6 სიმბოლო.');passEl.focus();return;}
   if(!/^[A-Za-z]+$/.test(n)){alert('სახელი უნდა შეიცავდეს მხოლოდ ლათინურ ასოებს (A-Z, a-z)');nameEl.value=n.replace(/[^A-Za-z]/g,'');return;}
   if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){alert('შეიყვანე სწორი ელფოსტა');return;}
   if(n.toUpperCase()===ADMIN_USER){alert('ეს სახელი ადმინისტრატორისთვისაა');return;}
-
+  if(!window.temoFirebaseAuth){alert('Firebase Authentication ვერ ჩაიტვირთა.');return;}
   const localUsers=getUsers();
-  const remoteUsers=await loadUsersFromFirebase();
-  let users=Array.isArray(remoteUsers)?remoteUsers.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u)):localUsers;
-
-  if(!users.some(u=>u.name.toUpperCase()===ADMIN_USER)){
-    users.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));
+  if(localUsers.some(u=>u.name.toLowerCase()===n.toLowerCase())){alert('ასეთი მომხმარებელი უკვე არსებობს');return;}
+  if(localUsers.some(u=>u.email&&u.email.toLowerCase()===email)){alert('ეს ელფოსტა უკვე გამოყენებულია');return;}
+  let authUser=null;
+  try{
+    const credential=await window.temoFirebaseAuth.createUserWithEmailAndPassword(email,p);
+    authUser=credential.user;
+    const remoteUsers=await loadUsersFromFirebase();
+    if(!Array.isArray(remoteUsers))throw new Error('Firebase-ის არსებული მომხმარებლების სია ვერ ჩაიტვირთა; მონაცემების დაკარგვის თავიდან ასაცილებლად რეგისტრაცია შეჩერდა.');
+    const users=remoteUsers.map(normalizeUser).filter(u=>u&&u.name&&!isRemovedUser(u));
+    if(users.some(u=>u.name.toLowerCase()===n.toLowerCase()))throw new Error('ასეთი მომხმარებელი უკვე არსებობს');
+    if(users.some(u=>u.email&&u.email.toLowerCase()===email))throw new Error('ეს ელფოსტა უკვე გამოყენებულია');
+    if(!users.some(u=>u.name.toUpperCase()===ADMIN_USER)){
+      users.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,admin:true,authorized:true,blocked:false}));
+    }
+    const user=normalizeUser({id:authUser.uid,name:n,email:email,admin:false,authorized:true,blocked:false});
+    users.push(user);
+    const saved=await saveUsersToFirebase(users);
+    if(saved!==true)throw new Error('Firebase HTTP 401/403 — ავტორიზებული ანგარიშის მონაცემები ვერ შეინახა. Rules უნდა დაემთხვეს ავტორიზაციას.');
+    localStorage.setItem(USERS_KEY,JSON.stringify(users));
+    markFreshUser(user.id);currentUser=user.name;currentUserId=user.id;localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(AUTH_KEY,'yes');
+    nameEl.value='';emailEl.value='';passEl.value='';
+    document.getElementById('newUserAuthModal').classList.remove('show');$('loginError').textContent='';
+    jobs=loadUserJobs();updateUserUI();render();startJobsSyncWatcher();startDailySyncWatcher();syncJobsFromFirebase().catch(e=>console.warn('Firebase jobs sync failed:',e));
+  }catch(e){
+    console.warn('Firebase registration failed:',e);
+    if(authUser){try{await authUser.delete();}catch(cleanupError){console.warn('Firebase auth cleanup failed:',cleanupError);}}
+    alert(e.code==='auth/email-already-in-use'?'ეს ელფოსტა უკვე რეგისტრირებულია.':String(e.message||'რეგისტრაცია ვერ დასრულდა.'));
   }
-  if(users.some(u=>u.name.toLowerCase()===n.toLowerCase())){alert('ასეთი მომხმარებელი უკვე არსებობს');return;}
-  if(users.some(u=>u.email&&u.email.toLowerCase()===email)){alert('ეს ელფოსტა უკვე გამოყენებულია');return;}
-
-  const user=normalizeUser({id:makeUserId(),name:n,email:email,password:p,admin:false,authorized:true,blocked:false});
-  users.push(user);
-  const saved=await saveUsersToFirebase(users);
-  if(saved!==true){alert('მომხმარებელი ვერ შეინახა Firebase-ში. შეამოწმე ინტერნეტი ან Firebase-ის წვდომა.');return;}
-
-  localStorage.setItem(USERS_KEY,JSON.stringify(users));
-  markFreshUser(user.id);currentUser=user.name;currentUserId=user.id;localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(AUTH_KEY,'yes');nameEl.value='';emailEl.value='';passEl.value='';document.getElementById('newUserAuthModal').classList.remove('show');$('loginError').textContent='';jobs=loadUserJobs();updateUserUI();render();startJobsSyncWatcher();startDailySyncWatcher();syncJobsFromFirebase().catch(e=>console.warn('Firebase jobs sync failed:',e));
 }
 </script>
 
@@ -5681,14 +5906,14 @@ html body.site-white-theme #userManagementList .userDetailsPopover b{
     <input id="forgotPasswordName" type="text" maxlength="40" placeholder="შეიყვანე შენი სახელი" autocomplete="username">
     <label for="forgotPasswordEmail">რეგისტრირებული ელფოსტა</label>
     <input id="forgotPasswordEmail" type="email" placeholder="მაგ: temo@gmail.com" autocomplete="email">
-    <label for="forgotPasswordNew">ახალი პაროლი</label>
-    <input id="forgotPasswordNew" type="password" maxlength="80" placeholder="შეიყვანე ახალი პაროლი" autocomplete="new-password">
+    <p>პაროლის აღდგენის ბმული ელფოსტაზე გამოგეგზავნება.</p>
+    <input id="forgotPasswordNew" type="hidden" autocomplete="new-password">
     <div id="forgotPasswordError" class="forgotPasswordError"></div>
     <div class="forgotPasswordRow">
       <button type="button" id="forgotPasswordCancel" onclick="closeForgotPassword()">გაუქმება</button>
       <button type="button" id="forgotPasswordSubmit" onclick="submitForgotPassword()" data-i18n-key="პაროლის შეცვლა">შეცვლა</button>
     </div>
-    <p class="forgotPasswordHint">პაროლი შეინახება ამ მოწყობილობასა და Firebase-ში.</p>
+    <p class="forgotPasswordHint">პაროლი უსაფრთხოდ აღდგება Firebase Authentication-ის მეშვეობით.</p>
   </div>
 </div>
 
@@ -6141,7 +6366,7 @@ async function loadNotes(){
     if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){
       window.AndroidReminder.setNotesEndpoint(url);
     }
-    const r=await fetch(url,{cache:'no-store'});
+    const r=await firebaseAuthorizedFetchUrl(url,{cache:'no-store'});
     if(!r.ok)throw new Error('Firebase HTTP '+r.status);
     const data=await r.json();
     notesCache=Array.isArray(data)?data.filter(Boolean):Object.entries(data||{}).map(([id,n])=>({...n,id}));
@@ -6315,7 +6540,7 @@ function editNote(id){
 async function saveNotesRemote(){
   const url=notesUrl();
   if(!url)throw new Error('მომხმარებელი ჯერ არ არის ავტორიზებული');
-  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(notesCache)});
+  const r=await firebaseAuthorizedFetchUrl(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(notesCache)});
   if(!r.ok)throw new Error('Firebase HTTP '+r.status);
 }
 async function saveNote(){
@@ -6877,14 +7102,14 @@ startNotesReminderWatcher();
     const id=String(window.currentUserId||'').trim();
     if(!id)return;
     try{
-      const r=await fetch(FIREBASE_DB_URL+'/users.json',{cache:'no-store'});
+      const r=await firebaseAuthorizedFetch('/users.json',{cache:'no-store'});
       if(!r.ok)return;
       const data=await r.json();
       let users=Array.isArray(data)?data.filter(Boolean):Object.values(data||{}).filter(Boolean);
       const target=users.find(u=>String(u?.id||'')===id);
       if(!target)return;
       target.language=next;
-      const put=await fetch(FIREBASE_DB_URL+'/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(users)});
+      const put=await firebaseAuthorizedFetch('/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(users)});
       if(!put.ok)throw new Error('Firebase HTTP '+put.status);
       const local=getUsers();const me=local.find(u=>String(u.id)===id);
       if(me){me.language=next;localStorage.setItem(USERS_KEY,JSON.stringify(local));}
@@ -7199,6 +7424,126 @@ body.temo-admin-slide-menu-open{overflow:hidden}
 
 <footer style="max-width:1100px;margin:24px auto 90px;padding:12px 18px;text-align:center;font-size:13px;color:#9fb0b8"><a href="./privacy-policy.html" style="color:inherit;text-decoration:underline">Privacy Policy / კონფიდენციალურობის პოლიტიკა</a><span style="padding:0 10px">·</span><a href="./terms-of-service.html" style="color:inherit;text-decoration:underline">Terms of Service / მომსახურების პირობები</a></footer>
 <script id="temo-bottom-neon-active-final-fix">(function(){const map={mainPage:0,settingsPage:1,userManagementPage:2,walletPage:3,expensesPage:3,notesPage:4};function sync(id){const i=map[id];if(i===undefined)return;document.querySelectorAll('#bottomNav > button:not(#temoAdminMenuToggle)').forEach((b,n)=>{b.classList.toggle('active',n===i);b.setAttribute('aria-current',n===i?'page':'false')})}function bind(){const old=window.temoNavigatePage;if(typeof old==='function'&&!old.__neonFixed){const fn=function(id){const r=old.apply(this,arguments);sync(id);requestAnimationFrame(()=>sync(id));setTimeout(()=>sync(id),550);return r};fn.__neonFixed=true;window.temoNavigatePage=fn}const ids=Object.keys(map);const obs=new MutationObserver(()=>{const visible=ids.map(id=>document.getElementById(id)).filter(p=>p&&!p.classList.contains('pageHidden'));if(visible.length===1)sync(visible[0].id)});ids.forEach(id=>{const p=document.getElementById(id);if(p)obs.observe(p,{attributes:true,attributeFilter:['class']})});const visible=ids.map(id=>document.getElementById(id)).find(p=>p&&!p.classList.contains('pageHidden'));if(visible)sync(visible.id)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind()})();</script>
+<style id="temo-neon-settings-compact-block">
+/* მხოლოდ ნეონის ფერების გარე ბლოკის სიმაღლის შემცირება */
+#neonControlSection{
+  padding:12px 14px 10px !important;
+  margin-top:8px !important;
+}
+#neonControlSection > h2{
+  margin:0 0 8px !important;
+}
+#neonControlSection .neonControlBox{
+  margin-top:0 !important;
+  padding:8px 10px !important;
+}
+#neonControlSection .neonControlRow{
+  margin-top:4px !important;
+  gap:8px !important;
+}
+#neonControlSection .backgroundControlRow{
+  margin-top:6px !important;
+  gap:8px !important;
+}
+#neonControlSection .neonColorOpen{
+  width:42px !important;
+  height:42px !important;
+}
+#neonControlSection .backgroundColorBtn{
+  width:38px !important;
+  height:38px !important;
+}
+</style>
+<style id="temo-admin-settings-layout">
+#settingsPage > .section{margin:16px 0 0!important;padding:14px!important;border-radius:18px!important;box-sizing:border-box}
+#settingsPage > .section > h2{margin:0 0 12px!important;line-height:1.3}
+#settingsPage #neonControlSection .neonControlBox{margin:0!important;padding:10px!important}
+#settingsPage #t1SiteControl{margin:0!important;padding:12px!important;border-radius:15px!important}
+#settingsPage #websiteUpdateSection .repoTokenOpenBtn{margin-top:12px!important}
+#settingsPage #workerUpdateSection,#settingsPage #dataExportSection{margin-top:16px!important}
+@media(max-width:600px){#settingsPage > .section{padding:12px!important}}
+</style>
+<style id="temo-neon-settings-extra-compact">
+/* ნეონის მართვის ბლოკი — მნიშვნელოვნად დაბალი სიმაღლე */
+#settingsPage #neonControlSection{
+  padding:10px 12px 9px !important;
+  margin-top:10px !important;
+}
+#settingsPage #neonControlSection > h2{
+  font-size:17px !important;
+  margin:0 0 7px !important;
+  line-height:1.2 !important;
+}
+#settingsPage #neonControlSection .neonControlBox{
+  padding:7px 9px !important;
+  border-radius:13px !important;
+  line-height:1.15 !important;
+}
+#settingsPage #neonControlSection .neonControlRow{
+  margin-top:2px !important;
+  gap:6px !important;
+  min-height:0 !important;
+}
+#settingsPage #neonControlSection .neonColorOpen{
+  width:32px !important;
+  height:32px !important;
+  min-height:32px !important;
+  border-radius:8px !important;
+}
+#settingsPage #neonControlSection .backgroundControlRow{
+  margin-top:4px !important;
+  gap:7px !important;
+}
+#settingsPage #neonControlSection .backgroundColorBtn{
+  width:30px !important;
+  height:30px !important;
+  min-height:30px !important;
+  border-radius:7px !important;
+}
+#settingsPage #neonControlSection input[type="range"]{
+  height:18px !important;
+  padding:0 !important;
+  margin:0 !important;
+}
+#settingsPage #neonControlSection .neonValue{
+  font-size:14px !important;
+}
+</style>
+<style id="temo-t1-switch-style">
+#settingsPage #t1SiteControlButton.t1Switch{
+ display:flex;align-items:center;justify-content:flex-start;gap:13px;
+ width:100%;min-height:42px;padding:4px 0;margin-top:10px;
+ border:0;border-radius:0;
+ background:transparent;color:#eef7fa;font-size:17px;font-weight:600;
+ box-shadow:none;cursor:pointer;
+ transition:color .2s;
+}
+#settingsPage #t1SiteControlButton .t1SwitchTrack{
+ position:relative;display:inline-flex;align-items:center;flex:0 0 52px;
+ width:52px;height:30px;border-radius:999px;background:#59636b;
+ border:1px solid #7e8990;transition:background .2s,border-color .2s;
+}
+#settingsPage #t1SiteControlButton .t1SwitchThumb{
+ position:absolute;left:3px;top:3px;width:22px;height:22px;
+ border-radius:50%;background:#fff;box-shadow:0 1px 4px #0008;
+ transition:transform .2s;
+}
+#settingsPage #t1SiteControlButton.is-on{
+ color:#baf8d9;
+}
+#settingsPage #t1SiteControlButton.is-on .t1SwitchTrack{background:#159b63;border-color:#35e6a1}
+#settingsPage #t1SiteControlButton.is-on .t1SwitchThumb{transform:translateX(22px)}
+#settingsPage #t1SiteControlButton:disabled{opacity:.7;cursor:wait}
+</style>
+<style id="temo-t1-switch-label-right">
+#settingsPage #t1SiteControlButton.t1Switch{
+ display:flex;align-items:center;justify-content:flex-start;gap:12px;
+}
+#settingsPage #t1SiteControlButton #t1SiteSwitchLabel{
+ order:2;display:inline-block;flex:1;text-align:left;
+}
+#settingsPage #t1SiteControlButton .t1SwitchTrack{order:1;flex:0 0 52px}
+</style>
 </body>
 <style id="temo-bottom-neon-css-final">
 /* ქვედა მენიუს ნეონი მხოლოდ აქტიურ ღილაკზეა; წინა ღილაკზე გადასული glow/transition არ რჩება. */
@@ -7293,4 +7638,11 @@ body.temo-admin-slide-menu-open{overflow:hidden}
 body.temo-android-app #bottomNav > button .navLogo{
   font-size:28px !important;
 }
+</style>
+
+<style id="temo-ai-voice-toggle-only">
+#aiChatModal .aiHeaderActions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+#aiChatModal .aiVoiceToggle{width:34px;height:34px;padding:0;border:1px solid #2999df;border-radius:10px;background:#102b3b;color:#fff;font-size:17px;line-height:1;cursor:pointer;box-shadow:0 0 5px rgba(41,153,223,.35)}
+#aiChatModal .aiVoiceToggle.enabled{border-color:#00e5ff;box-shadow:0 0 6px rgba(0,229,255,.8),0 0 13px rgba(0,229,255,.3)}
+@media(max-width:700px){#aiChatModal .aiVoiceToggle{width:32px;height:32px;font-size:16px}}
 </style>
