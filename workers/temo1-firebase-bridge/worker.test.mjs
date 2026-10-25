@@ -27,6 +27,12 @@ test.beforeEach(() => {
       target[path[path.length - 1]] = JSON.parse(init.body);
       return new Response(JSON.stringify(target[path[path.length - 1]]), { status: 200 });
     }
+    if (init.method === 'DELETE') {
+      let target = database;
+      for (const part of path.slice(0, -1)) target = target?.[part];
+      if (target && typeof target === 'object') delete target[path[path.length - 1]];
+      return new Response('null', { status: 200 });
+    }
     return new Response('method not allowed', { status: 405 });
   };
 });
@@ -76,6 +82,21 @@ test('user reads and sends only own messages; client cannot forge admin replies'
   assert.equal(database.adminMessages['user-1'][0].reply, '');
   assert.equal(database.adminMessages['user-1'][1].reply, '');
   assert.deepEqual(database.users, originalUsersSnapshot);
+});
+
+test('only TEMO can delete an individual admin message thread through Firebase auth', async () => {
+  const { body: userSession } = await login('Alice', 'user-pass');
+  const path = 'adminMessages/user-1';
+  assert.equal((await call({ action: 'db', path, method: 'DELETE' }, userSession.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path, method: 'DELETE' })).status, 401);
+  assert.equal(database.adminMessages['user-1'].length, 1);
+
+  const { body: adminSession } = await login('TEMO', 'admin-pass');
+  const deleted = await call({ action: 'db', path, method: 'DELETE' }, adminSession.sessionToken);
+  assert.equal(deleted.status, 200);
+  assert.equal(database.adminMessages['user-1'], undefined);
+  assert.deepEqual(database.users, originalUsersSnapshot);
+  assert.equal((await call({ action: 'db', path: 'adminMessages', method: 'DELETE' }, adminSession.sessionToken)).status, 400);
 });
 
 test('site and bridge user-key encoding agree for non-UUID legacy IDs', async () => {
