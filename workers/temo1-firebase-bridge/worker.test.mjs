@@ -78,12 +78,25 @@ test('user reads and sends only own messages; client cannot forge admin replies'
   assert.deepEqual(database.users, originalUsersSnapshot);
 });
 
+test('site and bridge user-key encoding agree for non-UUID legacy IDs', async () => {
+  const legacy = { id: 'legacy/user 7', name: 'Legacy', password: 'legacy-pass', authorized: true, blocked: false };
+  database.users.push(legacy);
+  const key = 'legacy_2Fuser_207';
+  database.adminMessages[key] = [{ id: 'legacy-msg', userId: legacy.id, userName: legacy.name, text: 'Legacy thread', createdAt: 1, reply: '', replyAt: 0, replyReadByUser: true }];
+  const { response, body } = await login('Legacy', 'legacy-pass');
+  assert.equal(response.status, 200);
+  const own = await call({ action: 'db', path: 'adminMessages/' + key, method: 'GET' }, body.sessionToken);
+  assert.equal(own.status, 200);
+  assert.equal((await own.json())[0].userId, legacy.id);
+  assert.equal((await call({ action: 'db', path: 'adminMessages/legacy_2Fuser_208', method: 'GET' }, body.sessionToken)).status, 403);
+});
+
 test('admin reads inbox and replies without overwriting user content or account data', async () => {
   const { body } = await login('TEMO', 'admin-pass');
   const inbox = await call({ action: 'db', path: 'adminMessages', method: 'GET' }, body.sessionToken);
   assert.equal(inbox.status, 200);
   const write = await call({ action: 'db', path: 'adminMessages/user-1', method: 'PUT', data: [
-    { ...database.adminMessages['user-1'][0], text: 'tampered', userName: 'tampered', reply: 'We will help.', replyAt: 25, readByAdmin: true }
+    { ...database.adminMessages['user-1'][0], text: 'tampered', userName: 'tampered', reply: 'We will help.', replyAt: 25, readByAdmin: true, replyReadByUser: true }
   ] }, body.sessionToken);
   assert.equal(write.status, 200);
   const saved = database.adminMessages['user-1'][0];
@@ -91,6 +104,20 @@ test('admin reads inbox and replies without overwriting user content or account 
   assert.equal(saved.userName, 'Alice');
   assert.equal(saved.reply, 'We will help.');
   assert.equal(saved.replyAt, 25);
+  assert.equal(saved.replyReadByUser, false, 'a newly sent admin reply is unread for the user');
+  const { body: userSession } = await login('Alice', 'user-pass');
+  const userRead = await call({ action: 'db', path: 'adminMessages/user-1', method: 'GET' }, userSession.sessionToken);
+  const received = await userRead.json();
+  assert.equal(received[0].replyReadByUser, false);
+  received[0].replyReadByUser = true;
+  const markRead = await call({ action: 'db', path: 'adminMessages/user-1', method: 'PUT', data: received }, userSession.sessionToken);
+  assert.equal(markRead.status, 200);
+  assert.equal(database.adminMessages['user-1'][0].replyReadByUser, true, 'the user can mark an existing reply as read');
+  const adminRefresh = await call({ action: 'db', path: 'adminMessages/user-1', method: 'PUT', data: [
+    { ...database.adminMessages['user-1'][0], replyReadByUser: false }
+  ] }, body.sessionToken);
+  assert.equal(adminRefresh.status, 200);
+  assert.equal(database.adminMessages['user-1'][0].replyReadByUser, true, 'admin refresh cannot reset or forge user read state');
   assert.deepEqual(database.users, originalUsersSnapshot);
 });
 
