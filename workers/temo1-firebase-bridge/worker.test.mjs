@@ -11,7 +11,7 @@ let database;
 let originalUsersSnapshot;
 
 test.beforeEach(() => {
-  database = { users: structuredClone(originalUsers), adminMessages: { 'user-1': [{ id: 'msg-1', userId: 'user-1', userName: 'Alice', text: 'Hello', createdAt: 10, reply: '', replyAt: 0, readByAdmin: false, replyReadByUser: true }] } };
+  database = { users: structuredClone(originalUsers), adminMessages: { 'user-1': [{ id: 'msg-1', userId: 'user-1', userName: 'Alice', text: 'Hello', createdAt: 10, reply: '', replyAt: 0, readByAdmin: false, replyReadByUser: true }] }, expenses: { 'user-1': [{ id: 'exp-1', category: '🛒 მაღაზია', amount: 12.5, date: '2026-10-26', createdAt: 1 }] } };
   originalUsersSnapshot = structuredClone(database.users);
   globalThis.fetch = async (input, init = {}) => {
     const url = new URL(String(input));
@@ -234,3 +234,24 @@ test('emulator overrides isolate Auth, RTDB namespace, and allowed Origin from p
   globalThis.fetch = previousFetch;
 });
 
+
+test('expenses require a signed-in session and are limited to the caller\'s own path', async () => {
+  const unauthorized = await call({ action: 'db', path: 'expenses/user-1', method: 'GET' });
+  assert.equal(unauthorized.status, 401);
+
+  const { body } = await login('Alice', 'user-pass');
+  const ownRead = await call({ action: 'db', path: 'expenses/user-1', method: 'GET' }, body.sessionToken);
+  assert.equal(ownRead.status, 200);
+  assert.equal((await ownRead.json())[0].amount, 12.5);
+
+  const ownWrite = await call({ action: 'db', path: 'expenses/user-1', method: 'PUT', data: [
+    { id: 'exp-2', category: '⛽ საწვავი', amount: 20, date: '2026-10-26', createdAt: 2 }
+  ] }, body.sessionToken);
+  assert.equal(ownWrite.status, 200);
+  assert.equal(database.expenses['user-1'][0].amount, 20);
+
+  assert.equal((await call({ action: 'db', path: 'expenses/admin-1', method: 'GET' }, body.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path: 'expenses/admin-1', method: 'PUT', data: [] }, body.sessionToken)).status, 403);
+  assert.equal((await call({ action: 'db', path: 'expenses/user-1/extra', method: 'GET' }, body.sessionToken)).status, 400);
+  assert.deepEqual(database.users, originalUsersSnapshot);
+});
