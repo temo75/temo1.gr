@@ -113,6 +113,10 @@ test('blocked, removed, renamed, or password-changed accounts lose their active 
   const removed = await login('Alice', 'new-pass');
   database.users = database.users.filter(user => user.id !== 'user-1');
   assert.equal((await call({ action: 'db', path: 'adminMessages/user-1', method: 'GET' }, removed.body.sessionToken)).status, 401);
+  database.users = structuredClone(originalUsers);
+  const renamed = await login('Alice', 'user-pass');
+  database.users[0].name = 'Alicia';
+  assert.equal((await call({ action: 'db', path: 'adminMessages/user-1', method: 'GET' }, renamed.body.sessionToken)).status, 401);
 });
 
 test('sessions expire, signatures cannot be tampered with, and unauthenticated/unsafe paths are rejected', async () => {
