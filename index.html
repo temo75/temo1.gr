@@ -2541,7 +2541,7 @@ const FRESH_USER_IDS_KEY='temoFreshUserIds';
 const ADMIN_USER='TEMO';
 const REMOVED_USER_NAMES=['TEMOADMIN'];
 const FIREBASE_DB_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app';
-const FIREBASE_BRIDGE_URL='https://temo1-firebase-bridge.temo75elia.workers.dev';
+const FIREBASE_BRIDGE_URL=window.TEMO_FIREBASE_BRIDGE_URL||((location.hostname==='localhost'||location.hostname==='127.0.0.1')?'http://127.0.0.1:8787':'https://temo1-firebase-bridge.temo75elia.workers.dev');
 const BRIDGE_SESSION_KEY='temoFirebaseBridgeSession';
 let currentUser=localStorage.getItem(SESSION_USER_KEY)||'';
 let currentUserId=localStorage.getItem(SESSION_USER_ID_KEY)||'';
@@ -7293,3 +7293,4 @@ body.temo-android-app #bottomNav > button .navLogo{
   font-size:28px !important;
 }
 </style>
+
