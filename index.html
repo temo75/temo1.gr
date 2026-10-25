@@ -4714,9 +4714,9 @@ async function loadChatThread(userId){
   const key=chatUserKey(userId);
   if(!key)return [];
   try{
-    const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{cache:'no-store'});
-    if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-    const data=await r.json();
+    const r=await fetch('https://temo1-firebase-bridge.temo75elia.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:'adminMessages/'+key,method:'GET'})});
+    const data=await r.json().catch(()=>null);
+    if(!r.ok)throw new Error(data?.details||data?.error||('Worker HTTP '+r.status));
     if(!data)return [];
     const arr=Array.isArray(data)?data.filter(Boolean):Object.entries(data).map(([id,m])=>({...m,id:String(m?.id||id)})).filter(Boolean);
     return arr.map(m=>({id:String(m.id||''),userId:String(m.userId||userId),userName:String(m.userName||''),text:String(m.text||''),createdAt:Number(m.createdAt||0),reply:String(m.reply||''),replyAt:Number(m.replyAt||0)})).sort((a,b)=>a.createdAt-b.createdAt);
@@ -4725,8 +4725,9 @@ async function loadChatThread(userId){
 async function saveChatThread(userId,thread){
   const key=chatUserKey(userId);
   if(!key)throw new Error('მომხმარებელი ჯერ არ არის ავტორიზებული');
-  const r=await fetch(FIREBASE_DB_URL+CHAT_ROOT+key+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(thread)});
-  if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+  const r=await fetch('https://temo1-firebase-bridge.temo75elia.workers.dev/',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({path:'adminMessages/'+key,method:'PUT',data:thread})});
+  const result=await r.json().catch(()=>({}));
+  if(!r.ok)throw new Error(result.details||result.error||('Worker HTTP '+r.status));
 }
 function updateUserChatCount(){
   const el=$('userChatCount'),ta=$('userChatText');if(!el||!ta)return;
