@@ -3,10 +3,19 @@
 <head>
 <script>
 (function(){
-  if(location.pathname === '/index.html' || location.pathname === '/index.html/'){
-    var cleanPath = location.pathname.slice(0, location.pathname.lastIndexOf('index.html'));
-    history.replaceState(null, '', cleanPath + location.search + location.hash);
-  }
+  try {
+    var url = new URL(location.href);
+    var changed = false;
+    if(url.pathname === '/index.html' || url.pathname === '/index.html/'){
+      url.pathname = url.pathname.slice(0, url.pathname.lastIndexOf('index.html'));
+      changed = true;
+    }
+    if(url.searchParams.get('utm_source') === 'chatgpt.com'){
+      url.searchParams.delete('utm_source');
+      changed = true;
+    }
+    if(changed) history.replaceState(null, '', url.pathname + url.search + url.hash);
+  } catch(e) {}
 })();
 </script>
 <meta name="google-site-verification" content="vPkaq57GkbGCufy6hasdsXrRhcvq6gQ_SXYJk8t7JG0" />
