@@ -33,3 +33,14 @@ test('the login handler no longer reads users directly from unauthenticated Fire
   assert.match(html, /function expireBridgeSession\(\).*removeItem\(BRIDGE_SESSION_KEY\).*currentUser='';currentUserId=''/);
 });
 
+
+test('expense reads and writes use the authenticated bridge and render the home total', () => {
+  const save = html.slice(html.indexOf('async function saveExpensesToFirebase('), html.indexOf('async function syncExpensesFromFirebase('));
+  const load = html.slice(html.indexOf('async function syncExpensesFromFirebase('), html.indexOf('function expenseCategoryParts('));
+  const render = html.slice(html.indexOf('function renderExpenses('), html.indexOf('function closeExpenseDayPopup('));
+  assert.match(save, /bridgeRequest\('db',\{path,method:'PUT',data:expenses\}\)/);
+  assert.match(load, /bridgeRequest\('db',\{path,method:'GET'\}\)/);
+  assert.doesNotMatch(save + load, /fetch\(FIREBASE_DB_URL/);
+  assert.match(render, /expenseMonthTotalMain/);
+  assert.match(html, /syncExpensesFromFirebase\(\);/);
+});
