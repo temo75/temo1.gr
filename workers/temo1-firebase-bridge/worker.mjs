@@ -231,6 +231,37 @@ export default {
       } catch { return respond({ error: "Authentication service unavailable" }, 503); }
     }
 
+    if (input.action === "register") {
+      const username = String(input.username || "").trim();
+      const email = String(input.email || "").trim().toLowerCase();
+      const password = typeof input.password === "string" ? input.password : "";
+      if (!/^[A-Za-z]{1,40}$/.test(username) || !/^[^\s@]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,}$/.test(email) ||
+          email.length > 120 || password.length < 6 || password.length > 80) {
+        return respond({ error: "Invalid registration data" }, 400);
+      }
+      const reservedName = username.toUpperCase();
+      if (reservedName === ADMIN_USER || reservedName === "TEMOADMIN") {
+        return respond({ error: "Account name unavailable" }, 409);
+      }
+      try {
+        const records = normalizedUsers(await firebaseRequest(env, "users", "GET"));
+        if (records.some(record =>
+          String(record.name || "").trim().toLowerCase() === username.toLowerCase() ||
+          (record.email && String(record.email).trim().toLowerCase() === email)
+        )) return respond({ error: "Account already exists" }, 409);
+
+        const userId = crypto.randomUUID();
+        const record = { id: userId, name: username, email, password, admin: false, authorized: true, blocked: false };
+        // Write only this new child so existing users and the TEMO admin record remain untouched.
+        await firebaseRequest(env, "users/" + userId, "PUT", record);
+        const user = safeUser(record);
+        const sessionToken = await issueSession(env, user, password);
+        return respond({ user, sessionToken }, 201);
+      } catch {
+        return respond({ error: "Registration service unavailable" }, 502);
+      }
+    }
+
     const claims = await verifySession(env, input.sessionToken);
     if (!claims) return respond({ error: "Authentication required" }, 401);
     let activeUser;
