@@ -7414,6 +7414,63 @@ startNotesReminderWatcher();
 #temoAdminMenuDrawer .temoAdminMenuClose{width:38px;height:38px;border:1px solid #285269;border-radius:10px;background:#183445;color:#fff;font-size:22px;cursor:pointer}
 #temoAdminMenuDrawer .temoAdminMenuItem{display:block;width:100%;margin:8px 0;padding:14px 12px;text-align:left;border:1px solid var(--line,#1e3542);border-radius:12px;background:var(--panel2,#10232f);color:var(--text,#eef7f7);font-size:16px;cursor:pointer}
 body.temo-admin-slide-menu-open{overflow:hidden}
+@media(min-width:701px){
+  #temoAdminMenuDrawer{
+    top:16px;
+    bottom:auto;
+    width:min(330px,30vw);
+    max-height:calc(100vh - 32px);
+    max-height:calc(100dvh - 32px);
+    box-sizing:border-box;
+    padding:12px 12px 14px;
+    border:1px solid var(--line,#1e3542);
+    border-left:0;
+    border-radius:0 16px 16px 0;
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+  }
+  #temoAdminMenuDrawer .temoAdminMenuHead{
+    margin-bottom:8px;
+    padding:2px 2px 9px;
+    font-size:16px;
+  }
+  #temoAdminMenuDrawer .temoAdminMenuClose{
+    width:32px;
+    height:32px;
+    flex:0 0 32px;
+  }
+  #temoAdminMenuDrawer .temoAdminMenuItem{
+    flex:0 0 auto;
+    min-height:38px;
+    box-sizing:border-box;
+    margin:4px 0;
+    padding:9px 11px;
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.2;
+    box-shadow:0 2px 8px rgba(0,0,0,.12);
+  }
+  #temoAdminMenuDrawer .temoAdminMenuItem:hover{
+    border-color:#399ac4;
+    background:var(--panel2,#10232f);
+    transform:translateX(2px);
+  }
+  #temoAdminMenuDrawer .temoAdminMenuItem[data-action="logout"]{
+    position:sticky;
+    bottom:0;
+    z-index:1;
+    margin-top:auto;
+    border-color:rgba(220,75,92,.48);
+    background:var(--panel,#0d1b24);
+    box-shadow:0 -6px 14px rgba(0,0,0,.18);
+  }
+}
+@media(max-width:700px){
+  #temoAdminMenuDrawer .temoAdminMessagesShortcut{display:none!important}
+}
 </style>
 <script id="temo-admin-slide-menu-v1">
 (function(){
@@ -7442,7 +7499,7 @@ body.temo-admin-slide-menu-open{overflow:hidden}
     toggle.id='temoAdminMenuToggle';toggle.type='button';toggle.textContent='☰';
     toggle.setAttribute('aria-label','მენიუს გახსნა');toggle.setAttribute('aria-expanded','false');
     var overlay=document.createElement('div');overlay.id='temoAdminMenuOverlay';
-    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem" data-action="logout">🚪 გამოსვლა</button></aside>`;
+    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem temoAdminMessagesShortcut" data-action="goUsers">📨 შეტყობინებები</button><button type="button" class="temoAdminMenuItem" data-action="logout">🚪 გამოსვლა</button></aside>`;
     var bottomNav=document.getElementById("bottomNav");if(bottomNav){toggle.className="adminMenuNavButton";bottomNav.insertBefore(toggle,bottomNav.firstChild);}else{document.body.appendChild(toggle);}document.body.appendChild(overlay);
     toggle.addEventListener('click',function(){
       if(overlay.classList.contains('open')){
@@ -7459,7 +7516,9 @@ body.temo-admin-slide-menu-open{overflow:hidden}
       var admin=isAdmin();
       toggle.style.display='flex';
       var usersItem=overlay.querySelector('[data-action="goUsers"]');
-      if(usersItem)usersItem.style.display=admin?'block':'none';
+      if(usersItem&&!usersItem.classList.contains('temoAdminMessagesShortcut'))usersItem.style.display=admin?'block':'none';
+      var messagesShortcut=overlay.querySelector('.temoAdminMessagesShortcut');
+      if(messagesShortcut)messagesShortcut.style.display=admin?'block':'none';
       /* Do not close the drawer during unrelated DOM updates: the page's text/localization observers mutate child nodes after opening. */
     }
     sync();
