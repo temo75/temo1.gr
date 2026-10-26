@@ -7517,21 +7517,15 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   overflow:hidden;
 }
 #temoAdminMenuDrawer .temoAdminMenuItems{
+  display:flex;
   flex:1 1 auto;
   min-height:0;
+  flex-direction:column;
   overflow-y:auto;
   overscroll-behavior:contain;
   scrollbar-width:thin;
 }
-#temoAdminMenuDrawer .temoAdminMenuFooter{
-  flex:0 0 auto;
-  margin-top:auto;
-  padding-top:10px;
-  border-top:1px solid var(--line,#1e3542);
-  background:var(--panel,#0d1b24);
-  z-index:2;
-}
-#temoAdminMenuDrawer .temoAdminMenuFooter .temoAdminMenuLogout{
+#temoAdminMenuDrawer .temoAdminMenuItems .temoAdminMenuLogout{
   display:block!important;
   visibility:visible!important;
   opacity:1!important;
@@ -7540,7 +7534,10 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   flex:0 0 auto;
   width:100%!important;
   min-height:42px;
-  margin:0!important;
+  margin:auto 0 0!important;
+  border-color:rgba(220,75,92,.48);
+  background:var(--panel,#0d1b24);
+  box-shadow:0 -6px 14px rgba(0,0,0,.18);
 }
 @media(min-width:701px){
   #temoAdminMenuDrawer{
@@ -7576,7 +7573,7 @@ body.temo-admin-slide-menu-open{overflow:hidden}
     toggle.id='temoAdminMenuToggle';toggle.type='button';toggle.textContent='☰';
     toggle.setAttribute('aria-label','მენიუს გახსნა');toggle.setAttribute('aria-expanded','false');
     var overlay=document.createElement('div');overlay.id='temoAdminMenuOverlay';
-    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><div class="temoAdminMenuItems"><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem temoAdminReminderShortcut" data-action="openReminder">🔔 შეტყობინება</button></div><div class="temoAdminMenuFooter"><button type="button" class="temoAdminMenuItem temoAdminMenuLogout" data-action="logout" aria-label="გამოსვლა">🚪 გამოსვლა</button></div></aside>`;
+    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><div class="temoAdminMenuItems"><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem temoAdminReminderShortcut" data-action="openReminder">🔔 შეტყობინება</button><button type="button" class="temoAdminMenuItem temoAdminMenuLogout" data-action="logout" aria-label="გამოსვლა">🚪 გამოსვლა</button></div></aside>`;
     var bottomNav=document.getElementById("bottomNav");if(bottomNav){toggle.className="adminMenuNavButton";bottomNav.insertBefore(toggle,bottomNav.firstChild);}else{document.body.appendChild(toggle);}document.body.appendChild(overlay);
     toggle.addEventListener('click',function(){
       if(overlay.classList.contains('open')){
