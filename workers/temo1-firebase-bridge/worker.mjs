@@ -270,6 +270,14 @@ export default {
     catch { return respond({ error: "Authentication service unavailable" }, 503); }
     if (!activeUser) return respond({ error: "Authentication required" }, 401);
     if (input.action === "session") return respond({ user: activeUser }, 200);
+    if (input.action === "listUsers") {
+      if (!claims.admin) return respond({ error: "Forbidden" }, 403);
+      try {
+        return respond(normalizedUsers(await firebaseRequest(env, "users", "GET")), 200);
+      } catch {
+        return respond({ error: "Firebase user list failed" }, 502);
+      }
+    }
     if (input.action === "userBlock") {
       if (!claims.admin) return respond({ error: "Forbidden" }, 403);
       const userId = String(input.userId || "").trim();
