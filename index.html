@@ -2332,6 +2332,34 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   #notesPage #notesSecondPage.notes-daily-fullscreen{transition:none!important}
 }
 </style>
+<style id="temo-desktop-nav-compact">
+@media(min-width:701px){
+  #bottomNav{
+    bottom:0!important;
+    height:48px!important;
+    padding:0 8px!important;
+    align-items:center!important;
+    grid-template-columns:repeat(6,minmax(0,1fr))!important;
+  }
+  #bottomNav>button{
+    min-height:42px!important;
+    padding:0!important;
+    border-radius:9px!important;
+  }
+  #bottomNav>button .navLogo{
+    width:30px!important;
+    height:30px!important;
+    margin:auto!important;
+    font-size:28px!important;
+  }
+  #bottomNav>button.active .navLogo{
+    width:36px!important;
+    height:36px!important;
+    font-size:30px!important;
+  }
+  body{padding-bottom:60px!important}
+}
+</style>
 </head>
 <body>
 <nav id="bottomNav" aria-label="მთავარი მენიუ">
@@ -2737,7 +2765,7 @@ function makeLegacyUserId(name,password){const str=String(name||'').trim().toLow
 function firebaseUserKey(id){return encodeURIComponent(String(id)).replace(/%/g,'_');}
 function expireBridgeSession(){if(!localStorage.getItem(BRIDGE_SESSION_KEY))return;localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);localStorage.removeItem(BRIDGE_SESSION_KEY);currentUser='';currentUserId='';const screen=$('loginScreen');if(screen)screen.classList.remove('hidden');if($('bottomNav'))$('bottomNav').style.display='none';if(typeof updateUserUI==='function')updateUserUI();}
 async function bridgeRequest(action,payload={},sessionToken){const token=sessionToken===undefined?(localStorage.getItem(BRIDGE_SESSION_KEY)||''):sessionToken;const response=await fetch(FIREBASE_BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload,sessionToken:token})});const result=await response.json().catch(()=>({error:'Invalid bridge response'}));if(!response.ok){if(response.status===401&&action!=='login'&&token)expireBridgeSession();throw Object.assign(new Error(result?.error||'Bridge request failed'),{status:response.status});}return result;}
-async function loadUsersFromFirebase(){try{const r=await fetch(FIREBASE_DB_URL+'/users.json',{cache:'no-store'});if(!r.ok)throw new Error('Firebase HTTP '+r.status);const data=await r.json();if(data===null)return null;if(Array.isArray(data))return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));return Object.entries(data||{}).filter(([,u])=>u).map(([key,u])=>normalizeUser({...u,_firebaseKey:key})).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Firebase users read failed:',e);return null}}
+async function loadUsersFromFirebase(){try{const data=await bridgeRequest('listUsers');if(!Array.isArray(data))return null;return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Authenticated user list read failed:',e);return null}}
 function normalizeUser(raw){const u=(raw&&typeof raw==='object')?raw:{};const name=String(u.name||'').trim(),email=String(u.email||'').trim(),password=String(u.password??'');const admin=(name.toUpperCase()===ADMIN_USER)||u.admin===true;const blocked=admin?false:(typeof u.blocked==='boolean'?u.blocked:u.authorized===false);const id=String(u.id||'').trim()||makeLegacyUserId(name,password);return {id,name,email,password,admin,authorized:admin?true:!blocked,blocked,_firebaseKey:u._firebaseKey||''};}
 function isRemovedUser(u){return REMOVED_USER_NAMES.includes(String(u?.name||'').trim().toUpperCase());}
 async function saveUsersToFirebase(users){const snapshot=users.filter(u=>u&&u.name&&!isRemovedUser(u)).map(normalizeUser);firebaseWriteQueue=firebaseWriteQueue.then(async()=>{try{const r=await fetch(FIREBASE_DB_URL+'/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase users write failed:',e);return false}});return firebaseWriteQueue;}
@@ -4998,8 +5026,7 @@ async function renderManagedUsers(){
     }
   }
 
-  const adminUser=users.find(u=>u.admin||u.name.toUpperCase()===ADMIN_USER);
-  const list=[...(adminUser?[adminUser]:[]),...users.filter(u=>!u.admin&&u.name.toUpperCase()!==ADMIN_USER&&!isRemovedUser(u))];
+  const list=users.filter(u=>!u.admin&&u.name.toUpperCase()!==ADMIN_USER&&!isRemovedUser(u));
   const key=JSON.stringify(list.map(u=>[u.id,u.name,u.password,u.email,u.blocked===true,u.admin===true]));
 
   if(key===managedUsersRenderKey && box.children.length)return;
