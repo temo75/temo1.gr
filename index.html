@@ -3592,9 +3592,9 @@ function dailyUserKey(){
   const raw=String(currentUserId||currentUser||'').trim();
   return raw ? encodeURIComponent(raw).replace(/%/g,'_') : '';
 }
-function dailyUrl(){
+function dailyBridgePath(){
   const key=dailyUserKey();
-  return key ? FIREBASE_DB_URL+DAILY_ROOT+key+'.json' : '';
+  return key ? 'daily/'+key : '';
 }
 function dailyStorageKey(){
   return 'temoDaily_'+String(currentUserId||currentUser||'guest');
@@ -3640,23 +3640,20 @@ function mergeDailyState(localEntries,remoteEntries,localDel,remoteDel){
   return {entries,deletes};
 }
 async function saveDailyRemote(entries,deletes){
-  const url=dailyUrl();
-  if(!url)return false;
+  const path=dailyBridgePath();
+  if(!path)throw new Error('daily_path_unavailable');
   const payload={entries:Array.isArray(entries)?entries:[],deletes:deletes&&typeof deletes==='object'?deletes:{}};
-  const r=await fetch(url,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),keepalive:true});
-  if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+  await bridgeRequest('db',{path,method:'PUT',data:payload});
   return true;
 }
 async function syncDailyFromFirebase(){
-  const url=dailyUrl();
-  if(!url||dailySyncBusy)return;
+  const path=dailyBridgePath();
+  if(!path||dailySyncBusy)return;
   dailySyncBusy=true;
   try{
     const localEntries=loadDailyEntries();
     const localDel=loadDailyDeletes();
-    const r=await fetch(url,{cache:'no-store'});
-    if(!r.ok)throw new Error('Firebase HTTP '+r.status);
-    const data=await r.json();
+    const data=await bridgeRequest('db',{path,method:'GET'});
     const remoteEntries=Array.isArray(data)?data:(Array.isArray(data?.entries)?data.entries:[]);
     const remoteDel=(!Array.isArray(data)&&data?.deletes&&typeof data.deletes==='object')?data.deletes:{};
     const merged=mergeDailyState(localEntries,remoteEntries,localDel,remoteDel);

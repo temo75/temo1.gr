@@ -194,6 +194,7 @@ function firebaseUserKey(id) { return encodeURIComponent(String(id)).replace(/%/
 function parseBridgePath(path) {
   if (typeof path !== "string" || path.length > 256) return null;
   if (/^notes\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "notes", id: path.slice("notes/".length) };
+  if (/^daily\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "daily", id: path.slice("daily/".length) };
   if (/^expenses\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "expenses", id: path.slice("expenses/".length) };
   if (/^jobs\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "jobs", id: path.slice("jobs/".length) };
   if (/^jobDeletes\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "jobDeletes", id: path.slice("jobDeletes/".length) };
@@ -297,7 +298,7 @@ export default {
     const method = String(input.method || "").toUpperCase();
     if (!route || !["GET", "PUT", "DELETE"].includes(method) ||
         (method === "DELETE" && (route.kind !== "adminMessages" || !route.id))) return respond({ error: "Invalid path or method" }, 400);
-    if ((route.kind === "notes" || route.kind === "expenses" || route.kind === "jobs" || route.kind === "jobDeletes") && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
+    if ((route.kind === "notes" || route.kind === "daily" || route.kind === "expenses" || route.kind === "jobs" || route.kind === "jobDeletes") && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
     if (route.kind === "adminMessages") {
       if (!route.id && (!claims.admin || method !== "GET")) return respond({ error: "Forbidden" }, 403);
       if (route.id && !claims.admin && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
