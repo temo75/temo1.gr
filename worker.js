@@ -133,7 +133,7 @@ let cachedFirebaseToken='',cachedFirebaseTokenEmail='',cachedFirebaseTokenUntil=
 async function firebaseIdToken(env){const email=String(env.FIREBASE_EMAIL||'').trim(),password=String(env.FIREBASE_PASSWORD||'');if(!email||!password)throw new Error('Firebase backend authentication is not configured');const now=Date.now();if(cachedFirebaseToken&&cachedFirebaseTokenEmail===email&&cachedFirebaseTokenUntil>now+60000)return cachedFirebaseToken;const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+encodeURIComponent(TEMO_FIREBASE_API_KEY),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true})});const data=await r.json().catch(()=>null);if(!r.ok||typeof data?.idToken!=='string')throw new Error('Firebase backend authentication failed');cachedFirebaseToken=data.idToken;cachedFirebaseTokenEmail=email;cachedFirebaseTokenUntil=now+Math.max(0,Number(data.expiresIn||3600)*1000-60000);return cachedFirebaseToken;}
 async function pfget(path,env){const url=new URL(TEMO_FIREBASE_DB_URL+path+'.json');url.searchParams.set('auth',await firebaseIdToken(env));const r=await fetch(url.toString(),{cache:'no-store'});if(!r.ok)throw new Error('Firebase GET '+r.status);return r.json();}
 async function pfput(path,v,env){const url=new URL(TEMO_FIREBASE_DB_URL+path+'.json');url.searchParams.set('auth',await firebaseIdToken(env));const r=await fetch(url.toString(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});if(!r.ok)throw new Error('Firebase PUT '+r.status);}
-async function validatePushSession(token,userId){if(!token||!userId)return false;let r;try{r=await fetch(TEMO_FIREBASE_BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://temo1.gr'},body:JSON.stringify({action:'session',sessionToken:token})});}catch(_){throw new Error('Session verification unavailable');}const data=await r.json().catch(()=>null);if(r.status===401||r.status===403)return false;if(!r.ok||!data?.user)throw new Error('Session verification unavailable');return String(data.user.id)===String(userId)&&data.user.authorized===true&&data.user.blocked!==true;}
+async function validatePushSession(token,userId,env){if(!token||!userId)return false;if(!env.FIREBASE_BRIDGE)throw new Error('Session verifier unavailable');let r;try{r=await env.FIREBASE_BRIDGE.fetch(new Request('https://firebase-bridge.internal/',{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://temo1.gr'},body:JSON.stringify({action:'session',sessionToken:token})}));}catch(_){throw new Error('Session verification unavailable');}const data=await r.json().catch(()=>null);if(r.status===401||r.status===403)return false;if(!r.ok||!data?.user)throw new Error('Session verification unavailable');return String(data.user.id)===String(userId)&&data.user.authorized===true&&data.user.blocked!==true;}
 function pb64d(v){const s=String(v||'').replace(/-/g,'+').replace(/_/g,'/');const r=atob(s+'='.repeat((4-s.length%4)%4));const o=new Uint8Array(r.length);for(let i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o;}
 function pb64e(b){let s='';for(const x of new Uint8Array(b))s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 function pcat(...a){const o=new Uint8Array(a.reduce((n,x)=>n+x.length,0));let p=0;for(const x of a){o.set(x,p);p+=x.length;}return o;}
@@ -300,7 +300,7 @@ export default {
         if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: 'Origin not allowed' }), { status: 403, headers: corsHeaders });
         const sessionToken = String(body.sessionToken || '').trim();
         let isSessionValid = false;
-        try { isSessionValid = await validatePushSession(sessionToken, userId); }
+        try { isSessionValid = await validatePushSession(sessionToken, userId, env); }
         catch (_) { return new Response(JSON.stringify({ ok: false, error: 'Push authentication unavailable' }), { status: 503, headers: corsHeaders }); }
         if (!isSessionValid) return new Response(JSON.stringify({ ok: false, error: 'Authentication required' }), { status: 401, headers: corsHeaders });
 
@@ -342,7 +342,7 @@ export default {
         if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: 'Origin not allowed' }), { status: 403, headers: corsHeaders });
         const sessionToken = String(body.sessionToken || '').trim();
         let isSessionValid = false;
-        try { isSessionValid = await validatePushSession(sessionToken, userId); }
+        try { isSessionValid = await validatePushSession(sessionToken, userId, env); }
         catch (_) { return new Response(JSON.stringify({ ok: false, error: 'Push authentication unavailable' }), { status: 503, headers: corsHeaders }); }
         if (!isSessionValid) return new Response(JSON.stringify({ ok: false, error: 'Authentication required' }), { status: 401, headers: corsHeaders });
 
