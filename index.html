@@ -2206,6 +2206,30 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   font-size:24px;
   line-height:1;
 }
+#notesPage .dailyEditor{position:relative}
+#notesPage .dailyEditorBack{
+  align-self:flex-end;
+  display:grid;
+  place-items:center;
+  width:50px;
+  height:46px;
+  min-width:50px;
+  margin:0 0 0 auto;
+  padding:0;
+  border:1px solid #ef5b67;
+  border-radius:12px;
+  background:#10232f;
+  color:#fff;
+  font-size:25px;
+  line-height:1;
+  cursor:pointer;
+  box-shadow:0 3px 12px #0006;
+}
+#notesPage .dailyEditorEntering{animation:dailyEditorSlideIn .28s ease both}
+#notesPage .dailyEditorClosing{transition:transform .24s ease,opacity .24s ease;transform:translate3d(105%,0,0);opacity:0}
+#notesPage .dailyListReturning{animation:dailyListSlideIn .28s ease both}
+@keyframes dailyEditorSlideIn{from{transform:translate3d(100%,0,0);opacity:.65}to{transform:translate3d(0,0,0);opacity:1}}
+@keyframes dailyListSlideIn{from{transform:translate3d(-28px,0,0);opacity:.7}to{transform:translate3d(0,0,0);opacity:1}}
 #notesPage .dailyFullscreenBack{
   display:grid;
   place-items:center;
@@ -2361,6 +2385,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
       </div>
     </div>
     <div id="dailyEditorPage" class="dailyEditor" style="display:none">
+      <button type="button" class="dailyEditorBack" onclick="closeDailyEditor()" aria-label="სიაში დაბრუნება" title="სიაში დაბრუნება">↩</button>
       <input id="dailyTitle" class="dailyTitleInput" type="text" maxlength="80" placeholder="ჩანაწერის სახელი">
       <textarea id="dailyText" placeholder="ჩაწერე შენი ჩანაწერი..."></textarea>
       <button type="button" class="dailySaveBtn" onclick="saveDailyEntry()">💾 შენახვა</button>
@@ -3412,6 +3437,7 @@ function showNotesSubPage(which){
   const reminders=document.getElementById('notesRemindersPage');
   const second=document.getElementById('notesSecondPage');
   const secondBtn=document.getElementById('notesSecondBtn');
+  const notesPage=document.getElementById('notesPage');
   if(!reminders||!second||!secondBtn)return;
   const isReminders=which!=='daily';
   reminders.style.display=isReminders?'':'none';
@@ -3427,6 +3453,10 @@ function showNotesSubPage(which){
         second.removeEventListener('transitionend',onTransitionEnd);
         second.classList.remove('notes-daily-fullscreen');
         second.style.display='none';
+        if(notesPage&&notesPage.dataset.dailyPreviousZ!==undefined){
+          notesPage.style.zIndex=notesPage.dataset.dailyPreviousZ;
+          delete notesPage.dataset.dailyPreviousZ;
+        }
       };
       const onTransitionEnd=e=>{
         if(e.target===second&&e.propertyName==='transform')finishClose();
@@ -3436,11 +3466,13 @@ function showNotesSubPage(which){
     }else{
       second.style.display='none';
     }
-    // „დააყენე შეტყობინება“ ღილაკზე დაჭერამ ყოველთვის უნდა მოახდინოს რეაგირება
-    // და აქტუალური შეხსენებების სია ხელახლა ჩაიტვირთოს.
     if(typeof loadNotes==='function')loadNotes();
   }else{
     window.clearTimeout(second._dailyCloseTimer);
+    if(notesPage&&notesPage.dataset.dailyPreviousZ===undefined){
+      notesPage.dataset.dailyPreviousZ=notesPage.style.zIndex||'';
+      notesPage.style.zIndex='2147483645';
+    }
     second.style.display='block';
     second.classList.add('notes-daily-fullscreen');
     requestAnimationFrame(()=>requestAnimationFrame(()=>second.classList.add('notes-daily-open')));
@@ -3898,9 +3930,31 @@ function openDailyEditor(){
   if(!listPage||!editor||!text)return;
   listPage.style.display='none';
   editor.style.display='flex';
-  if(title)title.value='';
-  text.value='';
+  editor.classList.remove('dailyEditorClosing');
+  editor.classList.add('dailyEditorEntering');
+  window.setTimeout(()=>editor.classList.remove('dailyEditorEntering'),320);
+  if(editor.dataset.hasDraft!=='true'){
+    if(title)title.value='';
+    text.value='';
+  }
   setTimeout(()=>title?title.focus():text.focus(),50);
+}
+function closeDailyEditor(){
+  const listPage=document.getElementById('dailyListPage');
+  const editor=document.getElementById('dailyEditorPage');
+  const title=document.getElementById('dailyTitle');
+  const text=document.getElementById('dailyText');
+  if(!listPage||!editor||!text)return;
+  editor.dataset.hasDraft=String(!!(String(title?.value||'').trim()||text.value.trim()));
+  editor.classList.remove('dailyEditorEntering');
+  editor.classList.add('dailyEditorClosing');
+  window.setTimeout(()=>{
+    editor.style.display='none';
+    editor.classList.remove('dailyEditorClosing');
+    listPage.style.display='';
+    listPage.classList.add('dailyListReturning');
+    window.setTimeout(()=>listPage.classList.remove('dailyListReturning'),320);
+  },260);
 }
 async function saveDailyEntry(){
   const text=document.getElementById('dailyText');
@@ -3910,6 +3964,8 @@ async function saveDailyEntry(){
   const titleValue=String(title?.value||'').trim();
   if(!titleValue){if(title)title.focus();return;}
   if(!value){text.focus();return;}
+  const editor=document.getElementById('dailyEditorPage');
+  if(editor)editor.dataset.hasDraft='false';
   const now=Date.now();
   const entries=loadDailyEntries();
   entries.push({id:'d'+now+Math.random().toString(36).slice(2,8),title:titleValue,text:value,createdAt:now,updatedAt:now});
