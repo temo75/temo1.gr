@@ -2152,6 +2152,52 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 #bottomNav .messagesNavDot.read{background:#ef4444;color:#ef4444}
 #bottomNav .messagesNavDot[hidden]{display:none!important}
 </style>
+<style id="temo-daily-notes-fullscreen">
+#notesPage #notesSecondPage.notes-daily-fullscreen{
+  position:fixed!important;
+  inset:0!important;
+  z-index:40000!important;
+  display:block!important;
+  width:100vw!important;
+  height:100vh!important;
+  height:100dvh!important;
+  max-height:100dvh!important;
+  margin:0!important;
+  padding:calc(18px + env(safe-area-inset-top,0px)) 18px calc(92px + env(safe-area-inset-bottom,0px))!important;
+  overflow-x:hidden!important;
+  overflow-y:auto!important;
+  box-sizing:border-box!important;
+  border:0!important;
+  border-radius:0!important;
+  background:var(--bg,#071117)!important;
+  transform:translate3d(100%,0,0)!important;
+  transition:transform .32s cubic-bezier(.22,.75,.25,1)!important;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+#notesPage #notesSecondPage.notes-daily-fullscreen.notes-daily-open{
+  transform:translate3d(0,0,0)!important;
+}
+#notesPage .dailyFullscreenBack{
+  position:absolute;
+  right:calc(18px + env(safe-area-inset-right,0px));
+  bottom:calc(18px + env(safe-area-inset-bottom,0px));
+  z-index:2;
+  min-width:104px;
+  padding:13px 18px;
+  border:1px solid #ef5b67;
+  border-radius:14px;
+  background:#10232f;
+  color:#fff;
+  font:700 16px Arial,sans-serif;
+  box-shadow:0 4px 18px #0008;
+  cursor:pointer;
+}
+#notesPage #dailyListPage{padding-bottom:18px}
+@media(prefers-reduced-motion:reduce){
+  #notesPage #notesSecondPage.notes-daily-fullscreen{transition:none!important}
+}
+</style>
 </head>
 <body>
 <nav id="bottomNav" aria-label="მთავარი მენიუ">
@@ -2302,6 +2348,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
       <textarea id="dailyText" placeholder="ჩაწერე შენი ჩანაწერი..."></textarea>
       <button type="button" class="dailySaveBtn" onclick="saveDailyEntry()">💾 შენახვა</button>
     </div>
+    <button type="button" class="dailyFullscreenBack" onclick="showNotesSubPage('reminders')" aria-label="უკან დაბრუნება">↩ უკან</button>
   </div>
 
   <div id="dailyViewModal" class="dailyViewModal" onclick="if(event.target===this)closeDailyViewModal()">
@@ -3351,13 +3398,35 @@ function showNotesSubPage(which){
   if(!reminders||!second||!secondBtn)return;
   const isReminders=which!=='daily';
   reminders.style.display=isReminders?'':'none';
-  second.style.display=isReminders?'none':'';
   secondBtn.classList.toggle('active',!isReminders);
   if(isReminders){
+    second.classList.remove('notes-daily-open');
+    if(second.classList.contains('notes-daily-fullscreen')){
+      let finished=false;
+      const finishClose=()=>{
+        if(finished)return;
+        finished=true;
+        window.clearTimeout(second._dailyCloseTimer);
+        second.removeEventListener('transitionend',onTransitionEnd);
+        second.classList.remove('notes-daily-fullscreen');
+        second.style.display='none';
+      };
+      const onTransitionEnd=e=>{
+        if(e.target===second&&e.propertyName==='transform')finishClose();
+      };
+      second.addEventListener('transitionend',onTransitionEnd);
+      second._dailyCloseTimer=window.setTimeout(finishClose,420);
+    }else{
+      second.style.display='none';
+    }
     // „დააყენე შეტყობინება“ ღილაკზე დაჭერამ ყოველთვის უნდა მოახდინოს რეაგირება
     // და აქტუალური შეხსენებების სია ხელახლა ჩაიტვირთოს.
     if(typeof loadNotes==='function')loadNotes();
   }else{
+    window.clearTimeout(second._dailyCloseTimer);
+    second.style.display='block';
+    second.classList.add('notes-daily-fullscreen');
+    requestAnimationFrame(()=>requestAnimationFrame(()=>second.classList.add('notes-daily-open')));
     renderDailyEntries();
     syncDailyFromFirebase();
   }
