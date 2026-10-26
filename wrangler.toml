@@ -4,3 +4,7 @@ compatibility_date = "2026-09-30"
 
 [triggers]
 crons = ["* * * * *"]
+
+[[services]]
+binding = "FIREBASE_BRIDGE"
+service = "temo1-firebase-bridge"
