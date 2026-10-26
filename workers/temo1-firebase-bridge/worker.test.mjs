@@ -376,3 +376,70 @@ test('jobs and deletion markers require a signed-in session and stay within the 
   assert.equal((await call({ action: 'db', path: 'jobDeletes/user-1/extra', method: 'GET' }, body.sessionToken)).status, 400);
   assert.deepEqual(database.users, originalUsersSnapshot);
 });
+
+
+test('new user registration writes only a new child and returns a signed, password-free session', async () => {
+  database.users = Object.fromEntries(originalUsers.map((user, index) => ['existing-' + index, structuredClone(user)]));
+  originalUsersSnapshot = structuredClone(database.users);
+  const response = await call({ action: 'register', username: 'Koko', email: 'koko@example.invalid', password: 'new-pass-123' });
+  assert.equal(response.status, 201);
+  const body = await response.json();
+  assert.equal(body.user.name, 'Koko');
+  assert.equal(body.user.email, 'koko@example.invalid');
+  assert.equal(body.user.admin, false);
+  assert.equal(body.user.password, undefined);
+  assert.equal(typeof body.sessionToken, 'string');
+  const stored = Object.values(database.users).find(user => user.id === body.user.id);
+  assert.equal(stored.password, 'new-pass-123');
+  assert.equal(stored.blocked, false);
+  assert.equal(stored.authorized, true);
+  assert.deepEqual(database.users['existing-0'], originalUsers[0]);
+  assert.deepEqual(database.users['existing-1'], originalUsers[1]);
+  const session = await call({ action: 'session' }, body.sessionToken);
+  assert.equal(session.status, 200);
+  assert.equal((await session.json()).user.id, body.user.id);
+});
+
+test('new user registration rejects duplicate names, duplicate email, and reserved administrator names without writes', async () => {
+  const before = structuredClone(database.users);
+  for (const input of [
+    { username: 'Alice', email: 'new@example.invalid', password: 'new-pass-123' },
+    { username: 'Bob', email: 'alice@example.invalid', password: 'new-pass-123' },
+    { username: 'TEMO', email: 'new@example.invalid', password: 'new-pass-123' },
+    { username: 'TEMOADMIN', email: 'other@example.invalid', password: 'new-pass-123' }
+  ]) {
+    const response = await call({ action: 'register', ...input });
+    assert.equal(response.status, 409);
+  }
+  assert.deepEqual(database.users, before);
+});
+
+test('new user registration rejects malformed credentials and safely handles Firebase write denial', async () => {
+  const before = structuredClone(database.users);
+  for (const input of [
+    { username: 'Koko 7', email: 'koko@example.invalid', password: 'new-pass-123' },
+    { username: 'Koko', email: 'not-an-email', password: 'new-pass-123' },
+    { username: 'Koko', email: 'koko@example.invalid', password: '123' }
+  ]) {
+    const response = await call({ action: 'register', ...input });
+    assert.equal(response.status, 400);
+  }
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init = {}) => {
+    const url = new URL(String(input));
+    if (url.hostname === 'temo-75-default-rtdb.europe-west1.firebasedatabase.app' &&
+        init.method === 'PUT' && /\/users\/[A-Za-z0-9_-]+\.json$/.test(url.pathname)) {
+      return new Response('private database detail', { status: 401 });
+    }
+    return originalFetch(input, init);
+  };
+  try {
+    const response = await call({ action: 'register', username: 'Koko', email: 'koko@example.invalid', password: 'new-pass-123' });
+    assert.equal(response.status, 502);
+    const text = await response.text();
+    assert.doesNotMatch(text, /private database detail|new-pass-123/);
+    assert.deepEqual(database.users, before);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});

@@ -96,3 +96,14 @@ test('admin user block waits for the authenticated bridge before changing local 
   assert.doesNotMatch(block, /saveUsersToFirebase|FIREBASE_DB_URL/);
   assert.ok(block.includes('Firebase-ში ვერ განახლდა'));
 });
+
+
+test('new user registration uses the bridge and persists the returned profile for session restoration', () => {
+  const start = html.indexOf('async function registerNewUser(');
+  const register = html.slice(start, html.indexOf('\n</script>', start));
+  const remember = html.slice(html.indexOf('function rememberSessionUser('), html.indexOf('async function completeLogin('));
+  assert.match(register, /bridgeRequest\('register',\{username:n,email,password:p\},''\)/);
+  assert.doesNotMatch(register, /loadUsersFromFirebase|saveUsersToFirebase|FIREBASE_DB_URL/);
+  assert.match(remember, /localStorage\.setItem\(USERS_KEY,JSON\.stringify\(users\)\)/);
+  assert.match(register, /await completeLogin\(result\.user,result\.sessionToken\)/);
+});
