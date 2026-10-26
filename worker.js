@@ -127,6 +127,13 @@ function formatWeatherReply(weatherResult, language) {
 
 // TEMO Web Push backend
 const TEMO_FIREBASE_DB_URL='https://temo-75-default-rtdb.europe-west1.firebasedatabase.app';
+const TEMO_FIREBASE_API_KEY='AIzaSyAQqkrE6BweLfFEI179irLpkc6OVmIHArc';
+const TEMO_FIREBASE_BRIDGE_URL='https://temo1-firebase-bridge.temo75elia.workers.dev';
+let cachedFirebaseToken='',cachedFirebaseTokenEmail='',cachedFirebaseTokenUntil=0;
+async function firebaseIdToken(env){const email=String(env.FIREBASE_EMAIL||'').trim(),password=String(env.FIREBASE_PASSWORD||'');if(!email||!password)throw new Error('Firebase backend authentication is not configured');const now=Date.now();if(cachedFirebaseToken&&cachedFirebaseTokenEmail===email&&cachedFirebaseTokenUntil>now+60000)return cachedFirebaseToken;const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key='+encodeURIComponent(TEMO_FIREBASE_API_KEY),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password,returnSecureToken:true})});const data=await r.json().catch(()=>null);if(!r.ok||typeof data?.idToken!=='string')throw new Error('Firebase backend authentication failed');cachedFirebaseToken=data.idToken;cachedFirebaseTokenEmail=email;cachedFirebaseTokenUntil=now+Math.max(0,Number(data.expiresIn||3600)*1000-60000);return cachedFirebaseToken;}
+async function pfget(path,env){const url=new URL(TEMO_FIREBASE_DB_URL+path+'.json');url.searchParams.set('auth',await firebaseIdToken(env));const r=await fetch(url.toString(),{cache:'no-store'});if(!r.ok)throw new Error('Firebase GET '+r.status);return r.json();}
+async function pfput(path,v,env){const url=new URL(TEMO_FIREBASE_DB_URL+path+'.json');url.searchParams.set('auth',await firebaseIdToken(env));const r=await fetch(url.toString(),{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});if(!r.ok)throw new Error('Firebase PUT '+r.status);}
+async function validatePushSession(token,userId){if(!token||!userId)return false;let r;try{r=await fetch(TEMO_FIREBASE_BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json','Origin':'https://temo1.gr'},body:JSON.stringify({action:'session',sessionToken:token})});}catch(_){throw new Error('Session verification unavailable');}const data=await r.json().catch(()=>null);if(r.status===401||r.status===403)return false;if(!r.ok||!data?.user)throw new Error('Session verification unavailable');return String(data.user.id)===String(userId)&&data.user.authorized===true&&data.user.blocked!==true;}
 function pb64d(v){const s=String(v||'').replace(/-/g,'+').replace(/_/g,'/');const r=atob(s+'='.repeat((4-s.length%4)%4));const o=new Uint8Array(r.length);for(let i=0;i<r.length;i++)o[i]=r.charCodeAt(i);return o;}
 function pb64e(b){let s='';for(const x of new Uint8Array(b))s+=String.fromCharCode(x);return btoa(s).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');}
 function pcat(...a){const o=new Uint8Array(a.reduce((n,x)=>n+x.length,0));let p=0;for(const x of a){o.set(x,p);p+=x.length;}return o;}
@@ -139,17 +146,17 @@ async function pencrypt(sub,payload){const cp=pb64d(sub.keys.p256dh),auth=pb64d(
 function vapidPublicKeyFromJwk(jwk){const j=typeof jwk==='string'?JSON.parse(jwk):jwk;if(!j||j.kty!=='EC'||j.crv!=='P-256'||!j.d||!j.x||!j.y)throw new Error('Invalid VAPID private JWK');const x=pb64d(j.x),y=pb64d(j.y),d=pb64d(j.d);if(x.length!==32||y.length!==32||d.length!==32)throw new Error('Invalid VAPID P-256 key length');return pb64e(pcat(new Uint8Array([4]),x,y));}
 async function validateVapidPrivateJwk(jwk){const j=typeof jwk==='string'?JSON.parse(jwk):jwk;const privateKey=await crypto.subtle.importKey('jwk',j,{name:'ECDSA',namedCurve:'P-256'},false,['sign']);const publicKey=await crypto.subtle.importKey('jwk',{kty:'EC',crv:'P-256',x:j.x,y:j.y,ext:true,key_ops:['verify']},{name:'ECDSA',namedCurve:'P-256'},false,['verify']);const challenge=new TextEncoder().encode('TEMO VAPID key-pair check');const signature=await crypto.subtle.sign({name:'ECDSA',hash:'SHA-256'},privateKey,challenge);if(!await crypto.subtle.verify({name:'ECDSA',hash:'SHA-256'},publicKey,signature,challenge))throw new Error('VAPID public/private keys do not match');return vapidPublicKeyFromJwk(j);}
 async function sendPush(sub,payload,env){const body=await pencrypt(sub,JSON.stringify(payload)),jwt=await pvapid(sub.endpoint,env),publicKey=vapidPublicKeyFromJwk(env.VAPID_PRIVATE_JWK);return fetch(sub.endpoint,{method:'POST',headers:{TTL:'86400',Urgency:'high','Content-Type':'application/octet-stream','Content-Encoding':'aes128gcm',Authorization:'vapid t='+jwt+', k='+publicKey},body});}
-async function pfget(path){const r=await fetch(TEMO_FIREBASE_DB_URL+path+'.json',{cache:'no-store'});if(!r.ok)throw new Error('Firebase GET '+r.status);return r.json();}
-async function pfput(path,v){const r=await fetch(TEMO_FIREBASE_DB_URL+path+'.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(v)});if(!r.ok)throw new Error('Firebase PUT '+r.status);}
+
+
 function pkey(id){return encodeURIComponent(String(id||'')).replace(/%/g,'_');}
 function dueUtc(date,time,tz){const m=String(date).match(/^(\d{4})-(\d{2})-(\d{2})$/),t=String(time).match(/^(\d{1,2}):(\d{2})$/);if(!m||!t)return NaN;const base=Date.UTC(+m[1],+m[2]-1,+m[3],+t[1],+t[2]);try{const z=String(tz||'Europe/Athens'),parts=new Intl.DateTimeFormat('en-US',{timeZone:z,timeZoneName:'longOffset'}).formatToParts(new Date(base)),zn=parts.find(x=>x.type==='timeZoneName')?.value||'GMT',q=zn.match(/GMT([+-])(\d{2}):(\d{2})/),off=q?(+q[2]*60+ +q[3])*(q[1]=='-'?-1:1):0;const u=base-off*60000,p2=new Intl.DateTimeFormat('en-US',{timeZone:z,timeZoneName:'longOffset'}).formatToParts(new Date(u)),zn2=p2.find(x=>x.type==='timeZoneName')?.value||'GMT',q2=zn2.match(/GMT([+-])(\d{2}):(\d{2})/),off2=q2?(+q2[2]*60+ +q2[3])*(q2[1]=='-'?-1:1):off;return base-off2*60000;}catch(e){return base;}}
 async function runPushCron(env){
   if(!env.VAPID_PRIVATE_JWK)return;
   try{await validateVapidPrivateJwk(env.VAPID_PRIVATE_JWK);}catch(e){console.error('TEMO VAPID configuration is invalid');return;}
-  const all=await pfget('/pushSubscriptions')||{},now=Date.now();
+  const all=await pfget('/pushSubscriptions',env)||{},now=Date.now();
   for(const [uk,sv] of Object.entries(all)){
     if(!sv||typeof sv!=='object')continue;
-    const notes=await pfget('/notes/'+uk);
+    const notes=await pfget('/notes/'+uk,env);
     if(!Array.isArray(notes))continue;
     let changed=false;
     for(let i=0;i<notes.length;i++){
@@ -166,13 +173,13 @@ async function runPushCron(env){
         try{
           const r=await sendPush(s,{title:'📖 TEMO — ჩანაწერის შეხსენება',body:String(n.text||'შეხსენების დრო მოვიდა'),icon:'https://temo75.github.io/t1/icon.png',badge:'https://temo75.github.io/t1/icon.png',tag:'temo-note-'+String(n.id||i),url:'https://temo75.github.io/t1/'},env);
           if(r.ok)delivered=true;
-          else if(r.status===404||r.status===410)await pfput('/pushSubscriptions/'+uk+'/'+sk,null);
+          else if(r.status===404||r.status===410)await pfput('/pushSubscriptions/'+uk+'/'+sk,null,env);
           else console.error('TEMO push delivery failed with HTTP '+r.status);
         }catch(e){console.error('TEMO push delivery failed: '+String(e?.name||'network error'));}
       }
       if(delivered){notes[i]={...n,pushNotifiedAt:now,notifiedAt:now};changed=true;}
     }
-    if(changed)await pfput('/notes/'+uk,notes);
+    if(changed)await pfput('/notes/'+uk,notes,env);
   }
 }
 
@@ -290,6 +297,13 @@ export default {
 
       if (action === "push-subscribe") {
         const userId = String(body.userId || "").trim();
+        if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: 'Origin not allowed' }), { status: 403, headers: corsHeaders });
+        const sessionToken = String(body.sessionToken || '').trim();
+        let isSessionValid = false;
+        try { isSessionValid = await validatePushSession(sessionToken, userId); }
+        catch (_) { return new Response(JSON.stringify({ ok: false, error: 'Push authentication unavailable' }), { status: 503, headers: corsHeaders }); }
+        if (!isSessionValid) return new Response(JSON.stringify({ ok: false, error: 'Authentication required' }), { status: 401, headers: corsHeaders });
+
         const deviceId = String(body.deviceId || "").trim();
         const subscription = body.subscription && typeof body.subscription === "object" ? body.subscription : null;
         if (!userId || deviceId.length > 128 || !subscription?.endpoint || !subscription?.keys?.p256dh || !subscription?.keys?.auth) {
@@ -299,14 +313,14 @@ export default {
         const endpoint = String(subscription.endpoint);
         // Older deployed clients do not send a deviceId; keep their endpoint-keyed records working.
         const dk = pkey(deviceId || endpoint);
-        const allSubscriptions = await pfget('/pushSubscriptions') || {};
+        const allSubscriptions = await pfget('/pushSubscriptions',env) || {};
         for (const [existingUserKey, userSubscriptions] of Object.entries(allSubscriptions)) {
           if (!userSubscriptions || typeof userSubscriptions !== "object") continue;
           for (const [existingKey, existing] of Object.entries(userSubscriptions)) {
-            const sameDevice = Boolean(deviceId) && String(existing?.deviceId || "") === deviceId;
+            const sameDevice = existingUserKey === uk && Boolean(deviceId) && String(existing?.deviceId || "") === deviceId;
             const sameEndpoint = String(existing?.endpoint || "") === endpoint;
             if ((sameDevice || sameEndpoint) && (existingUserKey !== uk || existingKey !== dk)) {
-              await pfput('/pushSubscriptions/'+existingUserKey+'/'+existingKey, null);
+              await pfput('/pushSubscriptions/'+existingUserKey+'/'+existingKey, null,env);
             }
           }
         }
@@ -319,21 +333,28 @@ export default {
             auth: String(subscription.keys.auth)
           },
           updatedAt: Date.now()
-        });
+        },env);
         return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
       }
 
       if (action === "push-unsubscribe") {
         const userId = String(body.userId || "").trim();
+        if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: 'Origin not allowed' }), { status: 403, headers: corsHeaders });
+        const sessionToken = String(body.sessionToken || '').trim();
+        let isSessionValid = false;
+        try { isSessionValid = await validatePushSession(sessionToken, userId); }
+        catch (_) { return new Response(JSON.stringify({ ok: false, error: 'Push authentication unavailable' }), { status: 503, headers: corsHeaders }); }
+        if (!isSessionValid) return new Response(JSON.stringify({ ok: false, error: 'Authentication required' }), { status: 401, headers: corsHeaders });
+
         const endpoint = String(body.endpoint || "").trim();
         if (!userId || !endpoint) {
           return new Response(JSON.stringify({ ok: false, error: "Missing userId or endpoint" }), { status: 400, headers: corsHeaders });
         }
         const uk = pkey(userId);
-        const subscriptions = await pfget('/pushSubscriptions/'+uk) || {};
+        const subscriptions = await pfget('/pushSubscriptions/'+uk,env) || {};
         for (const [key, subscription] of Object.entries(subscriptions)) {
           if (key === pkey(endpoint) || String(subscription?.endpoint || "") === endpoint) {
-            await pfput('/pushSubscriptions/'+uk+'/'+key, null);
+            await pfput('/pushSubscriptions/'+uk+'/'+key, null,env);
           }
         }
         return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
