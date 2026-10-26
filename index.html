@@ -2194,6 +2194,29 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   cursor:pointer;
 }
 #notesPage #dailyListPage{padding-bottom:18px}
+#notesPage #dailyListPage>.notesToolsRow{display:flex;justify-content:flex-end;margin:0 0 10px}
+#notesPage .dailyCompactAdd{
+  display:grid;
+  place-items:center;
+  width:44px;
+  height:40px;
+  min-width:44px;
+  padding:0;
+  border-radius:11px;
+  font-size:24px;
+  line-height:1;
+}
+#notesPage .dailyFullscreenBack{
+  display:grid;
+  place-items:center;
+  width:50px;
+  height:50px;
+  min-width:50px;
+  padding:0;
+  border-radius:50%;
+  font-size:26px;
+  line-height:1;
+}
 @media(prefers-reduced-motion:reduce){
   #notesPage #notesSecondPage.notes-daily-fullscreen{transition:none!important}
 }
@@ -2328,13 +2351,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   <div id="notesSecondPage" class="notesSubPage" style="display:none">
     <div id="dailyListPage">
       <div class="notesToolsRow">
-        <button type="button" class="notesAddBtn" onclick="openDailyEditor()">➕ დამატე</button>
-      </div>
-      <div class="dailyCalendarTools">
-        <button type="button" class="dailyCalendarBtn" onclick="openDailyCalendar()">📅 კალენდარი</button>
-        <button type="button" class="dailyCalendarClear" onclick="clearDailyCalendar()">ყველა ჩანაწერი</button>
-        <span id="dailyCalendarLabel" class="dailyCalendarLabel">ყველა თარიღი</span>
-        <input id="dailyCalendarInput" class="dailyCalendarInput" type="date" onchange="applyDailyCalendar(this.value)" aria-label="ჩანაწერის თარიღი">
+        <button type="button" class="notesAddBtn dailyCompactAdd" onclick="openDailyEditor()" aria-label="ახალი ჩანაწერის დამატება" title="ახალი ჩანაწერის დამატება">＋</button>
       </div>
       <div id="dailyList" class="dailyList"></div>
       <div id="dailyPagination" class="dailyPagination" style="display:none">
@@ -2348,7 +2365,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
       <textarea id="dailyText" placeholder="ჩაწერე შენი ჩანაწერი..."></textarea>
       <button type="button" class="dailySaveBtn" onclick="saveDailyEntry()">💾 შენახვა</button>
     </div>
-    <button type="button" class="dailyFullscreenBack" onclick="showNotesSubPage('reminders')" aria-label="უკან დაბრუნება">↩ უკან</button>
+    <button type="button" class="dailyFullscreenBack" onclick="showNotesSubPage('reminders')" aria-label="უკან დაბრუნება" title="უკან დაბრუნება">↩</button>
   </div>
 
   <div id="dailyViewModal" class="dailyViewModal" onclick="if(event.target===this)closeDailyViewModal()">
