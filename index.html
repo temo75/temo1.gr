@@ -7523,12 +7523,24 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   overscroll-behavior:contain;
   scrollbar-width:thin;
 }
-#temoAdminMenuDrawer .temoAdminMenuItem[data-action="logout"]{
-  position:static;
+#temoAdminMenuDrawer .temoAdminMenuFooter{
   flex:0 0 auto;
-  width:100%;
-  margin:8px 0 0;
+  margin-top:auto;
+  padding-top:10px;
+  border-top:1px solid var(--line,#1e3542);
+  background:var(--panel,#0d1b24);
   z-index:2;
+}
+#temoAdminMenuDrawer .temoAdminMenuFooter .temoAdminMenuLogout{
+  display:block!important;
+  visibility:visible!important;
+  opacity:1!important;
+  position:relative!important;
+  inset:auto!important;
+  flex:0 0 auto;
+  width:100%!important;
+  min-height:42px;
+  margin:0!important;
 }
 @media(min-width:701px){
   #temoAdminMenuDrawer{
@@ -7564,7 +7576,7 @@ body.temo-admin-slide-menu-open{overflow:hidden}
     toggle.id='temoAdminMenuToggle';toggle.type='button';toggle.textContent='☰';
     toggle.setAttribute('aria-label','მენიუს გახსნა');toggle.setAttribute('aria-expanded','false');
     var overlay=document.createElement('div');overlay.id='temoAdminMenuOverlay';
-    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><div class="temoAdminMenuItems"><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem temoAdminReminderShortcut" data-action="openReminder">🔔 შეტყობინება</button></div><button type="button" class="temoAdminMenuItem" data-action="logout">🚪 გამოსვლა</button></aside>`;
+    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><div class="temoAdminMenuItems"><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem temoAdminReminderShortcut" data-action="openReminder">🔔 შეტყობინება</button></div><div class="temoAdminMenuFooter"><button type="button" class="temoAdminMenuItem temoAdminMenuLogout" data-action="logout" aria-label="გამოსვლა">🚪 გამოსვლა</button></div></aside>`;
     var bottomNav=document.getElementById("bottomNav");if(bottomNav){toggle.className="adminMenuNavButton";bottomNav.insertBefore(toggle,bottomNav.firstChild);}else{document.body.appendChild(toggle);}document.body.appendChild(overlay);
     toggle.addEventListener('click',function(){
       if(overlay.classList.contains('open')){
