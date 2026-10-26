@@ -317,7 +317,7 @@ export default {
         for (const [existingUserKey, userSubscriptions] of Object.entries(allSubscriptions)) {
           if (!userSubscriptions || typeof userSubscriptions !== "object") continue;
           for (const [existingKey, existing] of Object.entries(userSubscriptions)) {
-            const sameDevice = Boolean(deviceId) && String(existing?.deviceId || "") === deviceId;
+            const sameDevice = existingUserKey === uk && Boolean(deviceId) && String(existing?.deviceId || "") === deviceId;
             const sameEndpoint = String(existing?.endpoint || "") === endpoint;
             if ((sameDevice || sameEndpoint) && (existingUserKey !== uk || existingKey !== dk)) {
               await pfput('/pushSubscriptions/'+existingUserKey+'/'+existingKey, null,env);
