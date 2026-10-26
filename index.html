@@ -2231,6 +2231,11 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 @keyframes dailyEditorSlideIn{from{transform:translate3d(100%,0,0);opacity:.65}to{transform:translate3d(0,0,0);opacity:1}}
 @keyframes dailyListSlideIn{from{transform:translate3d(-28px,0,0);opacity:.7}to{transform:translate3d(0,0,0);opacity:1}}
 #notesPage .dailyFullscreenBack{
+  position:absolute;
+  top:calc(8px + env(safe-area-inset-top,0px));
+  left:calc(8px + env(safe-area-inset-left,0px));
+  right:auto;
+  bottom:auto;
   display:grid;
   place-items:center;
   width:50px;
