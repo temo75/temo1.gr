@@ -2552,7 +2552,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 
   <div id="noteModal" class="notesModal" onclick="if(event.target===this)closeNoteModal()">
     <div class="notesModalBox">
-      <h2 id="noteModalTitle">➕ ახალი ჩანაწერი</h2>
+      <h2 id="noteModalTitle">🔔 შეტყობინება</h2>
       <div class="notesField">
         <label for="noteText">📝 ჩანაწერი</label>
         <textarea id="noteText" placeholder="ჩაწერე რაც გინდა..." maxlength="5000"></textarea>
@@ -6369,7 +6369,7 @@ function formatNoteDate(date,time){
 }
 function openNoteModal(note){
   editingNoteId=note?.id||'';
-  $('noteModalTitle').textContent=editingNoteId?t('✏️ ჩანაწერის შეცვლა'):t('➕ ახალი ჩანაწერი');
+  $('noteModalTitle').textContent=editingNoteId?t('✏️ ჩანაწერის შეცვლა'):t('🔔 შეტყობინება');
   $('noteText').value=note?.text||'';
   $('noteText').setAttribute('placeholder',t('ჩაწერე რაც გინდა...'));
   $('noteDate').value=note?.date||localToday();
@@ -6815,7 +6815,7 @@ startNotesReminderWatcher();
     'ჩანაწერების წიგნი':['Notes Book','Βιβλίο σημειώσεων'],
     '➕ ახალი მომხმარებელი':['➕ New user','➕ Νέος χρήστης'],
     'შენი პირადი ჩანაწერები და შეხსენებები':['Your personal notes and reminders','Οι προσωπικές σου σημειώσεις και υπενθυμίσεις'],
-    '➕ ახალი ჩანაწერი':['➕ New note','➕ Νέα σημείωση'],
+    '🔔 შეტყობინება':['🔔 Reminder','🔔 Υπενθύμιση'],
     '✏️ ჩანაწერის შეცვლა':['✏️ Edit note','✏️ Επεξεργασία σημείωσης'],
     'ყველა თვე':['All months','Όλοι οι μήνες'],
     'ქართული':['Georgian','Γεωργιανά'],
@@ -7469,7 +7469,46 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   }
 }
 @media(max-width:700px){
-  #temoAdminMenuDrawer .temoAdminReminderShortcut{display:none!important}
+  #temoAdminMenuDrawer{
+    top:8px;
+    bottom:8px;
+    width:min(320px,88vw);
+    box-sizing:border-box;
+    padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
+    display:flex;
+    flex-direction:column;
+    overflow-y:auto;
+    overscroll-behavior:contain;
+    scrollbar-width:thin;
+  }
+  #temoAdminMenuDrawer .temoAdminMenuHead{
+    margin-bottom:8px;
+    padding:2px 2px 9px;
+    font-size:16px;
+  }
+  #temoAdminMenuDrawer .temoAdminMenuClose{
+    width:32px;
+    height:32px;
+    flex:0 0 32px;
+  }
+  #temoAdminMenuDrawer .temoAdminMenuItem{
+    flex:0 0 auto;
+    min-height:40px;
+    box-sizing:border-box;
+    margin:4px 0;
+    padding:10px 11px;
+    border-radius:10px;
+    font-size:14px;
+    line-height:1.2;
+  }
+  #temoAdminMenuDrawer .temoAdminMenuItem[data-action="logout"]{
+    position:sticky;
+    bottom:0;
+    z-index:1;
+    margin-top:auto;
+    background:var(--panel,#0d1b24);
+    box-shadow:0 -6px 14px rgba(0,0,0,.18);
+  }
 }
 </style>
 <script id="temo-admin-slide-menu-v1">
