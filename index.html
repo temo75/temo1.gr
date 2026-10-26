@@ -2225,6 +2225,88 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   cursor:pointer;
   box-shadow:0 3px 12px #0006;
 }
+#notesPage #notesSecondPage.daily-editor-active>.dailyFullscreenBack{display:none!important}
+#notesPage .dailyEditor{
+  width:100%;
+  max-width:900px;
+  min-height:calc(100dvh - 150px);
+  margin:0 auto;
+  padding:clamp(16px,3vw,26px);
+  gap:12px;
+  border:1px solid rgba(96,185,221,.28);
+  border-radius:22px;
+  background:linear-gradient(155deg,rgba(17,38,51,.98),rgba(7,17,23,.98));
+  box-shadow:0 18px 50px rgba(0,0,0,.28),inset 0 1px rgba(255,255,255,.04);
+}
+#notesPage .dailyEditorHeader{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+#notesPage .dailyEditorHeader .dailyEditorBack{
+  flex:0 0 48px;
+  align-self:center;
+  display:grid;
+  place-items:center;
+  width:48px;
+  height:48px;
+  min-width:48px;
+  margin:0;
+  padding:0;
+  border:1px solid rgba(90,185,225,.58);
+  border-radius:15px;
+  background:rgba(13,31,42,.95);
+  color:#eaf8ff;
+  font-size:27px;
+}
+#notesPage .dailyEditorTitle{margin:0;color:#f4fbff;font-size:22px;line-height:1.2}
+#notesPage .dailyEditorHint{margin:5px 0 0;color:#9fb5c2;font-size:14px;line-height:1.4}
+#notesPage .dailyEditorFieldLabel{margin:2px 0 -5px;color:#bdd1dc;font-size:14px;font-weight:700}
+#notesPage .dailyTitleInput{
+  width:100%;
+  height:56px;
+  flex:0 0 56px;
+  border:1px solid rgba(96,185,221,.42);
+  border-radius:14px;
+  background:#091720;
+  padding:14px 16px;
+  font-size:17px;
+  box-shadow:inset 0 1px 4px rgba(0,0,0,.22);
+}
+#notesPage #dailyText{
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:clamp(280px,48vh,460px);
+  flex:1 1 auto;
+  box-sizing:border-box;
+  resize:vertical;
+  border:1px solid rgba(96,185,221,.42);
+  border-radius:16px;
+  background:#091720;
+  color:#eef7f7;
+  padding:16px;
+  font:16px/1.6 Arial,sans-serif;
+  outline:none;
+  box-shadow:inset 0 1px 5px rgba(0,0,0,.25);
+}
+#notesPage #dailyText:focus,#notesPage .dailyTitleInput:focus{
+  border-color:#53b9e8;
+  box-shadow:0 0 0 3px rgba(83,185,232,.14);
+}
+#notesPage #dailyText::placeholder,#notesPage .dailyTitleInput::placeholder{color:#8398a4;opacity:1}
+#notesPage .dailySaveBtn{
+  min-height:56px;
+  border:1px solid rgba(83,185,232,.48);
+  border-radius:15px;
+  background:linear-gradient(135deg,#12394b,#102b3b);
+  color:#eaf8ff;
+  font-size:17px;
+  box-shadow:0 8px 20px rgba(0,0,0,.2);
+}
+@media(max-width:600px){
+  #notesPage .dailyEditor{min-height:calc(100dvh - 135px);padding:15px;border-radius:19px;gap:10px}
+  #notesPage #dailyText{min-height:clamp(300px,50vh,500px);font-size:16px}
+}
+@media(prefers-reduced-motion:reduce){
+  #notesPage #dailyEditorPage.dailyEditorEntering,#notesPage #dailyListPage.dailyListReturning{animation:none!important}
+}
 #notesPage .dailyEditorEntering{animation:dailyEditorSlideIn .28s ease both}
 #notesPage .dailyEditorClosing{transition:transform .24s ease,opacity .24s ease;transform:translate3d(105%,0,0);opacity:0}
 #notesPage .dailyListReturning{animation:dailyListSlideIn .28s ease both}
@@ -2390,8 +2472,16 @@ html body.site-white-theme #aiChatModal .aiChatClose{
       </div>
     </div>
     <div id="dailyEditorPage" class="dailyEditor" style="display:none">
-      <button type="button" class="dailyEditorBack" onclick="closeDailyEditor()" aria-label="სიაში დაბრუნება" title="სიაში დაბრუნება">↩</button>
+      <div class="dailyEditorHeader">
+        <button type="button" class="dailyEditorBack" onclick="closeDailyEditor()" aria-label="სიაში დაბრუნება" title="სიაში დაბრუნება">←</button>
+        <div>
+          <h2 class="dailyEditorTitle">ახალი ჩანაწერი</h2>
+          <p class="dailyEditorHint">ჩაწერე შენი ჩანაწერი და შეინახე პირად სიაში.</p>
+        </div>
+      </div>
+      <label class="dailyEditorFieldLabel" for="dailyTitle">სათაური</label>
       <input id="dailyTitle" class="dailyTitleInput" type="text" maxlength="80" placeholder="ჩანაწერის სახელი">
+      <label class="dailyEditorFieldLabel" for="dailyText">ჩანაწერი</label>
       <textarea id="dailyText" placeholder="ჩაწერე შენი ჩანაწერი..."></textarea>
       <button type="button" class="dailySaveBtn" onclick="saveDailyEntry()">💾 შენახვა</button>
     </div>
@@ -3680,6 +3770,7 @@ function renderDailyEntries(){
   if(!list||!listPage||!editor)return;
   listPage.style.display='';
   editor.style.display='none';
+  document.getElementById('notesSecondPage')?.classList.remove('daily-editor-active');
   const entries=loadDailyEntries();
   const filteredEntries=dailyCalendarDate?entries.filter(e=>getDailyDateKey(e.createdAt)===dailyCalendarDate):entries;
   if(!filteredEntries.length){
@@ -3935,6 +4026,7 @@ function openDailyEditor(){
   if(!listPage||!editor||!text)return;
   listPage.style.display='none';
   editor.style.display='flex';
+  document.getElementById('notesSecondPage')?.classList.add('daily-editor-active');
   editor.classList.remove('dailyEditorClosing');
   editor.classList.add('dailyEditorEntering');
   window.setTimeout(()=>editor.classList.remove('dailyEditorEntering'),320);
@@ -3956,6 +4048,7 @@ function closeDailyEditor(){
   window.setTimeout(()=>{
     editor.style.display='none';
     editor.classList.remove('dailyEditorClosing');
+    document.getElementById('notesSecondPage')?.classList.remove('daily-editor-active');
     listPage.style.display='';
     listPage.classList.add('dailyListReturning');
     window.setTimeout(()=>listPage.classList.remove('dailyListReturning'),320);
