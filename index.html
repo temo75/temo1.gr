@@ -7422,7 +7422,7 @@ body.temo-admin-slide-menu-open{overflow:hidden}
     max-height:calc(100vh - 32px);
     max-height:calc(100dvh - 32px);
     box-sizing:border-box;
-    padding:12px 12px 14px;
+    padding:8px 10px;
     border:1px solid var(--line,#1e3542);
     border-left:0;
     border-radius:0 16px 16px 0;
@@ -7433,8 +7433,8 @@ body.temo-admin-slide-menu-open{overflow:hidden}
     scrollbar-width:thin;
   }
   #temoAdminMenuDrawer .temoAdminMenuHead{
-    margin-bottom:8px;
-    padding:2px 2px 9px;
+    margin-bottom:4px;
+    padding:2px 2px 6px;
     font-size:15px;
   }
   #temoAdminMenuDrawer .temoAdminMenuClose{
@@ -7444,10 +7444,10 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   }
   #temoAdminMenuDrawer .temoAdminMenuItem{
     flex:0 0 auto;
-    min-height:36px;
+    min-height:34px;
     box-sizing:border-box;
-    margin:4px 0;
-    padding:8px 9px;
+    margin:2px 0;
+    padding:6px 8px;
     border-radius:10px;
     font-size:13px;
     line-height:1.25;
@@ -7474,10 +7474,13 @@ body.temo-admin-slide-menu-open{overflow:hidden}
 @media(max-width:700px){
   #temoAdminMenuDrawer{
     top:8px;
-    bottom:8px;
+    bottom:auto;
     width:min(280px,78vw);
+    max-height:calc(100vh - 16px);
+    max-height:calc(100dvh - 16px);
+    height:auto;
     box-sizing:border-box;
-    padding:calc(12px + env(safe-area-inset-top,0px)) 12px calc(12px + env(safe-area-inset-bottom,0px));
+    padding:calc(8px + env(safe-area-inset-top,0px)) 10px calc(8px + env(safe-area-inset-bottom,0px));
     display:flex;
     flex-direction:column;
     overflow-y:auto;
@@ -7485,8 +7488,8 @@ body.temo-admin-slide-menu-open{overflow:hidden}
     scrollbar-width:thin;
   }
   #temoAdminMenuDrawer .temoAdminMenuHead{
-    margin-bottom:8px;
-    padding:2px 2px 9px;
+    margin-bottom:4px;
+    padding:2px 2px 6px;
     font-size:15px;
   }
   #temoAdminMenuDrawer .temoAdminMenuClose{
@@ -7496,10 +7499,10 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   }
   #temoAdminMenuDrawer .temoAdminMenuItem{
     flex:0 0 auto;
-    min-height:38px;
+    min-height:34px;
     box-sizing:border-box;
-    margin:4px 0;
-    padding:8px 9px;
+    margin:2px 0;
+    padding:6px 8px;
     border-radius:10px;
     font-size:13px;
     line-height:1.25;
@@ -7540,15 +7543,14 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   flex:0 0 auto;
   width:100%!important;
   min-height:42px;
-  margin:4px 0!important;
+  margin:2px 0!important;
   border-color:rgba(220,75,92,.48);
   background:var(--panel,#0d1b24);
   box-shadow:0 -6px 14px rgba(0,0,0,.18);
 }
 @media(min-width:701px){
   #temoAdminMenuDrawer{
-    height:calc(100vh - 32px);
-    height:calc(100dvh - 32px);
+    height:auto;
   }
 }
 </style>
