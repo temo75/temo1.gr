@@ -7575,16 +7575,18 @@ body.temo-admin-slide-menu-open{overflow:hidden}
 }
 #temoPharmacyPanel.open #temoPharmacySheet{transform:translateX(0)}
 #temoPharmacyHeader{
+  order:2;
   flex:0 0 auto;
-  min-height:54px;
+  min-height:calc(60px + env(safe-area-inset-bottom,0px));
   box-sizing:border-box;
   display:flex;
   align-items:center;
   gap:12px;
-  padding:calc(7px + env(safe-area-inset-top,0px)) 12px 7px;
+  padding:7px 12px calc(7px + env(safe-area-inset-bottom,0px));
   background:#0d1b24;
   color:#fff;
-  border-bottom:1px solid #29404c;
+  border-top:1px solid #29404c;
+  box-shadow:0 -6px 18px rgba(0,0,0,.22);
   font-weight:700;
   font-size:16px;
 }
@@ -7599,6 +7601,7 @@ body.temo-admin-slide-menu-open{overflow:hidden}
   cursor:pointer;
 }
 #temoPharmacyFrame{
+  order:1;
   display:block;
   flex:1 1 auto;
   min-width:0;
