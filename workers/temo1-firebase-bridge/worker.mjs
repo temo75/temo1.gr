@@ -263,6 +263,39 @@ export default {
       }
     }
 
+    if (input.action === "passwordReset") {
+      const username = String(input.username || "").trim();
+      const email = String(input.email || "").trim().toLowerCase();
+      const newPassword = typeof input.newPassword === "string" ? input.newPassword : "";
+      if (!username || username.length > 128 || !/^[^\s@]{1,64}@[A-Za-z0-9.-]{1,190}\.[A-Za-z]{2,}$/.test(email) ||
+          email.length > 120 || newPassword.length < 6 || newPassword.length > 80) {
+        return respond({ error: "Invalid password reset data" }, 400);
+      }
+
+      try {
+        const stored = await firebaseRequest(env, "users", "GET");
+        const entries = Array.isArray(stored)
+          ? stored.map((record, index) => [String(index), record])
+          : stored && typeof stored === "object" ? Object.entries(stored) : [];
+        const matches = entries.filter(([, record]) => {
+          if (!record || typeof record !== "object") return false;
+          const name = String(record.name || "").trim();
+          return name.toUpperCase() !== ADMIN_USER && name.toUpperCase() !== "TEMOADMIN" &&
+            name.toLowerCase() === username.toLowerCase() &&
+            String(record.email || "").trim().toLowerCase() === email;
+        });
+        if (matches.length !== 1) {
+          return respond({ error: "Account details do not match" }, 400);
+        }
+
+        const [userKey] = matches[0];
+        await firebaseRequest(env, "users/" + userKey, "PATCH", { password: newPassword });
+        return respond({ ok: true }, 200);
+      } catch {
+        return respond({ error: "Password reset service unavailable" }, 502);
+      }
+    }
+
     const claims = await verifySession(env, input.sessionToken);
     if (!claims) return respond({ error: "Authentication required" }, 401);
     let activeUser;
