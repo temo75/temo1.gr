@@ -5147,24 +5147,23 @@ async function deleteManagedUser(id){
   if(!u||u.admin)return;
   if(!confirm('წავშალოთ მომხმარებელი '+u.name+'?'))return;
 
-  const remaining=users.filter(x=>String(x.id)!==String(id));
-  localStorage.setItem(USERS_KEY,JSON.stringify(remaining));
-
-  managedUsersRenderKey='';
-  await renderManagedUsers();
-  renderLoginUsers();
-
   try{
-    await saveUsersToFirebase(remaining);
+    const result=await bridgeRequest('userDelete',{userId:String(u.id)});
+    if(result?.ok!==true)throw new Error('Server did not confirm user deletion');
   }catch(e){
+    alert('მომხმარებელი ვერ წაიშალა. სერვერთან დაკავშირება ვერ მოხერხდა. სცადე მოგვიანებით.');
     console.warn('Firebase user delete failed:',e);
+    return;
   }
 
+  const remaining=getUsers().filter(x=>String(x.id)!==String(id));
+  localStorage.setItem(USERS_KEY,JSON.stringify(remaining));
   localStorage.removeItem('temoJobsId_'+u.id);
   removeAllLegacyJobKeysForName(u.name);
   unmarkFreshUser(u.id);
 
   managedUsersRenderKey='';
+  renderLoginUsers();
   await renderManagedUsers();
 }
 
