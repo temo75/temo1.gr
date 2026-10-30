@@ -4198,6 +4198,40 @@ async function createAIDiaryEntry(title,text){
     return false;
   }finally{dailySyncBusy=false;}
 }
+async function archiveAIChatTarget(type,id){
+  const targetId=String(id||'').trim();
+  if(!targetId)return false;
+  if(type==='reminder'){
+    while(notesLoadBusy)await new Promise(resolve=>setTimeout(resolve,25));
+    if(notesMutationBusy)return false;
+    const note=notesCache.find(item=>String(item.id)===targetId);
+    if(!note||note.archived===true)return false;
+    const oldArchived=note.archived===true,oldUpdatedAt=Number(note.updatedAt||0);
+    notesMutationBusy=true;note.archived=true;note.updatedAt=Date.now();renderNotes();
+    try{await saveNotesRemote();renderNotes();return true;}
+    catch(e){note.archived=oldArchived;note.updatedAt=oldUpdatedAt;renderNotes();console.warn('TEMO AI reminder archive failed:',e);return false;}
+    finally{notesMutationBusy=false;}
+  }
+  if(type==='diary'){
+    while(dailySyncBusy)await new Promise(resolve=>setTimeout(resolve,25));
+    dailySyncBusy=true;
+    const originalEntries=loadDailyEntries(),deletes=loadDailyDeletes();
+    const index=originalEntries.findIndex(item=>String(item.id)===targetId);
+    if(index<0||originalEntries[index].archived===true){dailySyncBusy=false;return false;}
+    const entries=originalEntries.slice(),current=entries[index];
+    entries[index]={...current,archived:true,updatedAt:Math.max(Date.now(),Number(current.updatedAt||0)+1)};
+    const previousArchiveView=dailyArchiveView,previousPage=dailyPage;
+    try{
+      dailyDeletes=deletes;saveDailyEntries(entries);saveDailyDeletes(deletes);
+      await saveDailyRemote(entries,deletes);renderDailyEntries();return true;
+    }catch(e){
+      saveDailyEntries(originalEntries);saveDailyDeletes(deletes);dailyDeletes=deletes;
+      dailyArchiveView=previousArchiveView;dailyPage=previousPage;renderDailyEntries();
+      console.warn('TEMO AI diary archive failed:',e);return false;
+    }finally{dailySyncBusy=false;}
+  }
+  return false;
+}
 function goNotes(){temoNavigatePage('notesPage');showNotesSubPage('reminders')}
 startDailySyncWatcher();
 
@@ -4856,10 +4890,20 @@ async function sendAIMessage(){
       })) : [],
       memory:Array.isArray(aiMemoryCache)?aiMemoryCache.slice(-50):[],
       notes:Array.isArray(notesCache)?notesCache.slice(-200).map(n=>({
+        id:String(n?.id??''),
         date:String(n?.date??''),
-        title:'',
-        text:String(n?.text??''),
-        done:n?.done===true      })) : []
+        time:String(n?.time??''),
+        title:String(n?.title??''),
+        text:String(n?.text??'').slice(0,1200),
+        done:n?.done===true,
+        archived:n?.archived===true
+      })) : [],
+      diaryEntries:Array.isArray(loadDailyEntries())?loadDailyEntries().slice(-200).map(n=>({
+        id:String(n?.id??''),
+        title:String(n?.title??'').slice(0,160),
+        text:String(n?.text??'').slice(0,1200),
+        archived:n?.archived===true
+      })) : []
     };
     const response=await fetch(TEMO_AI_WORKER_URL,{
       method:'POST',
@@ -4902,6 +4946,14 @@ async function sendAIMessage(){
       aiAddMessage('system',ok
         ?'📖 '+(language==='el'?'Η καταχώριση προστέθηκε στο ημερολόγιο: ':language==='en'?'Diary entry added: ':'📖 დღიურის ჩანაწერი დაემატა: ')+title
         :'⚠️ '+(language==='el'?'Η καταχώριση δεν αποθηκεύτηκε.':language==='en'?'The diary entry could not be saved.':'დღიურის ჩანაწერი ვერ შეინახა.'));
+    }
+    if(data.archiveRequest&&data.archiveType&&data.archiveTargetId){
+      const archived=await archiveAIChatTarget(data.archiveType,data.archiveTargetId);
+      const reminder=data.archiveType==='reminder';
+      const message=archived
+        ?(language==='el'?(reminder?'🔔 Η υπενθύμιση μεταφέρθηκε στο αρχείο.':'📖 Η καταχώριση μεταφέρθηκε στο αρχείο.'):language==='en'?(reminder?'🔔 Reminder moved to archive.':'📖 Diary entry moved to archive.'):(reminder?'🔔 შეტყობინება არქივში გადავიდა.':'📖 ჩანაწერი არქივში გადავიდა.'))
+        :(language==='el'?'⚠️ Δεν ήταν δυνατή η μεταφορά στο αρχείο.':language==='en'?'⚠️ Could not move the item to the archive.':'⚠️ ჩანაწერი არქივში ვერ გადაიტანა.');
+      aiAddMessage('system',message);
     }
     if(data.isWorkEntry&&data.needsConfirmation&&data.workEntry){
       aiPendingWorkEntry={...data.workEntry};
