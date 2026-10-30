@@ -4172,6 +4172,32 @@ async function saveDailyEntry(){
   try{await saveDailyRemote(entries,dailyDeletes);editingDailyId='';renderDailyEntries();}
   catch(e){alert('დღიური Firebase-ში ვერ შეინახა. შეამოწმე ინტერნეტი.');editingDailyId='';renderDailyEntries();}
 }
+async function createAIDiaryEntry(title,text){
+  const cleanTitle=String(title||'').trim().slice(0,80);
+  const cleanText=String(text||'').trim().slice(0,20000);
+  if(!cleanTitle||!cleanText)return false;
+  while(dailySyncBusy)await new Promise(resolve=>setTimeout(resolve,25));
+  dailySyncBusy=true;
+  const originalEntries=loadDailyEntries(),originalDeletes=loadDailyDeletes();
+  const previousArchiveView=dailyArchiveView,previousPage=dailyPage;
+  const now=Date.now();
+  const entry={id:'d'+now+Math.random().toString(36).slice(2,8),title:cleanTitle,text:cleanText,createdAt:now,updatedAt:now,archived:false};
+  const entries=[...originalEntries,entry];
+  try{
+    dailyDeletes=originalDeletes;
+    saveDailyEntries(entries);saveDailyDeletes(originalDeletes);
+    await saveDailyRemote(entries,originalDeletes);
+    dailyArchiveView=false;
+    dailyPage=Math.max(0,Math.ceil(entries.filter(item=>item.archived!==true).length/DAILY_PAGE_SIZE)-1);
+    renderDailyEntries();
+    return true;
+  }catch(e){
+    saveDailyEntries(originalEntries);saveDailyDeletes(originalDeletes);dailyDeletes=originalDeletes;
+    dailyArchiveView=previousArchiveView;dailyPage=previousPage;renderDailyEntries();
+    console.warn('TEMO AI diary entry save failed:',e);
+    return false;
+  }finally{dailySyncBusy=false;}
+}
 function goNotes(){temoNavigatePage('notesPage');showNotesSubPage('reminders')}
 startDailySyncWatcher();
 
@@ -4869,6 +4895,13 @@ async function sendAIMessage(){
         const ok=await createAIChatReminder(data.reminderDate,data.reminderTime,data.reminderText);
         aiAddMessage('system',ok?'🔔 '+(language==='el'?'Η υπενθύμιση αποθηκεύτηκε.':language==='en'?'Reminder saved.':'🔔 შეხსენება შენახულია.'):'⚠️ '+(language==='el'?'Η υπενθύμιση δεν αποθηκεύτηκε.':language==='en'?'Reminder could not be saved.':'შეხსენების შენახვა ვერ მოხერხდა.'));
       }
+    }
+    if(data.diaryEntryRequest&&data.diaryEntryTitle&&data.diaryEntryText){
+      const ok=await createAIDiaryEntry(data.diaryEntryTitle,data.diaryEntryText);
+      const title=String(data.diaryEntryTitle).trim();
+      aiAddMessage('system',ok
+        ?'📖 '+(language==='el'?'Η καταχώριση προστέθηκε στο ημερολόγιο: ':language==='en'?'Diary entry added: ':'📖 დღიურის ჩანაწერი დაემატა: ')+title
+        :'⚠️ '+(language==='el'?'Η καταχώριση δεν αποθηκεύτηκε.':language==='en'?'The diary entry could not be saved.':'დღიურის ჩანაწერი ვერ შეინახა.'));
     }
     if(data.isWorkEntry&&data.needsConfirmation&&data.workEntry){
       aiPendingWorkEntry={...data.workEntry};
