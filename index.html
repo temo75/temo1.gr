@@ -3831,14 +3831,14 @@ function renderDailyEntries(){
   listPage.style.display=''; editor.style.display='none';
   document.getElementById('notesSecondPage')?.classList.remove('daily-editor-active');
   const heading=document.getElementById('dailyListHeading');
-  if(heading)heading.textContent=dailyArchiveView?'📦 არქივი':'📖 დღიური ჩანაწერები';
+  if(heading)heading.textContent=t(dailyArchiveView?'📦 არქივი':'📖 დღიური ჩანაწერები');
   const archiveToggle=document.getElementById('dailyArchiveToggle');
-  if(archiveToggle){archiveToggle.textContent=dailyArchiveView?'📖 ჩანაწერები':'📦 არქივი';archiveToggle.setAttribute('aria-pressed',String(dailyArchiveView));}
+  if(archiveToggle){archiveToggle.textContent=t(dailyArchiveView?'📖 ჩანაწერები':'📦 არქივი');archiveToggle.setAttribute('aria-pressed',String(dailyArchiveView));}
   const entries=loadDailyEntries().filter(e=>(e.archived===true)===dailyArchiveView);
   const filteredEntries=dailyCalendarDate?entries.filter(e=>getDailyDateKey(e.createdAt)===dailyCalendarDate):entries;
   if(!filteredEntries.length){
     dailyPage=0;
-    const message=dailyArchiveView?'არქივში ჩანაწერი ჯერ არ არის.':dailyCalendarDate?'ამ თარიღზე ჩანაწერი არ არის.':'ჯერ ჩანაწერი არ არის.';
+    const message=t(dailyArchiveView?'არქივში ჩანაწერი ჯერ არ არის.':dailyCalendarDate?'ამ თარიღზე ჩანაწერი არ არის.':'ჯერ ჩანაწერი არ არის.');
     list.innerHTML='<div class="dailyEmpty">'+message+'</div>';
     updateDailyPagination(0); return;
   }
@@ -3873,7 +3873,7 @@ function openDailyActionMenu(id){
   const entry=loadDailyEntries().find(e=>String(e.id)===String(id));if(!entry)return;
   dailyActionId=String(id);
   const modal=document.getElementById('dailyActionModal'),archiveButton=document.getElementById('dailyArchiveActionBtn'),title=document.getElementById('dailyActionTitle');
-  if(archiveButton)archiveButton.textContent=dailyArchiveView?'↩ არქივიდან დაბრუნება':'📦 არქივში გადატანა';
+  if(archiveButton)archiveButton.textContent=t(dailyArchiveView?'↩ არქივიდან დაბრუნება':'📦 არქივში გადატანა');
   if(title)title.textContent='📝 '+(entry.title||'ჩანაწერი');
   if(modal){modal.classList.add('show');modal.setAttribute('aria-hidden','false');}
 }
@@ -6517,13 +6517,13 @@ function renderNotes(){
   const archivedCount=notesCache.filter(n=>n.archived).length;
   const archiveToggle=$('notesArchiveToggle');
   if(archiveToggle){
-    archiveToggle.textContent=notesArchiveView?'↩ აქტიურ შეტყობინებებზე დაბრუნება':('📦 არქივი ('+archivedCount+')');
+    archiveToggle.textContent=notesArchiveView?t('↩ აქტიურ შეტყობინებებზე დაბრუნება'):(t('📦 არქივი')+' ('+archivedCount+')');
     archiveToggle.setAttribute('aria-pressed',notesArchiveView?'true':'false');
   }
   const visible=notesCache.filter(n=>Boolean(n.archived)===notesArchiveView);
   if(!visible.length){
     list.innerHTML=notesArchiveView
-      ?'<div class="noteEmpty">📦 არქივი ცარიელია.</div>'
+      ?'<div class="noteEmpty">'+t('📦 არქივი ცარიელია.')+'</div>'
       :'<div class="noteEmpty">'+t('📖 ჯერ ჩანაწერები არ გაქვს.')+'<br>'+t('დააჭირე „🔔 შეტყობინების დაყენება“-ს.')+'</div>';
     return;
   }
@@ -6533,8 +6533,8 @@ function renderNotes(){
       const shortText=String(n.text||'').replace(/\s+/g,' ').trim();
       return `<div class="noteArchiveRow" data-note-id="${noteEsc(n.id)}">
         <div class="noteArchiveSummary">${noteEsc(shortText)}</div>
-        <div class="noteArchiveMeta">${noteEsc(formatNoteDate(n.date,n.time))}${n.done?' · ✅ შესრულდა':''}${n.reminder?' · 🔔':''}</div>
-        <button type="button" class="noteArchiveRestore" onclick="toggleNoteArchive('${noteEsc(n.id)}')">↩ დაბრუნება</button>
+        <div class="noteArchiveMeta">${noteEsc(formatNoteDate(n.date,n.time))}${n.done?' · '+t('✅ შესრულდა'):''}${n.reminder?' · 🔔':''}</div>
+        <button type="button" class="noteArchiveRestore" onclick="toggleNoteArchive('${noteEsc(n.id)}')">${t('↩ დაბრუნება')}</button>
       </div>`;
     }
     return `<div class="noteCard ${n.done?'done':''}" data-note-id="${noteEsc(n.id)}">
@@ -6544,7 +6544,7 @@ function renderNotes(){
       <div class="noteActions">
         <button type="button" onclick="toggleNoteDone('${noteEsc(n.id)}')">${n.done?t('↩️ აქტიური'):t('✅ შესრულდა')}</button>
         <button type="button" onclick="editNote('${noteEsc(n.id)}')">${t('✏️ შეცვლა')}</button>
-        <button type="button" onclick="toggleNoteArchive('${noteEsc(n.id)}')">📦 არქივში</button>
+        <button type="button" onclick="toggleNoteArchive('${noteEsc(n.id)}')">${t('📦 არქივში')}</button>
         <button type="button" class="danger" onclick="deleteNote('${noteEsc(n.id)}')">${t('🗑️ წაშლა')}</button>
       </div>
     </div>`;
@@ -6955,6 +6955,20 @@ startNotesReminderWatcher();
     'ამ მოწყობილობაზე Push შეტყობინებები ხელმისაწვდომი არ არის.':['Push notifications are not available on this device.','Οι ειδοποιήσεις Push δεν είναι διαθέσιμες σε αυτή τη συσκευή.'],
     'შეტყობინებები გამორთულია. ჩართე ისინი iPhone-ის Settings-ში TEMO-სთვის.':['Notifications are disabled. Enable them in iPhone Settings for TEMO.','Οι ειδοποιήσεις είναι απενεργοποιημένες. Ενεργοποίησέ τες στις Ρυθμίσεις iPhone για το TEMO.'],
     'iPhone-ზე Push შეტყობინებებისთვის დაამატე TEMO Home Screen-ზე და გახსენი მისი ხატულიდან.':['For Push notifications on iPhone, add TEMO to the Home Screen and open it from its icon.','Για ειδοποιήσεις Push στο iPhone, πρόσθεσε το TEMO στην Αρχική οθόνη και άνοιξέ το από το εικονίδιό του.'],
+    '📦 არქივი':['📦 Archive','📦 Αρχείο'],
+    '📦 არქივში':['📦 Archive','📦 Αρχειοθέτηση'],
+    '📦 არქივში გადატანა':['📦 Move to archive','📦 Μεταφορά στο αρχείο'],
+    '↩ არქივიდან დაბრუნება':['↩ Restore from archive','↩ Επαναφορά από το αρχείο'],
+    '↩ დაბრუნება':['↩ Restore','↩ Επαναφορά'],
+    '↩ აქტიურ შეტყობინებებზე დაბრუნება':['↩ Back to active reminders','↩ Επιστροφή στις ενεργές υπενθυμίσεις'],
+    '📦 არქივი ცარიელია.':['📦 The archive is empty.','📦 Το αρχείο είναι άδειο.'],
+    '📖 ჩანაწერები':['📖 Notes','📖 Σημειώσεις'],
+    'არქივში ჩანაწერი ჯერ არ არის.':['There are no archived entries yet.','Δεν υπάρχουν ακόμη αρχειοθετημένες καταχωρίσεις.'],
+    '✅ შესრულდა':['✅ Completed','✅ Ολοκληρώθηκε'],
+    '↩️ აქტიური':['↩️ Active','↩️ Ενεργό'],
+    'შეტყობინების არქივის ცვლილება ვერ შეინახა Firebase-ში.':['Could not save the reminder archive change to Firebase.','Δεν ήταν δυνατή η αποθήκευση της αλλαγής αρχείου υπενθυμίσεων στο Firebase.'],
+    'ჩანაწერი არქივში ვერ შეინახა. სცადე ხელახლა.':['Could not save the archive change. Please try again.','Δεν ήταν δυνατή η αποθήκευση της αρχειοθέτησης. Δοκίμασε ξανά.'],
+    'ჩანაწერის დაბრუნება ვერ შეინახა. სცადე ხელახლა.':['Could not restore the entry. Please try again.','Δεν ήταν δυνατή η επαναφορά της καταχώρισης. Δοκίμασε ξανά.'],
     'დღიური':['Diary','Ημερολόγιο'],
     '📖 დღიური ჩანაწერები':['📖 Diary entries','📖 Καταχωρίσεις ημερολογίου'],
     '➕ დამატე':['➕ Add','➕ Προσθήκη'],
