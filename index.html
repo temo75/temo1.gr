@@ -4077,14 +4077,42 @@ function closeDailyDeleteModal(){
 }
 async function confirmDeleteDailyEntry(){
   if(!dailyDeleteId)return;
-  const id=String(dailyDeleteId),originalEntries=loadDailyEntries(),entries=originalEntries.filter(e=>String(e.id)!==id);
-  const originalDeletes=loadDailyDeletes();dailyDeletes={...originalDeletes,[id]:Date.now()};
-  saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);closeDailyDeleteModal();renderDailyEntries();
-  try{await saveDailyRemote(entries,dailyDeletes);}
-  catch(e){
-    saveDailyEntries(originalEntries);saveDailyDeletes(originalDeletes);renderDailyEntries();
-    alert('ჩანაწერი Firebase-იდან ვერ წაიშალა. სცადე ხელახლა.');
-    console.warn('Firebase daily delete sync failed:',e);
+  const id=String(dailyDeleteId);
+  closeDailyDeleteModal();
+
+  // Wait for any in-flight Firebase merge before changing the local snapshot.
+  while(dailySyncBusy)await new Promise(resolve=>setTimeout(resolve,25));
+  dailySyncBusy=true;
+  const originalEntries=loadDailyEntries();
+  const entry=originalEntries.find(item=>String(item.id)===id);
+  const entries=originalEntries.filter(item=>String(item.id)!==id);
+  const originalDeletes=loadDailyDeletes();
+  const deletedAt=Math.max(Date.now(),Number(entry?.updatedAt||0)+1);
+  dailyDeletes={...originalDeletes,[id]:deletedAt};
+  saveDailyEntries(entries);
+  saveDailyDeletes(dailyDeletes);
+  renderDailyEntries();
+
+  try{
+    await saveDailyRemote(entries,dailyDeletes);
+
+    // Confirm the tombstone reached Firebase; a successful HTTP response alone
+    // does not guarantee that an overlapping sync did not replace it.
+    let remote=await bridgeRequest('db',{path:dailyBridgePath(),method:'GET'});
+    let remoteDeletes=(!Array.isArray(remote)&&remote?.deletes&&typeof remote.deletes==='object')?remote.deletes:{};
+    if(Number(remoteDeletes[id]||0)<deletedAt){
+      await saveDailyRemote(entries,dailyDeletes);
+      remote=await bridgeRequest('db',{path:dailyBridgePath(),method:'GET'});
+      remoteDeletes=(!Array.isArray(remote)&&remote?.deletes&&typeof remote.deletes==='object')?remote.deletes:{};
+    }
+    if(Number(remoteDeletes[id]||0)<deletedAt)throw new Error('daily_delete_not_confirmed');
+  }catch(e){
+    // Keep the local tombstone. The next sync can retry the remote write,
+    // and a page refresh must not bring the deleted record back.
+    console.warn('Firebase daily delete sync pending:',e);
+    alert('ჩანაწერი წაიშალა. სერვერთან სინქრონიზაცია ვერ დადასტურდა და ხელახლა სცადეთ ინტერნეტის აღდგენის შემდეგ.');
+  }finally{
+    dailySyncBusy=false;
   }
 }
 
