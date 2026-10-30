@@ -7766,6 +7766,45 @@ body.temo-pharmacy-panel-open{overflow:hidden}
 #notesPage #dailyActionModal .dailyActionOptions button.danger{border-color:#74333d;background:#321b20;color:#ff8c95}
 #notesPage #dailyActionModal .dailyActionOptions button:active{transform:scale(.98)}
 </style>
+<script id="temo-daily-controls-viewport-fix">
+(function(){
+  function moveDailyControls(){
+    var controls=document.getElementById('dailyBottomControls');
+    if(controls&&controls.parentElement!==document.body)document.body.appendChild(controls);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',moveDailyControls,{once:true});
+  else moveDailyControls();
+})();
+</script>
+<style id="temo-daily-controls-viewport-fix-css">
+body>#dailyBottomControls{
+  position:fixed!important;left:12px!important;right:12px!important;
+  bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;
+  z-index:2147483646!important;display:none!important;
+  grid-template-columns:52px minmax(0,1fr) 52px;align-items:center;gap:9px;padding:7px;
+  border:1px solid rgba(80,170,255,.32);border-radius:16px;background:rgba(7,17,23,.96);
+  box-shadow:0 7px 24px rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)
+}
+body:has(#notesSecondPage.notes-daily-open)>#dailyBottomControls{display:grid!important}
+body:has(#notesSecondPage.daily-editor-active)>#dailyBottomControls{display:none!important}
+body>#dailyBottomControls .dailyFullscreenBack,
+body>#dailyBottomControls .dailyCompactAdd,
+body>#dailyBottomControls .dailyArchiveToggle{
+  position:static!important;inset:auto!important;display:grid!important;place-items:center;
+  width:52px!important;min-width:52px!important;height:48px!important;min-height:48px!important;
+  margin:0!important;padding:0!important;border:1px solid #ef5b67;border-radius:13px;
+  background:#10232f;color:#fff;font-size:24px;line-height:1;box-shadow:0 3px 12px #0007;
+  cursor:pointer;touch-action:manipulation
+}
+body>#dailyBottomControls .dailyArchiveToggle{
+  display:block!important;width:100%!important;min-width:0!important;padding:0 10px!important;
+  border-color:#315061;font-size:15px;font-weight:800;white-space:nowrap
+}
+body>#dailyBottomControls .dailyFullscreenBack{border-radius:50%;font-size:26px}
+body>#dailyBottomControls .dailyCompactAdd{font-size:28px}
+body>#dailyBottomControls button:active{transform:scale(.96)}
+@media(max-width:420px){body>#dailyBottomControls{left:8px!important;right:8px!important;bottom:calc(70px + env(safe-area-inset-bottom,0px))!important}}
+</style>
 </body>
 <style id="temo-bottom-neon-css-final">
 /* ქვედა მენიუს ნეონი მხოლოდ აქტიურ ღილაკზეა; წინა ღილაკზე გადასული glow/transition არ რჩება. */
