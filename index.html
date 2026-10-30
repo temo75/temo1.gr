@@ -4545,6 +4545,11 @@ function aiSpeakReply(text,button){
       const prefix=targetLang.slice(0,2).toLowerCase();
       const matching=voices.find(v=>String(v.lang||'').toLowerCase()===targetLang.toLowerCase())
         ||voices.find(v=>String(v.lang||'').toLowerCase().startsWith(prefix));
+      if(requested==='ka'&&!matching){
+        finish('⚠️ ქართული ხმა მიუწვდომელია');
+        aiAddMessage('system','🔊 ამ მოწყობილობაზე ქართული ხმოვანი კითხვა მიუწვდომელია. ბრაუზერმა ქართული ხმა ვერ იპოვა, ამიტომ ტექსტს სხვა ენაზე აღარ წაიკითხავს. ტექსტური პასუხი ქართულად ხელმისაწვდომია.');
+        return;
+      }
       const fallback=matching||voices.find(v=>v.default)||voices[0]||null;
       const utterance=new SpeechSynthesisUtterance(clean);
       temoAISpeechUtterance=utterance;
