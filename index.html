@@ -2777,7 +2777,16 @@ async function bridgeRequest(action,payload={},sessionToken){const token=session
 async function loadUsersFromFirebase(){try{const data=await bridgeRequest('listUsers');if(!Array.isArray(data))return null;return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Authenticated user list read failed:',e);return null}}
 function normalizeUser(raw){const u=(raw&&typeof raw==='object')?raw:{};const name=String(u.name||'').trim(),email=String(u.email||'').trim(),password=String(u.password??'');const admin=(name.toUpperCase()===ADMIN_USER)||u.admin===true;const blocked=admin?false:(typeof u.blocked==='boolean'?u.blocked:u.authorized===false);const id=String(u.id||'').trim()||makeLegacyUserId(name,password);return {id,name,email,password,admin,authorized:admin?true:!blocked,blocked,_firebaseKey:u._firebaseKey||''};}
 function isRemovedUser(u){return REMOVED_USER_NAMES.includes(String(u?.name||'').trim().toUpperCase());}
-async function saveUsersToFirebase(users){const snapshot=users.filter(u=>u&&u.name&&!isRemovedUser(u)).map(normalizeUser);firebaseWriteQueue=firebaseWriteQueue.then(async()=>{try{const r=await fetch(FIREBASE_DB_URL+'/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot)});if(!r.ok)throw new Error('Firebase HTTP '+r.status);return true;}catch(e){console.warn('Firebase users write failed:',e);return false}});return firebaseWriteQueue;}
+async function saveUsersToFirebase(users){
+  const snapshot=users.filter(u=>u&&u.name&&!isRemovedUser(u)).map(normalizeUser);
+  const write=firebaseWriteQueue.then(async()=>{
+    const r=await fetch(FIREBASE_DB_URL+'/users.json',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(snapshot)});
+    if(!r.ok)throw new Error('Firebase HTTP '+r.status);
+    return true;
+  });
+  firebaseWriteQueue=write.catch(e=>{console.warn('Firebase users write failed:',e)});
+  return write;
+}
 async function syncUsersFromFirebase(){if(firebaseSyncBusy)return;firebaseSyncBusy=true;try{await firebaseWriteQueue;const remote=await loadUsersFromFirebase();if(remote!==null){let clean=remote.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));if(!clean.some(u=>u.name.toUpperCase()===ADMIN_USER))clean.unshift(normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false}));localStorage.setItem(USERS_KEY,JSON.stringify(clean));return clean;}console.warn('Firebase users could not be read; local users were preserved and no cloud write was attempted.');return getUsers().filter(u=>!isRemovedUser(u));}finally{firebaseSyncBusy=false}}
 function getUsers(){let users;try{users=JSON.parse(localStorage.getItem(USERS_KEY)||'null')}catch(e){users=null}if(!Array.isArray(users)||!users.length)users=[normalizeUser({id:'admin-temo',name:ADMIN_USER,password:AUTH_PASSWORD,admin:true,authorized:true,blocked:false})];const normalized=users.map(normalizeUser).filter(u=>u.name&&!isRemovedUser(u));localStorage.setItem(USERS_KEY,JSON.stringify(normalized));return normalized;}
 function findUserById(id){return getUsers().find(u=>String(u.id)===String(id));}
@@ -5410,23 +5419,23 @@ function submitForgotPassword(){
   const email=document.getElementById('forgotPasswordEmail').value.trim().toLowerCase();
   const newPassword=document.getElementById('forgotPasswordNew').value;
   const er=document.getElementById('forgotPasswordError');
+  const btn=document.getElementById('forgotPasswordSubmit');
   er.textContent='';
   if(!name){er.textContent='შეიყვანე სახელი';return;}
   if(!email){er.textContent='შეიყვანე ელფოსტა';return;}
-  if(!newPassword){er.textContent='შეიყვანე ახალი პაროლი';return;}
-  const users=getUsers();
-  const u=users.find(x=>String(x.name||'')===name && x.email&&String(x.email).toLowerCase()===email);
-  if(!u){er.textContent='სახელი და ელფოსტა ზუსტად უნდა ემთხვეოდეს რეგისტრირებულ მონაცემებს';return;}
-  u.password=newPassword;
-  localStorage.setItem(USERS_KEY,JSON.stringify(users));
-  const btn=document.getElementById('forgotPasswordSubmit');
+  if(newPassword.length<6||newPassword.length>80){er.textContent='პაროლი უნდა იყოს 6-დან 80 სიმბოლომდე';return;}
+
   btn.disabled=true; btn.textContent='ინახება...';
-  saveUsersToFirebase(users).then(()=>{
+  bridgeRequest('passwordReset',{username:name,email,newPassword},'').then(result=>{
+    if(result?.ok!==true)throw new Error('Password reset was not confirmed');
+    const users=getUsers();
+    const cached=users.find(x=>String(x.name||'').trim().toLowerCase()===name.toLowerCase()&&String(x.email||'').trim().toLowerCase()===email);
+    if(cached){cached.password=newPassword;localStorage.setItem(USERS_KEY,JSON.stringify(users));}
     closeForgotPassword();
     showForgotPasswordSuccess();
-  }).catch(()=>{
-    closeForgotPassword();
-    alert('პაროლი შეიცვალა ამ მოწყობილობაზე, მაგრამ Firebase-ში შენახვა ვერ მოხერხდა');
+  }).catch(error=>{
+    if(error?.status===400||error?.status===404)er.textContent='სახელი და ელფოსტა ზუსტად უნდა ემთხვეოდეს რეგისტრირებულ მონაცემებს';
+    else er.textContent='პაროლი ვერ შეიცვალა. სერვერი დროებით მიუწვდომელია. სცადე მოგვიანებით.';
   }).finally(()=>{
     btn.disabled=false; btn.textContent=t('პაროლის შეცვლა');
   });
