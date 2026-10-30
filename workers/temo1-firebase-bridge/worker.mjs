@@ -333,6 +333,30 @@ export default {
         return respond({ error: "Firebase user update failed" }, 502);
       }
     }
+    if (input.action === "userDelete") {
+      if (!claims.admin) return respond({ error: "Forbidden" }, 403);
+      const userId = String(input.userId || "").trim();
+      if (!/^[A-Za-z0-9_-]{1,128}$/.test(userId)) return respond({ error: "Invalid user delete request" }, 400);
+      try {
+        const storedUsers = await firebaseRequest(env, "users", "GET");
+        let matches = [];
+        if (Array.isArray(storedUsers)) {
+          matches = storedUsers.map((record, index) => ({ record, path: "users/" + index }))
+            .filter(item => item.record && safeUser(item.record).id === userId);
+        } else if (storedUsers && typeof storedUsers === "object") {
+          matches = Object.entries(storedUsers).map(([key, record]) => ({ record, path: "users/" + key }))
+            .filter(item => item.record && safeUser(item.record).id === userId);
+        }
+        if (matches.length !== 1) {
+          return respond({ error: matches.length ? "Ambiguous user" : "User not found" }, matches.length ? 409 : 404);
+        }
+        if (safeUser(matches[0].record).admin) return respond({ error: "Forbidden" }, 403);
+        await firebaseRequest(env, matches[0].path, "DELETE");
+        return respond({ ok: true, userId }, 200);
+      } catch {
+        return respond({ error: "Firebase user delete failed" }, 502);
+      }
+    }
     if (input.action !== "db") return respond({ error: "Invalid action" }, 400);
 
     const route = parseBridgePath(input.path);
