@@ -2822,7 +2822,7 @@ function rememberSessionUser(raw){
   localStorage.setItem(USERS_KEY,JSON.stringify(users));
   return user;
 }
-async function completeLogin(u,sessionToken){const user=rememberSessionUser(u);if(user.blocked===true||user.authorized!==true||typeof sessionToken!=='string'||!sessionToken){$('loginError').textContent='შესვლა ვერ მოხერხდა';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;expenses=loadLocalExpenses();renderExpenses();localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(BRIDGE_SESSION_KEY,sessionToken);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncExpensesFromFirebase();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
+async function completeLogin(u,sessionToken){const user=rememberSessionUser(u);if(user.blocked===true||user.authorized!==true||typeof sessionToken!=='string'||!sessionToken){$('loginError').textContent='შესვლა ვერ მოხერხდა';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;expenses=loadLocalExpenses();renderExpenses();localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(BRIDGE_SESSION_KEY,sessionToken);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();if(isTEMOiOSDevice())ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncExpensesFromFirebase();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
 async function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value;$('loginError').textContent='';if(!name||!pass){$('loginError').textContent='შეიყვანე სახელი და პაროლი';return;}try{const result=await bridgeRequest('login',{username:name,password:pass},'');if(!result?.user||!result?.sessionToken)throw new Error('Invalid authentication response');await completeLogin(result.user,result.sessionToken);}catch(error){$('loginError').textContent=error?.status===401?'სახელი ან პაროლი არასწორია ან მომხმარებელი დაბლოკილია':'შესვლა დროებით მიუწვდომელია. სცადე მოგვიანებით.';$('loginPassword').value='';$('loginPassword').focus();}}
 function renderLoginUsers(){}
 window.addEventListener('DOMContentLoaded',async()=>{
@@ -4740,7 +4740,7 @@ async function createAIChatReminder(date,time,text){
   const trigger=new Date(d+'T'+t).getTime();
   if(!Number.isFinite(trigger)||trigger<=Date.now())return false;
   await loadNotes();
-  if('Notification' in window && Notification.permission==='default'){try{await Notification.requestPermission();}catch(e){}}
+  if(isTEMOiOSDevice()&&'Notification' in window&&Notification.permission==='default'){try{await Notification.requestPermission();}catch(e){}}
   const duplicate=notesCache.find(n=>n.reminder===true&&!n.done&&String(n.date)===d&&String(n.time)===t&&String(n.text||'').trim()===cleanText);
   if(duplicate){scheduleNativeNoteReminder(duplicate);renderNotes();return true;}
   const note={id:makeNoteId(),text:cleanText,date:d,time:t,reminder:true,done:false,notifiedAt:0,timezone:Intl.DateTimeFormat().resolvedOptions().timeZone||'Europe/Athens',updatedAt:Date.now()};
@@ -6441,7 +6441,7 @@ function openNoteModal(note){
   $('noteModal').classList.add('show');
   setTimeout(()=>$('noteText').focus(),50);
   // The reminder button also requests Push permission on this direct user gesture.
-  if(!note)enableTEMOPush();
+  if(!note&&isTEMOiOSDevice())enableTEMOPush();
 }
 function closeNoteModal(){
   $('noteModal').classList.remove('show');
@@ -6570,7 +6570,13 @@ function temoPushKeysMatch(a,b){
   for(let i=0;i<x.length;i++)if(x[i]!==y[i])return false;
   return true;
 }
-function isTEMOiOSDevice(){return /iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);}
+function isTEMOiOSDevice(){
+  const ua=String(navigator.userAgent||'');
+  const platform=String(navigator.userAgentData?.platform||navigator.platform||'');
+  const android=!!window.AndroidReminder||/Android/i.test(ua)||/Android/i.test(platform);
+  if(android)return false;
+  return /iPhone|iPad|iPod/i.test(ua)||(platform==='MacIntel'&&navigator.maxTouchPoints>1);
+}
 async function loadTEMOVapidPublicKey(){
   if(TEMO_VAPID_PUBLIC_KEY)return TEMO_VAPID_PUBLIC_KEY;
   const r=await fetch(TEMO_PUSH_WORKER_URL+'?action=push-config',{cache:'no-store'});
@@ -6630,7 +6636,7 @@ async function enableTEMOPush(){
 
 function autoTEMOPushOnEntry(){
   try{
-    if('Notification' in window && Notification.permission==='granted'){
+    if(isTEMOiOSDevice()&&'Notification' in window&&Notification.permission==='granted'){
       ensureTEMOPushSubscription();
     }
   }catch(e){console.warn('TEMO Push entry check failed:',e);}
@@ -6672,7 +6678,7 @@ async function saveNote(){
   if(reminder && new Date(date+'T'+time).getTime()<=Date.now()){
     alert('შეხსენების დრო მომავალში უნდა იყოს');return;
   }
-  if(reminder && 'Notification' in window){
+  if(reminder && isTEMOiOSDevice() && 'Notification' in window){
     try{
       if(Notification.permission==='default'){
         const permission=await Notification.requestPermission();
