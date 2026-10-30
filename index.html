@@ -2498,9 +2498,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 
   <div id="notesSecondPage" class="notesSubPage" style="display:none">
     <div id="dailyListPage">
-      <div class="notesToolsRow">
-        <button type="button" class="notesAddBtn dailyCompactAdd" onclick="openDailyEditor()" aria-label="ახალი ჩანაწერის დამატება" title="ახალი ჩანაწერის დამატება">＋</button>
-      </div>
+      <div class="dailyListHeading" id="dailyListHeading">📖 დღიური ჩანაწერები</div>
       <div id="dailyList" class="dailyList"></div>
       <div id="dailyPagination" class="dailyPagination" style="display:none">
         <button type="button" class="dailyPageBtn" id="dailyPrevPageBtn" onclick="dailyGoPage(-1)">‹ წინა</button>
@@ -2522,7 +2520,11 @@ html body.site-white-theme #aiChatModal .aiChatClose{
       <textarea id="dailyText" placeholder="ჩაწერე შენი ჩანაწერი..."></textarea>
       <button type="button" class="dailySaveBtn" onclick="saveDailyEntry()">💾 შენახვა</button>
     </div>
-    <button type="button" class="dailyFullscreenBack" onclick="showNotesSubPage('reminders')" aria-label="უკან დაბრუნება" title="უკან დაბრუნება">↩</button>
+    <div class="dailyBottomControls" id="dailyBottomControls">
+      <button type="button" class="dailyFullscreenBack" onclick="showNotesSubPage('reminders')" aria-label="უკან დაბრუნება" title="უკან დაბრუნება">↩</button>
+      <button type="button" class="dailyArchiveToggle" id="dailyArchiveToggle" onclick="toggleDailyArchiveView()" aria-pressed="false">📦 არქივი</button>
+      <button type="button" class="notesAddBtn dailyCompactAdd" onclick="openDailyEditor()" aria-label="ახალი ჩანაწერის დამატება" title="ახალი ჩანაწერის დამატება">＋</button>
+    </div>
   </div>
 
   <div id="dailyViewModal" class="dailyViewModal" onclick="if(event.target===this)closeDailyViewModal()">
@@ -2536,6 +2538,18 @@ html body.site-white-theme #aiChatModal .aiChatClose{
       <textarea id="dailyViewEditText" class="dailyViewEditText" aria-label="ჩანაწერის გაგრძელება"></textarea>
       <button type="button" id="dailyCopyBtn" class="dailyCopyBtn" onclick="copyDailyViewPage()">📋 კოპირება</button>
       <div class="dailyViewBottom"><button type="button" class="dailyAddMoreBtn" id="dailyContinueBtn" onclick="continueDailyEntry()">➕ ჩაამატე ჩანაწერი</button><button type="button" id="dailyViewSaveBtn" onclick="saveContinuedDailyEntry()" style="display:none">💾 შენახვა</button><button type="button" onclick="closeDailyViewModal()">✕ დახურვა</button></div>
+    </div>
+  </div>
+
+  <div id="dailyActionModal" class="notesModal" onclick="if(event.target===this)closeDailyActionMenu()">
+    <div class="notesModalBox dailyActionBox">
+      <h2 id="dailyActionTitle">📝 ჩანაწერის მოქმედებები</h2>
+      <div class="dailyActionOptions">
+        <button type="button" onclick="editDailyEntryFromMenu()">✏️ შეცვლა</button>
+        <button type="button" id="dailyArchiveActionBtn" onclick="toggleDailyEntryArchive()">📦 არქივში გადატანა</button>
+        <button type="button" class="danger" onclick="openDeleteDailyEntryConfirm()">🗑️ წაშლა</button>
+        <button type="button" onclick="closeDailyActionMenu()">გაუქმება</button>
+      </div>
     </div>
   </div>
 
@@ -3624,6 +3638,9 @@ function showNotesSubPage(which){
 
 const DAILY_ROOT='/daily/';
 let dailyDeleteId='';
+let dailyActionId='';
+let editingDailyId='';
+let dailyArchiveView=false;
 let dailyLongPressTimer=null;
 let dailySyncTimer=null;
 let dailySyncBusy=false;
@@ -3669,7 +3686,7 @@ function saveDailyDeletes(data){
   localStorage.setItem(dailyDeleteStorageKey(),JSON.stringify(data||{}));
 }
 function normalizeDailyEntry(e){
-  return {id:String(e?.id||''),title:String(e?.title||'ჩანაწერი'),text:String(e?.text||''),createdAt:Number(e?.createdAt||0),updatedAt:Number(e?.updatedAt||e?.createdAt||0)};
+  return {id:String(e?.id||''),title:String(e?.title||'ჩანაწერი'),text:String(e?.text||''),createdAt:Number(e?.createdAt||0),updatedAt:Number(e?.updatedAt||e?.createdAt||0),archived:e?.archived===true};
 }
 function mergeDailyState(localEntries,remoteEntries,localDel,remoteDel){
   const byId=new Map();
@@ -3811,67 +3828,75 @@ function renderDailyEntries(){
   const listPage=document.getElementById('dailyListPage');
   const editor=document.getElementById('dailyEditorPage');
   if(!list||!listPage||!editor)return;
-  listPage.style.display='';
-  editor.style.display='none';
+  listPage.style.display=''; editor.style.display='none';
   document.getElementById('notesSecondPage')?.classList.remove('daily-editor-active');
-  const entries=loadDailyEntries();
+  const heading=document.getElementById('dailyListHeading');
+  if(heading)heading.textContent=dailyArchiveView?'📦 არქივი':'📖 დღიური ჩანაწერები';
+  const archiveToggle=document.getElementById('dailyArchiveToggle');
+  if(archiveToggle){archiveToggle.textContent=dailyArchiveView?'📖 ჩანაწერები':'📦 არქივი';archiveToggle.setAttribute('aria-pressed',String(dailyArchiveView));}
+  const entries=loadDailyEntries().filter(e=>(e.archived===true)===dailyArchiveView);
   const filteredEntries=dailyCalendarDate?entries.filter(e=>getDailyDateKey(e.createdAt)===dailyCalendarDate):entries;
   if(!filteredEntries.length){
     dailyPage=0;
-    list.innerHTML=dailyCalendarDate?'<div class="dailyEmpty">'+(window.t?window.t('ამ თარიღზე ჩანაწერი არ არის.'):'ამ თარიღზე ჩანაწერი არ არის.')+'<button type="button" class="notesFramePlus" aria-label="ახალი ჩანაწერი" onclick="openDailyEditor()">＋</button></div>':'<div class="dailyEmpty">'+(window.t?window.t('ჯერ ჩანაწერი არ არის.'):'ჯერ ჩანაწერი არ არის.')+'<button type="button" class="notesFramePlus" aria-label="ახალი ჩანაწერი" onclick="openDailyEditor()">＋</button></div>';
-    updateDailyPagination(0);
-    return;
+    const message=dailyArchiveView?'არქივში ჩანაწერი ჯერ არ არის.':dailyCalendarDate?'ამ თარიღზე ჩანაწერი არ არის.':'ჯერ ჩანაწერი არ არის.';
+    list.innerHTML='<div class="dailyEmpty">'+message+'</div>';
+    updateDailyPagination(0); return;
   }
   const totalPages=Math.max(1,Math.ceil(filteredEntries.length/DAILY_PAGE_SIZE));
   dailyPage=Math.max(0,Math.min(totalPages-1,dailyPage));
-  const start=dailyPage*DAILY_PAGE_SIZE;
-  const pageEntries=filteredEntries.slice(start,start+DAILY_PAGE_SIZE);
+  const pageEntries=filteredEntries.slice(dailyPage*DAILY_PAGE_SIZE,(dailyPage+1)*DAILY_PAGE_SIZE);
   list.innerHTML='';
   pageEntries.forEach(e=>{
     const card=document.createElement('div');
-    card.className='dailyCard';
-    card.dataset.dailyId=e.id;
-    const title=document.createElement('div');
-    title.className='dailyCardTitle';
-    title.textContent=e.title||'ჩანაწერი';
-    card.appendChild(title);
-    const text=document.createElement('div');
-    text.className='dailyCardText';
-    text.textContent=e.text;
-    card.appendChild(text);
-    if(e.createdAt){
-      const date=document.createElement('div');
-      date.className='dailyCardDate';
-      date.textContent=new Date(e.createdAt).toLocaleDateString();
-      card.appendChild(date);
-    }
+    card.className='dailyCard'; card.dataset.dailyId=e.id; card.setAttribute('role','button'); card.setAttribute('tabindex','0');
+    card.setAttribute('aria-label',(e.title||'ჩანაწერი')+' — ხანგრძლივად დააჭირე მოქმედებებისთვის');
+    const title=document.createElement('div'); title.className='dailyCardTitle'; title.textContent=e.title||'ჩანაწერი'; card.appendChild(title);
+    const text=document.createElement('div'); text.className='dailyCardText'; text.textContent=e.text; card.appendChild(text);
+    if(e.createdAt){const date=document.createElement('div');date.className='dailyCardDate';date.textContent=new Date(e.createdAt).toLocaleDateString();card.appendChild(date);}
     let longPressed=false;
     const startPress=ev=>{
-      if(ev.pointerType==='mouse' && ev.button!==0)return;
-      longPressed=false;
-      clearTimeout(dailyLongPressTimer);
-      dailyLongPressTimer=setTimeout(()=>{
-        longPressed=true;
-        openDailyDeleteModal(e.id);
-      },650);
+      if(ev.pointerType==='mouse'&&ev.button!==0)return;
+      longPressed=false;clearTimeout(dailyLongPressTimer);
+      dailyLongPressTimer=setTimeout(()=>{longPressed=true;openDailyActionMenu(e.id);},650);
     };
-    const finishPress=()=>{
-      clearTimeout(dailyLongPressTimer);
-      if(!longPressed)openDailyViewModal(e.id);
-    };
+    const finishPress=()=>{clearTimeout(dailyLongPressTimer);if(!longPressed)openDailyViewModal(e.id);};
     const cancelPress=()=>clearTimeout(dailyLongPressTimer);
-    card.addEventListener('pointerdown',startPress);
-    card.addEventListener('pointerup',finishPress);
-    card.addEventListener('pointercancel',cancelPress);
-    card.addEventListener('pointerleave',cancelPress);
-    card.addEventListener('contextmenu',ev=>ev.preventDefault());
-    list.appendChild(card);
+    card.addEventListener('pointerdown',startPress);card.addEventListener('pointerup',finishPress);
+    card.addEventListener('pointercancel',cancelPress);card.addEventListener('pointerleave',cancelPress);
+    card.addEventListener('contextmenu',ev=>ev.preventDefault());list.appendChild(card);
   });
-  updateDailyPagination(totalPages);
-  bindDailySwipe();
+  updateDailyPagination(totalPages);bindDailySwipe();
 }
-
 let dailyViewId='';
+function toggleDailyArchiveView(){dailyArchiveView=!dailyArchiveView;dailyPage=0;renderDailyEntries();}
+function openDailyActionMenu(id){
+  const entry=loadDailyEntries().find(e=>String(e.id)===String(id));if(!entry)return;
+  dailyActionId=String(id);
+  const modal=document.getElementById('dailyActionModal'),archiveButton=document.getElementById('dailyArchiveActionBtn'),title=document.getElementById('dailyActionTitle');
+  if(archiveButton)archiveButton.textContent=dailyArchiveView?'↩ არქივიდან დაბრუნება':'📦 არქივში გადატანა';
+  if(title)title.textContent='📝 '+(entry.title||'ჩანაწერი');
+  if(modal){modal.classList.add('show');modal.setAttribute('aria-hidden','false');}
+}
+function closeDailyActionMenu(){dailyActionId='';const modal=document.getElementById('dailyActionModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}}
+function editDailyEntryFromMenu(){const id=dailyActionId;closeDailyActionMenu();if(id)openDailyEditor(id);}
+async function toggleDailyEntryArchive(){
+  const id=String(dailyActionId||'');if(!id)return;
+  const entries=loadDailyEntries(),index=entries.findIndex(e=>String(e.id)===id);
+  if(index<0){closeDailyActionMenu();return;}
+  const original=entries[index],archived=!dailyArchiveView;
+  entries[index]={...original,archived,updatedAt:Math.max(Date.now(),Number(original.updatedAt||0)+1)};
+  dailyDeletes=loadDailyDeletes();saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);
+  closeDailyActionMenu();dailyPage=0;renderDailyEntries();
+  try{await saveDailyRemote(entries,dailyDeletes);}
+  catch(e){
+    const latest=loadDailyEntries().map(item=>String(item.id)===id?original:item);
+    saveDailyEntries(latest);renderDailyEntries();
+    alert(archived?'ჩანაწერი არქივში ვერ შეინახა. სცადე ხელახლა.':'ჩანაწერის დაბრუნება ვერ შეინახა. სცადე ხელახლა.');
+    console.warn('Firebase daily archive update failed:',e);
+  }
+}
+function openDeleteDailyEntryConfirm(){const id=dailyActionId;closeDailyActionMenu();if(id)openDailyDeleteModal(id);}
+
 function openDailyViewModal(id){
   const entry=loadDailyEntries().find(e=>String(e.id)===String(id));
   if(!entry)return;
@@ -4052,76 +4077,73 @@ function closeDailyDeleteModal(){
 }
 async function confirmDeleteDailyEntry(){
   if(!dailyDeleteId)return;
-  const id=String(dailyDeleteId);
-  const entries=loadDailyEntries().filter(e=>String(e.id)!==id);
-  dailyDeletes=loadDailyDeletes();
-  dailyDeletes[id]=Date.now();
-  saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);
-  closeDailyDeleteModal();
-  renderDailyEntries();
-  try{await saveDailyRemote(entries,dailyDeletes);}catch(e){console.warn('Firebase daily delete sync failed:',e);}
-}
-function openDailyEditor(){
-  const listPage=document.getElementById('dailyListPage');
-  const editor=document.getElementById('dailyEditorPage');
-  const text=document.getElementById('dailyText');
-  const title=document.getElementById('dailyTitle');
-  if(!listPage||!editor||!text)return;
-  listPage.style.display='none';
-  editor.style.display='flex';
-  document.getElementById('notesSecondPage')?.classList.add('daily-editor-active');
-  editor.classList.remove('dailyEditorClosing');
-  editor.classList.add('dailyEditorEntering');
-  window.setTimeout(()=>editor.classList.remove('dailyEditorEntering'),320);
-  if(editor.dataset.hasDraft!=='true'){
-    if(title)title.value='';
-    text.value='';
+  const id=String(dailyDeleteId),originalEntries=loadDailyEntries(),entries=originalEntries.filter(e=>String(e.id)!==id);
+  const originalDeletes=loadDailyDeletes();dailyDeletes={...originalDeletes,[id]:Date.now()};
+  saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);closeDailyDeleteModal();renderDailyEntries();
+  try{await saveDailyRemote(entries,dailyDeletes);}
+  catch(e){
+    saveDailyEntries(originalEntries);saveDailyDeletes(originalDeletes);renderDailyEntries();
+    alert('ჩანაწერი Firebase-იდან ვერ წაიშალა. სცადე ხელახლა.');
+    console.warn('Firebase daily delete sync failed:',e);
   }
+}
+
+function openDailyEditor(entryId=''){
+  const listPage=document.getElementById('dailyListPage'),editor=document.getElementById('dailyEditorPage');
+  const text=document.getElementById('dailyText'),title=document.getElementById('dailyTitle');
+  if(!listPage||!editor||!text)return;
+  const existing=entryId?loadDailyEntries().find(e=>String(e.id)===String(entryId)):null;
+  if(entryId&&!existing)return;
+  editingDailyId=existing?String(existing.id):'';
+  if(existing){if(title)title.value=existing.title||'ჩანაწერი';text.value=existing.text||'';editor.dataset.hasDraft='false';}
+  else if(editor.dataset.hasDraft!=='true'){if(title)title.value='';text.value='';}
+  const heading=editor.querySelector('.dailyEditorTitle'),saveButton=editor.querySelector('.dailySaveBtn');
+  if(heading)heading.textContent=existing?'ჩანაწერის შეცვლა':'ახალი ჩანაწერი';
+  if(saveButton)saveButton.textContent=existing?'💾 ცვლილებების შენახვა':'💾 შენახვა';
+  listPage.style.display='none';editor.style.display='flex';
+  document.getElementById('notesSecondPage')?.classList.add('daily-editor-active');
+  editor.classList.remove('dailyEditorClosing');editor.classList.add('dailyEditorEntering');
+  window.setTimeout(()=>editor.classList.remove('dailyEditorEntering'),320);
   setTimeout(()=>title?title.focus():text.focus(),50);
 }
 function closeDailyEditor(){
-  const listPage=document.getElementById('dailyListPage');
-  const editor=document.getElementById('dailyEditorPage');
-  const title=document.getElementById('dailyTitle');
-  const text=document.getElementById('dailyText');
+  const listPage=document.getElementById('dailyListPage'),editor=document.getElementById('dailyEditorPage');
+  const title=document.getElementById('dailyTitle'),text=document.getElementById('dailyText');
   if(!listPage||!editor||!text)return;
-  editor.dataset.hasDraft=String(!!(String(title?.value||'').trim()||text.value.trim()));
-  editor.classList.remove('dailyEditorEntering');
-  editor.classList.add('dailyEditorClosing');
+  if(editingDailyId){
+    editingDailyId='';editor.dataset.hasDraft='false';if(title)title.value='';text.value='';
+    const heading=editor.querySelector('.dailyEditorTitle'),saveButton=editor.querySelector('.dailySaveBtn');
+    if(heading)heading.textContent='ახალი ჩანაწერი';if(saveButton)saveButton.textContent='💾 შენახვა';
+  }else editor.dataset.hasDraft=String(!!(String(title?.value||'').trim()||text.value.trim()));
+  editor.classList.remove('dailyEditorEntering');editor.classList.add('dailyEditorClosing');
   window.setTimeout(()=>{
-    editor.style.display='none';
-    editor.classList.remove('dailyEditorClosing');
+    editor.style.display='none';editor.classList.remove('dailyEditorClosing');
     document.getElementById('notesSecondPage')?.classList.remove('daily-editor-active');
-    listPage.style.display='';
-    listPage.classList.add('dailyListReturning');
+    listPage.style.display='';listPage.classList.add('dailyListReturning');
     window.setTimeout(()=>listPage.classList.remove('dailyListReturning'),320);
   },260);
 }
 async function saveDailyEntry(){
-  const text=document.getElementById('dailyText');
-  const title=document.getElementById('dailyTitle');
+  const text=document.getElementById('dailyText'),title=document.getElementById('dailyTitle');
   if(!text)return;
-  const value=text.value.trim();
-  const titleValue=String(title?.value||'').trim();
-  if(!titleValue){if(title)title.focus();return;}
-  if(!value){text.focus();return;}
-  const editor=document.getElementById('dailyEditorPage');
+  const value=text.value.trim(),titleValue=String(title?.value||'').trim();
+  if(!titleValue){if(title)title.focus();return;}if(!value){text.focus();return;}
+  const wasEditing=!!editingDailyId,editor=document.getElementById('dailyEditorPage');
   if(editor)editor.dataset.hasDraft='false';
-  const now=Date.now();
-  const entries=loadDailyEntries();
-  entries.push({id:'d'+now+Math.random().toString(36).slice(2,8),title:titleValue,text:value,createdAt:now,updatedAt:now});
-  dailyPage=Math.max(0,Math.ceil(entries.length/DAILY_PAGE_SIZE)-1);
-  dailyDeletes=loadDailyDeletes();
-  saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);
-  try{
-    await saveDailyRemote(entries,dailyDeletes);
-    renderDailyEntries();
-  }catch(e){
-    alert('დღიური Firebase-ში ვერ შეინახა. შეამოწმე ინტერნეტი.');
-    renderDailyEntries();
+  const now=Date.now(),entries=loadDailyEntries();
+  if(wasEditing){
+    const index=entries.findIndex(e=>String(e.id)===String(editingDailyId));
+    if(index<0){alert('ჩანაწერი ვეღარ მოიძებნა.');editingDailyId='';renderDailyEntries();return;}
+    const current=entries[index];entries[index]={...current,title:titleValue,text:value,updatedAt:Math.max(now,Number(current.updatedAt||0)+1)};
+  }else{
+    entries.push({id:'d'+now+Math.random().toString(36).slice(2,8),title:titleValue,text:value,createdAt:now,updatedAt:now,archived:false});
+    dailyArchiveView=false;
+    dailyPage=Math.max(0,Math.ceil(entries.filter(e=>e.archived!==true).length/DAILY_PAGE_SIZE)-1);
   }
+  dailyDeletes=loadDailyDeletes();saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);
+  try{await saveDailyRemote(entries,dailyDeletes);editingDailyId='';renderDailyEntries();}
+  catch(e){alert('დღიური Firebase-ში ვერ შეინახა. შეამოწმე ინტერნეტი.');editingDailyId='';renderDailyEntries();}
 }
-
 function goNotes(){temoNavigatePage('notesPage');showNotesSubPage('reminders')}
 startDailySyncWatcher();
 
@@ -7710,6 +7732,40 @@ body.temo-pharmacy-panel-open{overflow:hidden}
 
 <footer style="max-width:1100px;margin:24px auto 90px;padding:12px 18px;text-align:center;font-size:13px;color:#9fb0b8"><a href="./privacy-policy.html" style="color:inherit;text-decoration:underline">Privacy Policy / კონფიდენციალურობის პოლიტიკა</a><span style="padding:0 10px">·</span><a href="./terms-of-service.html" style="color:inherit;text-decoration:underline">Terms of Service / მომსახურების პირობები</a></footer>
 <script id="temo-bottom-neon-active-final-fix">(function(){const map={mainPage:0,settingsPage:1,userManagementPage:2,walletPage:3,expensesPage:3,notesPage:4};function sync(id){const i=map[id];if(i===undefined)return;document.querySelectorAll('#bottomNav > button:not(#temoAdminMenuToggle)').forEach((b,n)=>{b.classList.toggle('active',n===i);b.setAttribute('aria-current',n===i?'page':'false')})}function bind(){const old=window.temoNavigatePage;if(typeof old==='function'&&!old.__neonFixed){const fn=function(id){const r=old.apply(this,arguments);sync(id);requestAnimationFrame(()=>sync(id));setTimeout(()=>sync(id),550);return r};fn.__neonFixed=true;window.temoNavigatePage=fn}const ids=Object.keys(map);const obs=new MutationObserver(()=>{const visible=ids.map(id=>document.getElementById(id)).filter(p=>p&&!p.classList.contains('pageHidden'));if(visible.length===1)sync(visible[0].id)});ids.forEach(id=>{const p=document.getElementById(id);if(p)obs.observe(p,{attributes:true,attributeFilter:['class']})});const visible=ids.map(id=>document.getElementById(id)).find(p=>p&&!p.classList.contains('pageHidden'));if(visible)sync(visible.id)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind()})();</script>
+<style id="temo-daily-archive-actions">
+#notesPage #notesSecondPage #dailyListPage{padding-bottom:calc(112px + env(safe-area-inset-bottom,0px))!important}
+#notesPage #notesSecondPage .dailyListHeading{margin:0 0 10px;padding:4px 2px;color:#fff;font-size:17px;font-weight:800}
+#notesPage #notesSecondPage .dailyBottomControls{
+  position:fixed!important;left:12px!important;right:12px!important;
+  bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;z-index:50000!important;display:grid!important;
+  grid-template-columns:52px minmax(0,1fr) 52px;align-items:center;gap:9px;padding:7px;
+  border:1px solid rgba(80,170,255,.32);border-radius:16px;background:rgba(7,17,23,.96);
+  box-shadow:0 7px 24px rgba(0,0,0,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)
+}
+#notesPage #notesSecondPage.daily-editor-active>.dailyBottomControls{display:none!important}
+#notesPage #notesSecondPage .dailyBottomControls .dailyFullscreenBack,
+#notesPage #notesSecondPage .dailyBottomControls .dailyCompactAdd,
+#notesPage #notesSecondPage .dailyArchiveToggle{
+  position:static!important;inset:auto!important;display:grid!important;place-items:center;
+  width:52px!important;min-width:52px!important;height:48px!important;min-height:48px!important;
+  margin:0!important;padding:0!important;border:1px solid #ef5b67;border-radius:13px;
+  background:#10232f;color:#fff;font-size:24px;line-height:1;box-shadow:0 3px 12px #0007;
+  cursor:pointer;touch-action:manipulation
+}
+#notesPage #notesSecondPage .dailyBottomControls .dailyArchiveToggle{
+  display:block!important;width:100%!important;min-width:0!important;padding:0 10px!important;
+  border-color:#315061;font-size:15px;font-weight:800;white-space:nowrap
+}
+#notesPage #notesSecondPage .dailyBottomControls .dailyFullscreenBack{border-radius:50%;font-size:26px}
+#notesPage #notesSecondPage .dailyBottomControls .dailyCompactAdd{font-size:28px}
+#notesPage #notesSecondPage .dailyBottomControls button:active{transform:scale(.96)}
+#notesPage #dailyActionModal .dailyActionBox{width:min(380px,calc(100vw - 28px));padding:18px}
+#notesPage #dailyActionModal .dailyActionBox h2{overflow-wrap:anywhere;font-size:19px;margin:0 0 12px}
+#notesPage #dailyActionModal .dailyActionOptions{display:grid;gap:9px}
+#notesPage #dailyActionModal .dailyActionOptions button{width:100%;min-height:48px;padding:11px 14px;border:1px solid #315061;border-radius:11px;background:#10232f;color:#fff;text-align:left;font-size:16px;font-weight:700;cursor:pointer}
+#notesPage #dailyActionModal .dailyActionOptions button.danger{border-color:#74333d;background:#321b20;color:#ff8c95}
+#notesPage #dailyActionModal .dailyActionOptions button:active{transform:scale(.98)}
+</style>
 </body>
 <style id="temo-bottom-neon-css-final">
 /* ქვედა მენიუს ნეონი მხოლოდ აქტიურ ღილაკზეა; წინა ღილაკზე გადასული glow/transition არ რჩება. */
@@ -7743,6 +7799,7 @@ body.temo-pharmacy-panel-open{overflow:hidden}
   border-color:var(--neon-control,#ff2020) !important;
 }
 </style>
+
 </html>
 <style id="temo-calendar-number-neon">
 #calendarGrid .dayCell:not(.empty){box-shadow:none !important;text-shadow:none !important;}
