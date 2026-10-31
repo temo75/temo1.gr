@@ -436,10 +436,10 @@ body.neon-global #userManagementList .userRow button.neonAll{
   border-color:var(--neon-control)!important;
   color:#fff!important;
   box-shadow:
-    0 0 7px rgba(var(--neon-control-rgb),.55),
-    0 0 16px rgba(var(--neon-control-rgb),.30),
-    inset 0 0 10px rgba(var(--neon-control-rgb),.22)!important;
-  text-shadow:0 0 7px rgba(var(--neon-control-rgb),.55)!important;
+    0 0 calc(3px + 7px*var(--neon-power)) rgba(var(--neon-control-rgb),calc(.10 + .45*var(--neon-power))),
+    0 0 calc(8px + 16px*var(--neon-power)) rgba(var(--neon-control-rgb),calc(.05 + .25*var(--neon-power))),
+    inset 0 0 calc(4px + 8px*var(--neon-power)) rgba(var(--neon-control-rgb),calc(.05 + .15*var(--neon-power))) !important;
+  text-shadow:0 0 calc(4px + 6px*var(--neon-power)) rgba(var(--neon-control-rgb),calc(.15 + .45*var(--neon-power)))!important;
 }
 </style>
 
@@ -2635,12 +2635,12 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 <div id="userManagementPage" class="pageHidden">
 <header><div><h1>👥 მომხმარებლები</h1></div></header>
 
-<div class="section adminOnly" id="userManagementSection">
+<div class="section adminOnly neonControlled" id="userManagementSection">
 <h2>👥 მომხმარებლები</h2>
 <div id="userManagementList"></div>
 </div>
 
-<div class="section" id="userChatSection">
+<div class="section neonControlled" id="userChatSection">
 <h2>💬 ადმინისტრატორს შენიშვნა</h2>
 <div class="chatHint">დაწერე ადმინისტრატორს შეტყობინება. მაქსიმუმ 100 სიტყვა.</div>
 <textarea id="userChatText" class="chatText" placeholder="ჩაწერე შეტყობინება..." maxlength="1000"></textarea>
@@ -2648,7 +2648,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 <div id="userChatMessages" class="chatMessages"></div>
 </div>
 
-<div class="section adminOnly" id="adminMessagesSection">
+<div class="section adminOnly neonControlled" id="adminMessagesSection">
 <h2>📨 მიღებული მესიჯები</h2>
 <div id="adminMessagesList" class="chatMessages"></div>
 </div>
