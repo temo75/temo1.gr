@@ -168,17 +168,6 @@ body{padding-bottom:78px;}
 #loginScreen #bottomNav{display:none !important;}
 body:has(#loginScreen:not(.hidden)) #bottomNav{display:none !important;}
 footer{display:none!important;}
-/* მხოლოდ „📁 აირჩიე ფაილი“ ღილაკის დამატებითი ნეონი */
-#siteFileBtn{
-  border-color:#49a84d;
-  box-shadow:
-    0 0 8px rgba(73,168,77,.75),
-    0 0 18px rgba(73,168,77,.65),
-    0 0 30px rgba(73,168,77,.48),
-    0 10px 22px rgba(47,125,50,.55) !important;
-  text-shadow:0 0 7px rgba(120,220,120,.85);
-}
-
 /* NEON CONTROLLER */
 :root{--neon-control:#49d86a;--neon-control-rgb:73,216,106;--neon-power:0.65}
 .neonControlled{border-color:var(--neon-control)!important;}
@@ -2610,7 +2599,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 <h2>🔄 საიტის განახლება</h2>
 <div class="tools">
 <input id="siteUpdateFile" type="file" accept=".html,text/html" onchange="siteFileSelected()" style="display:none">
-<button type="button" class="backupBtn" id="siteFileBtn" onclick="handleSiteFileButton()">📁 აირჩიე ფაილი</button>
+<button type="button" class="backupBtn neonControlled" id="siteFileBtn" onclick="handleSiteFileButton()">📁 აირჩიე ფაილი</button>
 </div>
 <button class="repoTokenOpenBtn" style="margin-top:20px" onclick="openCredentials()">🔐 Repository / Token</button>
 <div class="backup">
@@ -2622,17 +2611,17 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 <h2>⚙️ Worker-ის განახლება</h2>
 <div class="tools">
 <input id="workerUpdateFile" type="file" accept=".js,text/javascript,application/javascript" onchange="workerFileSelected()" style="display:none">
-<button type="button" class="backupBtn" id="workerFileBtn" onclick="handleWorkerFileButton()">📁 აირჩიე worker.js</button>
+<button type="button" class="backupBtn neonControlled" id="workerFileBtn" onclick="handleWorkerFileButton()">📁 აირჩიე worker.js</button>
 </div>
 <div class="meta" style="margin-top:12px">ატვირთე worker.js GitHub-ის იმავე Repository-ში. გამოიყენება იგივე Repository / Token.</div>
 </div>
 </div>
 
-<div class="section" id="dataExportSection">
+<div class="section neonControlled" id="dataExportSection">
 <h2>📥 ჩემი მონაცემების ჩამოტვირთვა</h2>
 <div class="tools">
-<button type="button" class="backupBtn" onclick="exportMyDataExcel()">📊 Excel</button>
-<button type="button" class="backupBtn" onclick="exportMyDataPdf()">📄 PDF</button>
+<button type="button" class="backupBtn neonControlled" onclick="exportMyDataExcel()">📊 Excel</button>
+<button type="button" class="backupBtn neonControlled" onclick="exportMyDataPdf()">📄 PDF</button>
 </div>
 <div class="meta" style="margin-top:12px">სამუშაოები, მიღებული თანხები, გასავლები და ჯამები.</div>
 </div>
