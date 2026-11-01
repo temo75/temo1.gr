@@ -6523,8 +6523,11 @@ function openNoteModal(note){
   if(!note&&isTEMOiOSDevice())enableTEMOPush();
 }
 function closeNoteModal(){
-  $('noteModal').classList.remove('show');
+  const modal=$('noteModal');
+  modal.classList.remove('show','temo-notes-keyboard-open');
   $('notesPage').classList.remove('notes-modal-open');
+  document.documentElement.style.removeProperty('--temo-notes-viewport-height');
+  document.documentElement.style.removeProperty('--temo-notes-viewport-top');
   editingNoteId='';
 }
 
@@ -8141,6 +8144,17 @@ body.temo-android-app #bottomNav > button .navLogo{
     root.style.setProperty('--temo-notes-viewport-top',Math.max(0,Math.round(top))+'px');
     modal.classList.add('temo-notes-keyboard-open');
   }
+  function closeDirectly(){
+    if(!modal.classList.contains('show'))return;
+    if(typeof window.closeNoteModal==='function'){
+      window.closeNoteModal();
+    }else{
+      modal.classList.remove('show');
+      const page=document.getElementById('notesPage');
+      if(page)page.classList.remove('notes-modal-open');
+    }
+    clear();
+  }
 
   modal.addEventListener('focusin',function(event){
     if(event.target.matches('textarea,input,select'))setTimeout(sync,80);
@@ -8150,8 +8164,27 @@ body.temo-android-app #bottomNav > button .navLogo{
     viewport.addEventListener('scroll',sync);
   }
   window.addEventListener('resize',sync);
-  new MutationObserver(function(){
-    if(!modal.classList.contains('show'))clear();
-  }).observe(modal,{attributes:true,attributeFilter:['class']});
+
+  const cancel=modal.querySelector('.notesModalActions button:not(.primary)');
+  if(cancel){
+    cancel.addEventListener('pointerdown',function(event){
+      if(event.pointerType==='touch'||event.pointerType==='pen'){
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        closeDirectly();
+      }
+    },true);
+    cancel.addEventListener('click',function(event){
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      closeDirectly();
+    },true);
+  }
+  window.addEventListener('keydown',function(event){
+    if(event.key==='Escape'&&modal.classList.contains('show')){
+      event.preventDefault();
+      closeDirectly();
+    }
+  });
 })();
 </script>
