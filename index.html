@@ -8096,3 +8096,74 @@ body.temo-android-app #bottomNav > button .navLogo{
 }
 </style>
 
+
+<!-- TEMO NOTES MOBILE KEYBOARD FIX -->
+<style id="temo-notes-mobile-keyboard-fix">
+@media(max-width:700px){
+  html body #notesPage #noteModal.notesModal.show.temo-notes-keyboard-open{
+    position:fixed!important;
+    inset:auto 0 auto 0!important;
+    top:var(--temo-notes-viewport-top,0px)!important;
+    height:var(--temo-notes-viewport-height,100dvh)!important;
+    max-height:var(--temo-notes-viewport-height,100dvh)!important;
+    box-sizing:border-box!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    padding:8px 10px!important;
+  }
+  html body #notesPage #noteModal.temo-notes-keyboard-open .notesModalBox{
+    max-height:calc(var(--temo-notes-viewport-height,100dvh) - 16px)!important;
+    overflow-y:auto!important;
+    overscroll-behavior:contain;
+    margin:0 auto!important;
+    align-self:flex-start!important;
+  }
+}
+</style>
+<script id="temo-notes-mobile-keyboard-fix-js">
+(function(){
+  const modal=document.getElementById('noteModal');
+  if(!modal)return;
+  const root=document.documentElement;
+  const viewport=window.visualViewport;
+
+  function hasFormFocus(){
+    const el=document.activeElement;
+    return modal.contains(el)&&el.matches('textarea,input,select');
+  }
+  function clear(){
+    modal.classList.remove('temo-notes-keyboard-open');
+    root.style.removeProperty('--temo-notes-viewport-height');
+    root.style.removeProperty('--temo-notes-viewport-top');
+  }
+  function sync(){
+    if(!modal.classList.contains('show')||!hasFormFocus())return;
+    const height=viewport?viewport.height:window.innerHeight;
+    const top=viewport?viewport.offsetTop:0;
+    root.style.setProperty('--temo-notes-viewport-height',Math.max(240,Math.round(height))+'px');
+    root.style.setProperty('--temo-notes-viewport-top',Math.max(0,Math.round(top))+'px');
+    modal.classList.add('temo-notes-keyboard-open');
+  }
+  function deferClear(){
+    setTimeout(function(){
+      if(hasFormFocus()){sync();return;}
+      clear();
+    },120);
+  }
+
+  modal.addEventListener('focusin',function(event){
+    if(event.target.matches('textarea,input,select'))setTimeout(sync,80);
+  });
+  modal.addEventListener('focusout',deferClear);
+  if(viewport){
+    viewport.addEventListener('resize',sync);
+    viewport.addEventListener('scroll',sync);
+  }
+  window.addEventListener('resize',sync);
+  new MutationObserver(function(){
+    if(!modal.classList.contains('show'))clear();
+  }).observe(modal,{attributes:true,attributeFilter:['class']});
+})();
+</script>
