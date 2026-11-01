@@ -6618,7 +6618,7 @@ function renderNotes(){
       return `<div class="noteArchiveRow" data-note-id="${noteEsc(n.id)}">
         <div class="noteArchiveSummary">${noteEsc(shortText)}</div>
         <div class="noteArchiveMeta">${noteEsc(formatNoteDate(n.date,n.time))}${n.done?' · '+t('✅ შესრულდა'):''}${n.reminder?' · 🔔':''}</div>
-        <button type="button" class="noteArchiveRestore" onclick="toggleNoteArchive('${noteEsc(n.id)}')">${t('↩ დაბრუნება')}</button>
+        <button type="button" class="noteArchiveDelete" title="${t('🗑️ წაშლა')}" aria-label="${t('🗑️ წაშლა')}" onclick="deleteArchivedNote('${noteEsc(n.id)}')">🗑️</button>
       </div>`;
     }
     return `<div class="noteCard ${n.done?'done':''}" data-note-id="${noteEsc(n.id)}">
@@ -8447,3 +8447,43 @@ body>#notesArchiveToggle:focus-visible{
   outline-offset:3px;
 }
 </style>
+
+
+<!-- TEMO ARCHIVED NOTE DELETE BUTTON -->
+<style id="temo-archived-note-delete-style">
+#notesPage .noteArchiveDelete{
+  grid-column:2;grid-row:1/3;justify-self:end;align-self:center;
+  display:grid;place-items:center;width:30px;height:30px;min-width:30px;min-height:30px;
+  padding:0;border:1px solid rgba(255,91,102,.75);border-radius:9px;
+  background:linear-gradient(145deg,#35171c,#17151b);color:#ff9aa1;
+  font-size:14px;line-height:1;cursor:pointer;
+  box-shadow:0 0 6px rgba(255,65,80,.25);-webkit-tap-highlight-color:transparent;
+}
+#notesPage .noteArchiveDelete:active{transform:scale(.92);background:#4a2026;box-shadow:0 0 9px rgba(255,65,80,.55)}
+#notesPage .noteArchiveDelete:focus-visible{outline:2px solid #ff9aa1;outline-offset:2px}
+</style>
+<script id="temo-archived-note-delete-handler">
+async function deleteArchivedNote(id){
+  while(notesLoadBusy)await new Promise(resolve=>setTimeout(resolve,25));
+  if(notesMutationBusy)return;
+  const note=notesCache.find(item=>String(item.id)===String(id));
+  if(!note||note.archived!==true)return;
+  if(!confirm('არქივიდან მხოლოდ ეს ჩანაწერი წაიშლება. წავშალოთ?'))return;
+  const previous=notesCache;
+  notesMutationBusy=true;
+  notesCache=notesCache.filter(item=>String(item.id)!==String(id));
+  renderNotes();
+  try{
+    await saveNotesRemote();
+    cancelNativeNoteReminder(id);
+    renderNotes();
+  }catch(e){
+    notesCache=previous;
+    renderNotes();
+    alert('არქივის ჩანაწერი ვერ წაიშალა.');
+    await loadNotes();
+  }finally{
+    notesMutationBusy=false;
+  }
+}
+</script>
