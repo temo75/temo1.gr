@@ -8190,10 +8190,12 @@ body.temo-android-app #bottomNav > button .navLogo{
 </script>
 
 <style id="temo-notes-archive-floating-position-final">
+/* #notesPage is transformed, so place the button by viewport coordinates. */
 #notesRemindersPage .noteArchiveToggle{
   position:fixed !important;
   right:12px !important;
-  bottom:calc(100px + env(safe-area-inset-bottom,0px)) !important;
+  top:calc(100dvh - 145px) !important;
+  bottom:auto !important;
   z-index:2147483000 !important;
   min-height:36px !important;
   height:36px !important;
