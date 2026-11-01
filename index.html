@@ -2511,6 +2511,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
     <div class="dailyBottomControls" id="dailyBottomControls">
       <button type="button" class="dailyFullscreenBack" onclick="showNotesSubPage('reminders')" aria-label="უკან დაბრუნება" title="უკან დაბრუნება">↩</button>
       <button type="button" class="dailyArchiveToggle" id="dailyArchiveToggle" onclick="toggleDailyArchiveView()" aria-pressed="false">📦 არქივი</button>
+      <button type="button" class="dailyTrashToggle" id="dailyTrashToggle" onclick="toggleDailyTrashView()" aria-label="წაშლილები" title="წაშლილები" aria-pressed="false">🗑️</button>
       <button type="button" class="notesAddBtn dailyCompactAdd" onclick="openDailyEditor()" aria-label="ახალი ჩანაწერის დამატება" title="ახალი ჩანაწერის დამატება">＋</button>
     </div>
   </div>
@@ -2544,7 +2545,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
   <div id="dailyDeleteModal" class="notesModal" onclick="if(event.target===this)closeDailyDeleteModal()">
     <div class="notesModalBox">
       <h2>🗑️ ჩანაწერის წაშლა</h2>
-      <div class="notesSub" style="margin:8px 0 16px">ნამდვილად გინდა ამ ჩანაწერის წაშლა?</div>
+      <div class="notesSub" style="margin:8px 0 16px">ჩანაწერი 30 დღე წაშლილებში შეინახება, შემდეგ წაიშლება. გადავიტანოთ?</div>
       <div class="notesModalActions">
         <button type="button" onclick="closeDailyDeleteModal()">✕ გაუქმება</button>
         <button type="button" class="primary" style="background:#4a2228;border-color:#74333d" onclick="confirmDeleteDailyEntry()">🗑️ წაშლა</button>
@@ -3632,6 +3633,7 @@ let dailyDeleteId='';
 let dailyActionId='';
 let editingDailyId='';
 let dailyArchiveView=false;
+let dailyTrashView=false;
 let dailyLongPressTimer=null;
 let dailySyncTimer=null;
 let dailySyncBusy=false;
@@ -3657,11 +3659,22 @@ function dailyStorageKey(){
 function dailyDeleteStorageKey(){
   return 'temoDailyDeletes_'+String(currentUserId||currentUser||'guest');
 }
+function purgeExpiredDailyTrash(entries,now=Date.now()){
+  const source=Array.isArray(entries)?entries:[];
+  const expired=source.filter(item=>Number(item?.deletedAt||0)>0&&now-Number(item.deletedAt)>=30*24*60*60*1000);
+  if(!expired.length)return source;
+  const deletes=loadDailyDeletes();
+  expired.forEach(item=>{deletes[String(item.id)]=Math.max(now,Number(item.updatedAt||0)+1);});
+  dailyDeletes=deletes;saveDailyDeletes(deletes);
+  const expiredIds=new Set(expired.map(item=>String(item.id)));
+  const keep=source.filter(item=>!expiredIds.has(String(item.id)));
+  saveDailyEntries(keep);return keep;
+}
 function loadDailyEntries(){
   try{
     const raw=localStorage.getItem(dailyStorageKey());
     const data=raw?JSON.parse(raw):[];
-    return Array.isArray(data)?data.filter(x=>x&&typeof x.text==='string'):[];
+    return purgeExpiredDailyTrash(Array.isArray(data)?data.filter(x=>x&&typeof x.text==='string'):[]);
   }catch(e){return [];}
 }
 function saveDailyEntries(data){
@@ -3678,7 +3691,7 @@ function saveDailyDeletes(data){
   localStorage.setItem(dailyDeleteStorageKey(),JSON.stringify(data||{}));
 }
 function normalizeDailyEntry(e){
-  return {id:String(e?.id||''),title:String(e?.title||'ჩანაწერი'),text:String(e?.text||''),createdAt:Number(e?.createdAt||0),updatedAt:Number(e?.updatedAt||e?.createdAt||0),archived:e?.archived===true};
+  return {id:String(e?.id||''),title:String(e?.title||'ჩანაწერი'),text:String(e?.text||''),createdAt:Number(e?.createdAt||0),updatedAt:Number(e?.updatedAt||e?.createdAt||0),archived:e?.archived===true,deletedAt:Number(e?.deletedAt||0)};
 }
 function mergeDailyState(localEntries,remoteEntries,localDel,remoteDel){
   const byId=new Map();
@@ -3822,17 +3835,21 @@ function renderDailyEntries(){
   if(!list||!listPage||!editor)return;
   listPage.style.display=''; editor.style.display='none';
   document.getElementById('notesSecondPage')?.classList.remove('daily-editor-active');
+  const allEntries=loadDailyEntries();
   const heading=document.getElementById('dailyListHeading');
-  if(heading)heading.textContent=t(dailyArchiveView?'📦 არქივი':'📖 დღიური ჩანაწერები');
+  if(heading)heading.textContent=t(dailyTrashView?'🗑️ წაშლილები':dailyArchiveView?'📦 არქივი':'📖 დღიური ჩანაწერები');
   const archiveToggle=document.getElementById('dailyArchiveToggle');
-  if(archiveToggle){archiveToggle.textContent=t(dailyArchiveView?'📖 ჩანაწერები':'📦 არქივი');archiveToggle.setAttribute('aria-pressed',String(dailyArchiveView));}
-  const entries=loadDailyEntries().filter(e=>(e.archived===true)===dailyArchiveView);
+  if(archiveToggle){archiveToggle.textContent=t(dailyArchiveView?'📖 ჩანაწერები':'📦 არქივი');archiveToggle.setAttribute('aria-pressed',String(dailyArchiveView&&!dailyTrashView));}
+  const trashToggle=document.getElementById('dailyTrashToggle');
+  const trashCount=allEntries.filter(e=>Number(e.deletedAt||0)>0).length;
+  if(trashToggle){trashToggle.textContent='🗑️';trashToggle.title=t('წაშლილები')+(trashCount?' ('+trashCount+')':'');trashToggle.setAttribute('aria-label',trashToggle.title);trashToggle.setAttribute('aria-pressed',String(dailyTrashView));}
+  const entries=allEntries.filter(e=>dailyTrashView?Number(e.deletedAt||0)>0:!Number(e.deletedAt||0)&&(e.archived===true)===dailyArchiveView);
   const filteredEntries=dailyCalendarDate?entries.filter(e=>getDailyDateKey(e.createdAt)===dailyCalendarDate):entries;
   if(!filteredEntries.length){
     dailyPage=0;
-    const message=t(dailyArchiveView?'არქივში ჩანაწერი ჯერ არ არის.':dailyCalendarDate?'ამ თარიღზე ჩანაწერი არ არის.':'ჯერ ჩანაწერი არ არის.');
+    const message=t(dailyTrashView?'🗑️ წაშლილებში ჩანაწერი არ არის.':dailyArchiveView?'არქივში ჩანაწერი ჯერ არ არის.':dailyCalendarDate?'ამ თარიღზე ჩანაწერი არ არის.':'ჯერ ჩანაწერი არ არის.');
     list.innerHTML='<div class="dailyEmpty">'+message+'</div>';
-    updateDailyPagination(0); return;
+    updateDailyPagination(0);return;
   }
   const totalPages=Math.max(1,Math.ceil(filteredEntries.length/DAILY_PAGE_SIZE));
   dailyPage=Math.max(0,Math.min(totalPages-1,dailyPage));
@@ -3840,17 +3857,13 @@ function renderDailyEntries(){
   list.innerHTML='';
   pageEntries.forEach(e=>{
     const card=document.createElement('div');
-    card.className='dailyCard'; card.dataset.dailyId=e.id; card.setAttribute('role','button'); card.setAttribute('tabindex','0');
-    card.setAttribute('aria-label',(e.title||'ჩანაწერი')+' — ხანგრძლივად დააჭირე მოქმედებებისთვის');
-    const title=document.createElement('div'); title.className='dailyCardTitle'; title.textContent=e.title||'ჩანაწერი'; card.appendChild(title);
-    const text=document.createElement('div'); text.className='dailyCardText'; text.textContent=e.text; card.appendChild(text);
-    if(e.createdAt){const date=document.createElement('div');date.className='dailyCardDate';date.textContent=new Date(e.createdAt).toLocaleDateString();card.appendChild(date);}
+    card.className='dailyCard'+(Number(e.deletedAt||0)>0?' dailyTrashedCard':'');card.dataset.dailyId=e.id;card.setAttribute('role','button');card.setAttribute('tabindex','0');
+    card.setAttribute('aria-label',(e.title||'ჩანაწერი')+(e.deletedAt?' — წაშლილებში':'')+' — ხანგრძლივად დააჭირე მოქმედებებისთვის');
+    const title=document.createElement('div');title.className='dailyCardTitle';title.textContent=e.title||'ჩანაწერი';card.appendChild(title);
+    const text=document.createElement('div');text.className='dailyCardText';text.textContent=e.text;card.appendChild(text);
+    if(e.createdAt){const date=document.createElement('div');date.className='dailyCardDate';date.textContent=new Date(e.createdAt).toLocaleDateString()+(e.deletedAt?' · წაშლილია '+new Date(e.deletedAt).toLocaleDateString():'');card.appendChild(date);}
     let longPressed=false;
-    const startPress=ev=>{
-      if(ev.pointerType==='mouse'&&ev.button!==0)return;
-      longPressed=false;clearTimeout(dailyLongPressTimer);
-      dailyLongPressTimer=setTimeout(()=>{longPressed=true;openDailyActionMenu(e.id);},650);
-    };
+    const startPress=ev=>{if(ev.pointerType==='mouse'&&ev.button!==0)return;longPressed=false;clearTimeout(dailyLongPressTimer);dailyLongPressTimer=setTimeout(()=>{longPressed=true;openDailyActionMenu(e.id);},650);};
     const finishPress=()=>{clearTimeout(dailyLongPressTimer);if(!longPressed)openDailyViewModal(e.id);};
     const cancelPress=()=>clearTimeout(dailyLongPressTimer);
     card.addEventListener('pointerdown',startPress);card.addEventListener('pointerup',finishPress);
@@ -3860,14 +3873,15 @@ function renderDailyEntries(){
   updateDailyPagination(totalPages);bindDailySwipe();
 }
 let dailyViewId='';
-function toggleDailyArchiveView(){dailyArchiveView=!dailyArchiveView;dailyPage=0;renderDailyEntries();}
+function toggleDailyArchiveView(){dailyTrashView=false;dailyArchiveView=!dailyArchiveView;dailyPage=0;renderDailyEntries();}
+function toggleDailyTrashView(){dailyTrashView=!dailyTrashView;if(dailyTrashView)dailyArchiveView=false;dailyPage=0;renderDailyEntries();}
 function openDailyActionMenu(id){
   const entry=loadDailyEntries().find(e=>String(e.id)===String(id));if(!entry)return;
   dailyActionId=String(id);
   const modal=document.getElementById('dailyActionModal'),archiveButton=document.getElementById('dailyArchiveActionBtn'),title=document.getElementById('dailyActionTitle');
-  if(archiveButton)archiveButton.textContent=t(dailyArchiveView?'↩ არქივიდან დაბრუნება':'📦 არქივში გადატანა');
+  if(archiveButton)archiveButton.textContent=t(entry.deletedAt?'↩ აღდგენა':dailyArchiveView?'↩ არქივიდან დაბრუნება':'📦 არქივში გადატანა');
   if(title)title.textContent='📝 '+(entry.title||'ჩანაწერი');
-  if(modal){modal.classList.add('show');modal.setAttribute('aria-hidden','false');}
+  if(modal){const buttons=modal.querySelectorAll('.dailyActionOptions button');if(buttons[0])buttons[0].style.display=entry.deletedAt?'none':'';if(buttons[2])buttons[2].style.display=entry.deletedAt?'none':'';modal.classList.add('show');modal.setAttribute('aria-hidden','false');}
 }
 function closeDailyActionMenu(){dailyActionId='';const modal=document.getElementById('dailyActionModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}}
 function editDailyEntryFromMenu(){const id=dailyActionId;closeDailyActionMenu();if(id)openDailyEditor(id);}
@@ -3878,26 +3892,15 @@ async function toggleDailyEntryArchive(){
   try{
     const entries=loadDailyEntries(),index=entries.findIndex(e=>String(e.id)===id);
     if(index<0){closeDailyActionMenu();return;}
-    const original=entries[index],archived=original.archived!==true;
-    const updated={...original,archived,updatedAt:Math.max(Date.now(),Number(original.updatedAt||0)+1)};
-    entries[index]=updated;
-    dailyDeletes=loadDailyDeletes();
+    const original=entries[index],fromTrash=Number(original.deletedAt||0)>0;
+    const archived=fromTrash?original.archived===true:original.archived!==true;
+    entries[index]={...original,archived,deletedAt:0,updatedAt:Math.max(Date.now(),Number(original.updatedAt||0)+1)};
+    dailyDeletes=loadDailyDeletes();delete dailyDeletes[id];
     saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);
     closeDailyActionMenu();dailyPage=0;renderDailyEntries();
-    try{
-      await saveDailyRemote(entries,dailyDeletes);
-      saveDailyEntries(entries);
-      renderDailyEntries();
-    }catch(e){
-      const latest=loadDailyEntries().map(item=>String(item.id)===id?original:item);
-      saveDailyEntries(latest);renderDailyEntries();
-      alert(archived?'ჩანაწერი არქივში ვერ შეინახა. სცადე ხელახლა.':'ჩანაწერის დაბრუნება ვერ შეინახა. სცადე ხელახლა.');
-      console.warn('Firebase daily archive update failed:',e);
-    }
-  }finally{
-    dailyArchiveWriteBusy=false;
-    syncDailyFromFirebase().catch(e=>console.warn('Firebase daily sync failed:',e));
-  }
+    try{await saveDailyRemote(entries,dailyDeletes);saveDailyEntries(entries);renderDailyEntries();}
+    catch(e){const latest=loadDailyEntries().map(item=>String(item.id)===id?original:item);saveDailyEntries(latest);renderDailyEntries();alert(fromTrash?'ჩანაწერის აღდგენა ვერ შეინახა. სცადე ხელახლა.':archived?'ჩანაწერი არქივში ვერ შეინახა. სცადე ხელახლა.':'ჩანაწერის დაბრუნება ვერ შეინახა. სცადე ხელახლა.');console.warn('Firebase daily archive update failed:',e);}
+  }finally{dailyArchiveWriteBusy=false;syncDailyFromFirebase().catch(e=>console.warn('Firebase daily sync failed:',e));}
 }
 function openDeleteDailyEntryConfirm(){const id=dailyActionId;closeDailyActionMenu();if(id)openDailyDeleteModal(id);}
 
@@ -4081,43 +4084,22 @@ function closeDailyDeleteModal(){
 }
 async function confirmDeleteDailyEntry(){
   if(!dailyDeleteId)return;
-  const id=String(dailyDeleteId);
-  closeDailyDeleteModal();
-
-  // Wait for any in-flight Firebase merge before changing the local snapshot.
-  while(dailySyncBusy)await new Promise(resolve=>setTimeout(resolve,25));
+  const id=String(dailyDeleteId);closeDailyDeleteModal();
+  while(dailySyncBusy||dailyArchiveWriteBusy)await new Promise(resolve=>setTimeout(resolve,25));
   dailySyncBusy=true;
-  const originalEntries=loadDailyEntries();
-  const entry=originalEntries.find(item=>String(item.id)===id);
-  const entries=originalEntries.filter(item=>String(item.id)!==id);
-  const originalDeletes=loadDailyDeletes();
-  const deletedAt=Math.max(Date.now(),Number(entry?.updatedAt||0)+1);
-  dailyDeletes={...originalDeletes,[id]:deletedAt};
-  saveDailyEntries(entries);
-  saveDailyDeletes(dailyDeletes);
-  renderDailyEntries();
-
+  const entries=loadDailyEntries(),index=entries.findIndex(item=>String(item.id)===id);
+  if(index<0){dailySyncBusy=false;return;}
+  const original=entries[index],deletedAt=Math.max(Date.now(),Number(original.updatedAt||0)+1);
+  entries[index]={...original,deletedAt,updatedAt:deletedAt};
+  dailyDeletes=loadDailyDeletes();delete dailyDeletes[id];
+  saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);renderDailyEntries();
   try{
     await saveDailyRemote(entries,dailyDeletes);
-
-    // Confirm the tombstone reached Firebase; a successful HTTP response alone
-    // does not guarantee that an overlapping sync did not replace it.
-    let remote=await bridgeRequest('db',{path:dailyBridgePath(),method:'GET'});
-    let remoteDeletes=(!Array.isArray(remote)&&remote?.deletes&&typeof remote.deletes==='object')?remote.deletes:{};
-    if(Number(remoteDeletes[id]||0)<deletedAt){
-      await saveDailyRemote(entries,dailyDeletes);
-      remote=await bridgeRequest('db',{path:dailyBridgePath(),method:'GET'});
-      remoteDeletes=(!Array.isArray(remote)&&remote?.deletes&&typeof remote.deletes==='object')?remote.deletes:{};
-    }
-    if(Number(remoteDeletes[id]||0)<deletedAt)throw new Error('daily_delete_not_confirmed');
-  }catch(e){
-    // Keep the local tombstone. The next sync can retry the remote write,
-    // and a page refresh must not bring the deleted record back.
-    console.warn('Firebase daily delete sync pending:',e);
-    alert('ჩანაწერი წაიშალა. სერვერთან სინქრონიზაცია ვერ დადასტურდა და ხელახლა სცადეთ ინტერნეტის აღდგენის შემდეგ.');
-  }finally{
-    dailySyncBusy=false;
-  }
+    const remote=await bridgeRequest('db',{path:dailyBridgePath(),method:'GET'});
+    const remoteEntries=Array.isArray(remote)?remote:(Array.isArray(remote?.entries)?remote.entries:[]);
+    if(!remoteEntries.some(item=>String(item?.id)===id&&Number(item?.deletedAt||0)>=deletedAt))throw new Error('daily_trash_write_not_confirmed');
+  }catch(e){console.warn('Firebase daily trash sync pending:',e);alert('ჩანაწერი წაშლილებში გადავიდა. სერვერთან სინქრონიზაცია ვერ დადასტურდა; ინტერნეტის აღდგენისას ხელახლა შეინახება.');}
+  finally{dailySyncBusy=false;syncDailyFromFirebase().catch(e=>console.warn('Firebase daily sync failed:',e));}
 }
 
 function openDailyEditor(entryId=''){
@@ -8500,3 +8482,22 @@ async function deleteArchivedNote(id){
   }
 }
 </script>
+
+
+<style id="temo-daily-trash-retention-layout">
+#notesPage #notesSecondPage .dailyBottomControls{grid-template-columns:44px minmax(0,1fr) 44px 44px!important;gap:6px!important}
+#notesPage #notesSecondPage .dailyBottomControls .dailyTrashToggle,
+body>#dailyBottomControls .dailyTrashToggle{
+  position:static!important;inset:auto!important;display:grid!important;place-items:center;
+  width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;
+  margin:0!important;padding:0!important;border:1px solid rgba(255,91,102,.72)!important;
+  border-radius:12px!important;background:linear-gradient(145deg,#32191d,#10232f)!important;
+  color:#ff9aa1!important;font-size:20px!important;line-height:1!important;
+  box-shadow:0 0 8px rgba(255,65,80,.22)!important;cursor:pointer;touch-action:manipulation;
+}
+#notesPage #notesSecondPage .dailyBottomControls .dailyTrashToggle[aria-pressed="true"],
+body>#dailyBottomControls .dailyTrashToggle[aria-pressed="true"]{
+  border-color:#ff5b66!important;box-shadow:0 0 9px rgba(255,65,80,.65),inset 0 0 8px rgba(255,65,80,.18)!important;
+}
+#notesPage .dailyTrashedCard{border-color:rgba(255,91,102,.58)!important}
+</style>
