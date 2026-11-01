@@ -3635,6 +3635,7 @@ let dailyArchiveView=false;
 let dailyLongPressTimer=null;
 let dailySyncTimer=null;
 let dailySyncBusy=false;
+let dailyArchiveWriteBusy=false;
 let dailySyncEventsBound=false;
 let dailyDeletes={};
 let dailyCalendarDate='';
@@ -3702,7 +3703,7 @@ async function saveDailyRemote(entries,deletes){
 }
 async function syncDailyFromFirebase(){
   const path=dailyBridgePath();
-  if(!path||dailySyncBusy)return;
+  if(!path||dailySyncBusy||dailyArchiveWriteBusy)return;
   dailySyncBusy=true;
   try{
     const localEntries=loadDailyEntries();
@@ -3871,19 +3872,31 @@ function openDailyActionMenu(id){
 function closeDailyActionMenu(){dailyActionId='';const modal=document.getElementById('dailyActionModal');if(modal){modal.classList.remove('show');modal.setAttribute('aria-hidden','true');}}
 function editDailyEntryFromMenu(){const id=dailyActionId;closeDailyActionMenu();if(id)openDailyEditor(id);}
 async function toggleDailyEntryArchive(){
-  const id=String(dailyActionId||'');if(!id)return;
-  const entries=loadDailyEntries(),index=entries.findIndex(e=>String(e.id)===id);
-  if(index<0){closeDailyActionMenu();return;}
-  const original=entries[index],archived=!dailyArchiveView;
-  entries[index]={...original,archived,updatedAt:Math.max(Date.now(),Number(original.updatedAt||0)+1)};
-  dailyDeletes=loadDailyDeletes();saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);
-  closeDailyActionMenu();dailyPage=0;renderDailyEntries();
-  try{await saveDailyRemote(entries,dailyDeletes);}
-  catch(e){
-    const latest=loadDailyEntries().map(item=>String(item.id)===id?original:item);
-    saveDailyEntries(latest);renderDailyEntries();
-    alert(archived?'ჩანაწერი არქივში ვერ შეინახა. სცადე ხელახლა.':'ჩანაწერის დაბრუნება ვერ შეინახა. სცადე ხელახლა.');
-    console.warn('Firebase daily archive update failed:',e);
+  const id=String(dailyActionId||'');if(!id||dailyArchiveWriteBusy)return;
+  while(dailySyncBusy)await new Promise(resolve=>setTimeout(resolve,25));
+  dailyArchiveWriteBusy=true;
+  try{
+    const entries=loadDailyEntries(),index=entries.findIndex(e=>String(e.id)===id);
+    if(index<0){closeDailyActionMenu();return;}
+    const original=entries[index],archived=original.archived!==true;
+    const updated={...original,archived,updatedAt:Math.max(Date.now(),Number(original.updatedAt||0)+1)};
+    entries[index]=updated;
+    dailyDeletes=loadDailyDeletes();
+    saveDailyEntries(entries);saveDailyDeletes(dailyDeletes);
+    closeDailyActionMenu();dailyPage=0;renderDailyEntries();
+    try{
+      await saveDailyRemote(entries,dailyDeletes);
+      saveDailyEntries(entries);
+      renderDailyEntries();
+    }catch(e){
+      const latest=loadDailyEntries().map(item=>String(item.id)===id?original:item);
+      saveDailyEntries(latest);renderDailyEntries();
+      alert(archived?'ჩანაწერი არქივში ვერ შეინახა. სცადე ხელახლა.':'ჩანაწერის დაბრუნება ვერ შეინახა. სცადე ხელახლა.');
+      console.warn('Firebase daily archive update failed:',e);
+    }
+  }finally{
+    dailyArchiveWriteBusy=false;
+    syncDailyFromFirebase().catch(e=>console.warn('Firebase daily sync failed:',e));
   }
 }
 function openDeleteDailyEntryConfirm(){const id=dailyActionId;closeDailyActionMenu();if(id)openDailyDeleteModal(id);}
