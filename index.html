@@ -3531,19 +3531,6 @@ function exportMyDataPdf(){
   <button type="button" class="noPrint" id="temoPdfPrintBtn" style="margin-top:20px;padding:10px 16px">${esc(t.print)}</button>
   <script>document.getElementById("temoPdfPrintBtn").addEventListener("click",function(){setTimeout(function(){window.focus();window.print();},50);});<\/script>
   </body>
-<style id="temo-notes-archive-floating-position">
-#notesPage .noteArchiveToggle{
-  position:fixed;
-  right:12px;
-  bottom:calc(100px + env(safe-area-inset-bottom,0px));
-  z-index:120;
-  min-height:36px;
-  padding:6px 10px;
-  font-size:13px;
-  border-radius:10px;
-  box-shadow:0 3px 12px #0008;
-}
-</style>
 </html>`);
   w.document.close();
   w.focus();
@@ -8201,3 +8188,18 @@ body.temo-android-app #bottomNav > button .navLogo{
   });
 })();
 </script>
+
+<style id="temo-notes-archive-floating-position-final">
+#notesPage .noteArchiveToggle{
+  position:fixed !important;
+  right:12px !important;
+  bottom:calc(100px + env(safe-area-inset-bottom,0px)) !important;
+  z-index:2147483000 !important;
+  min-height:36px !important;
+  height:36px !important;
+  padding:6px 10px !important;
+  font-size:13px !important;
+  border-radius:10px !important;
+  box-shadow:0 3px 12px #0008 !important;
+}
+</style>
