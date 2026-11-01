@@ -6601,7 +6601,7 @@ function renderNotes(){
   const archivedCount=notesCache.filter(n=>n.archived).length;
   const archiveToggle=$('notesArchiveToggle');
   if(archiveToggle){
-    archiveToggle.textContent=notesArchiveView?t('↩ აქტიურ შეტყობინებებზე დაბრუნება'):(t('📦 არქივი')+' ('+archivedCount+')');
+    archiveToggle.textContent=notesArchiveView?t('↩ დაბრუნება'):(t('📦 არქივი')+' ('+archivedCount+')');
     archiveToggle.setAttribute('aria-pressed',notesArchiveView?'true':'false');
   }
   const visible=notesCache.filter(n=>Boolean(n.archived)===notesArchiveView);
@@ -8417,17 +8417,17 @@ body>#notesArchiveToggle{
   display:block;
   width:auto!important;
   max-width:calc(100vw - 28px)!important;
-  min-height:46px!important;
+  min-height:38px!important;
   height:auto!important;
   margin:0!important;
-  padding:10px 16px!important;
+  padding:7px 12px!important;
   appearance:none!important;
   -webkit-appearance:none!important;
   border:1px solid #ff8a3d!important;
   border-radius:15px!important;
   background:linear-gradient(145deg,rgba(55,30,24,.98),rgba(14,27,36,.98))!important;
   color:#fff!important;
-  font:700 14px/1.2 Arial,sans-serif!important;
+  font:700 12px/1.2 Arial,sans-serif!important;
   letter-spacing:.1px;
   text-align:center;
   white-space:normal;
