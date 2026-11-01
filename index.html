@@ -8128,34 +8128,23 @@ body.temo-android-app #bottomNav > button .navLogo{
   const root=document.documentElement;
   const viewport=window.visualViewport;
 
-  function hasFormFocus(){
-    const el=document.activeElement;
-    return modal.contains(el)&&el.matches('textarea,input,select');
-  }
   function clear(){
     modal.classList.remove('temo-notes-keyboard-open');
     root.style.removeProperty('--temo-notes-viewport-height');
     root.style.removeProperty('--temo-notes-viewport-top');
   }
   function sync(){
-    if(!modal.classList.contains('show')||!hasFormFocus())return;
+    if(!modal.classList.contains('show'))return;
     const height=viewport?viewport.height:window.innerHeight;
     const top=viewport?viewport.offsetTop:0;
     root.style.setProperty('--temo-notes-viewport-height',Math.max(240,Math.round(height))+'px');
     root.style.setProperty('--temo-notes-viewport-top',Math.max(0,Math.round(top))+'px');
     modal.classList.add('temo-notes-keyboard-open');
   }
-  function deferClear(){
-    setTimeout(function(){
-      if(hasFormFocus()){sync();return;}
-      clear();
-    },120);
-  }
 
   modal.addEventListener('focusin',function(event){
     if(event.target.matches('textarea,input,select'))setTimeout(sync,80);
   });
-  modal.addEventListener('focusout',deferClear);
   if(viewport){
     viewport.addEventListener('resize',sync);
     viewport.addEventListener('scroll',sync);
