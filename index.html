@@ -8190,18 +8190,41 @@ body.temo-android-app #bottomNav > button .navLogo{
 </script>
 
 <style id="temo-notes-archive-floating-position-final">
-/* #notesPage is transformed, so place the button by viewport coordinates. */
-#notesRemindersPage .noteArchiveToggle{
-  position:fixed !important;
-  right:12px !important;
-  top:calc(100dvh - 145px) !important;
-  bottom:auto !important;
-  z-index:2147483000 !important;
-  min-height:36px !important;
-  height:36px !important;
-  padding:6px 10px !important;
-  font-size:13px !important;
-  border-radius:10px !important;
-  box-shadow:0 3px 12px #0008 !important;
+/* ეკრანის ფიქსირებული ქვედა მარჯვენა კუთხე */
+body>#notesArchiveToggle{
+  position:fixed!important;
+  right:12px!important;
+  left:auto!important;
+  top:auto!important;
+  bottom:calc(70px + env(safe-area-inset-bottom,0px))!important;
+  z-index:2147483646!important;
+  min-height:36px!important;
+  height:36px!important;
+  margin:0!important;
+  padding:6px 10px!important;
+  font-size:13px!important;
+  border-radius:10px!important;
+  box-shadow:0 3px 12px #0008!important;
 }
 </style>
+<script id="temo-notes-archive-viewport-mount">
+(function(){
+  function mountArchiveButton(){
+    var button=document.getElementById('notesArchiveToggle');
+    var page=document.getElementById('notesPage');
+    var reminders=document.getElementById('notesRemindersPage');
+    if(!button||!page||!reminders)return;
+    if(button.parentElement!==document.body)document.body.appendChild(button);
+    var visible=!page.classList.contains('pageHidden')
+      &&getComputedStyle(reminders).display!=='none'
+      &&!page.classList.contains('notes-modal-open');
+    button.style.display=visible?'block':'none';
+  }
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',mountArchiveButton,{once:true});
+  }else mountArchiveButton();
+  var observer=new MutationObserver(mountArchiveButton);
+  observer.observe(document.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+  window.addEventListener('pageshow',mountArchiveButton);
+})();
+</script>
