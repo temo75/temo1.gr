@@ -2397,9 +2397,9 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 
 <div class="stats">
 <div class="mini neonControlled"><span>📅 დღიური საშუალო</span><b id="average">€0</b></div>
-<div class="mini miniReceivable neonControlled" id="receivableCard" onclick="openReceivableModal()" role="button" tabindex="0" title="მისაღები თანხების ნახვა"><span>⏳ მისაღები</span><b id="unpaid">€0</b><small id="unpaidDays">0 გადასახდელი</small><span class="miniActionIcon" aria-hidden="true">↑</span></div>
+<div class="mini miniReceivable neonControlled" id="receivableCard" onclick="openReceivableModal()" role="button" tabindex="0" title="მისაღები თანხების ნახვა"><span>⏳ მისაღები</span><b id="unpaid">€0</b><span class="miniActionIcon" aria-hidden="true">↑</span></div>
 <div class="mini neonControlled"><span>📊 ამ თვის სამუშაოები</span><b id="monthDays">0 დღე</b></div>
-<div class="mini neonControlled expenseQuickCard" id="expenseQuickCardMain" onclick="goExpenses()" role="button" tabindex="0" title="გასავალი"><span>💸 გასავალი</span><b id="expenseMonthTotalMain">€0</b><small>ამ თვის გასავალი</small><span class="miniActionIcon" aria-hidden="true">↑</span></div>
+<div class="mini neonControlled expenseQuickCard" id="expenseQuickCardMain" onclick="goExpenses()" role="button" tabindex="0" title="გასავალი"><span>💸 გასავალი</span><b id="expenseMonthTotalMain">€0</b><span class="miniActionIcon" aria-hidden="true">↑</span></div>
 
 </div>
 <div class="section neonControlled">
@@ -3083,7 +3083,7 @@ function updateMonthFilter(){const old=$('monthFilter').value;const months=[...n
 function render(){
  const total=jobs.reduce((a,j)=>a+Number(j.money||0),0), paid=jobs.filter(j=>j.paid).reduce((a,j)=>a+Number(j.money||0),0), unpaid=total-paid;
  $('total').textContent=euro(total);$('paid').textContent=euro(paid);$('unpaid').textContent=euro(unpaid);
- $('days').textContent=jobs.length+' სამუშაო';$('paidDays').textContent=jobs.filter(j=>j.paid).length+' გადახდილი';$('unpaidDays').textContent=jobs.filter(j=>!j.paid).length+' გადასახდელი';
+ $('days').textContent=jobs.length+' სამუშაო';$('paidDays').textContent=jobs.filter(j=>j.paid).length+' გადახდილი';
  const calendarKey=calendarDate.getFullYear()+'-'+String(calendarDate.getMonth()+1).padStart(2,'0');
  const mj=jobs.filter(j=>(j.date||'').slice(0,7)===calendarKey);
  const monthTotal=mj.filter(j=>j.paid).reduce((a,j)=>a+Number(j.money||0),0);
@@ -3092,7 +3092,7 @@ function render(){
  $('monthTotal').textContent=euro(monthTotal);
  $('average').textContent=euro(mj.length?monthAll/mj.length:0);
  $('unpaid').textContent=euro(monthUnpaid);
- $('unpaidDays').textContent=mj.filter(j=>!j.paid).length+' გადასახდელი';
+ 
  $('monthDays').textContent=mj.length+' დღე';
  const expenseMonthKeyNow=calendarKey;const expenseTotalNow=expenses.filter(e=>e.date.slice(0,7)===expenseMonthKeyNow).reduce((a,e)=>a+Number(e.amount||0),0);const expenseQuick=$('expenseMonthTotal');if(expenseQuick)expenseQuick.textContent=euro(expenseTotalNow);
  const expenseQuickMain=$('expenseMonthTotalMain');if(expenseQuickMain)expenseQuickMain.textContent=euro(expenseTotalNow);
