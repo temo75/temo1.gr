@@ -3843,6 +3843,7 @@ function renderDailyEntries(){
   const trashToggle=document.getElementById('dailyTrashToggle');
   const trashCount=allEntries.filter(e=>Number(e.deletedAt||0)>0).length;
   if(trashToggle){trashToggle.textContent='🗑️';trashToggle.title=t('წაშლილები')+(trashCount?' ('+trashCount+')':'');trashToggle.setAttribute('aria-label',trashToggle.title);trashToggle.setAttribute('aria-pressed',String(dailyTrashView));}
+  list.classList.toggle('dailyListRows',dailyTrashView||dailyArchiveView);
   const entries=allEntries.filter(e=>dailyTrashView?Number(e.deletedAt||0)>0:!Number(e.deletedAt||0)&&(e.archived===true)===dailyArchiveView);
   const filteredEntries=dailyCalendarDate?entries.filter(e=>getDailyDateKey(e.createdAt)===dailyCalendarDate):entries;
   if(!filteredEntries.length){
@@ -3855,9 +3856,10 @@ function renderDailyEntries(){
   dailyPage=Math.max(0,Math.min(totalPages-1,dailyPage));
   const pageEntries=filteredEntries.slice(dailyPage*DAILY_PAGE_SIZE,(dailyPage+1)*DAILY_PAGE_SIZE);
   list.innerHTML='';
-  pageEntries.forEach(e=>{
+  pageEntries.forEach((e,index)=>{
     const card=document.createElement('div');
-    card.className='dailyCard'+(Number(e.deletedAt||0)>0?' dailyTrashedCard':'');card.dataset.dailyId=e.id;card.setAttribute('role','button');card.setAttribute('tabindex','0');
+    card.className='dailyCard'+(Number(e.deletedAt||0)>0?' dailyTrashedCard':'')+(dailyArchiveView&&!dailyTrashView?' dailyArchivedCard':'');
+    if(dailyTrashView||dailyArchiveView){const number=document.createElement('div');number.className='dailyRowNumber';number.textContent=String(dailyPage*DAILY_PAGE_SIZE+index+1)+'.';card.appendChild(number);}card.dataset.dailyId=e.id;card.setAttribute('role','button');card.setAttribute('tabindex','0');
     card.setAttribute('aria-label',(e.title||'ჩანაწერი')+(e.deletedAt?' — წაშლილებში':'')+' — ხანგრძლივად დააჭირე მოქმედებებისთვის');
     const title=document.createElement('div');title.className='dailyCardTitle';title.textContent=e.title||'ჩანაწერი';card.appendChild(title);
     const text=document.createElement('div');text.className='dailyCardText';text.textContent=e.text;card.appendChild(text);
@@ -8559,3 +8561,75 @@ body>#dailyBottomControls .dailyArchiveToggle[aria-pressed="true"]{
   box-shadow:0 0 8px rgba(255,138,61,.68)!important;
 }
 </style>
+
+
+<style id="temo-daily-archive-trash-row-layout">
+#notesPage .dailyList.dailyListRows{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  width:100%!important;
+  margin:0!important;
+  gap:8px!important;
+}
+#notesPage .dailyList.dailyListRows .dailyCard{
+  display:grid!important;
+  grid-template-columns:30px minmax(0,1fr)!important;
+  grid-template-rows:auto auto auto!important;
+  align-items:center!important;
+  column-gap:9px!important;
+  row-gap:2px!important;
+  width:100%!important;
+  height:auto!important;
+  min-height:70px!important;
+  max-height:none!important;
+  aspect-ratio:auto!important;
+  margin:0!important;
+  padding:8px 10px!important;
+  border:1px solid #ff8a3d!important;
+  border-left:4px solid #ff8a3d!important;
+  border-radius:12px!important;
+  background:linear-gradient(145deg,#0c1b24,#071117)!important;
+  box-shadow:0 0 9px rgba(255,138,61,.14)!important;
+  overflow:hidden!important;
+}
+#notesPage .dailyList.dailyListRows .dailyRowNumber{
+  grid-column:1!important;
+  grid-row:1/4!important;
+  display:grid;place-items:center;
+  align-self:stretch;
+  border-right:1px solid rgba(255,138,61,.28);
+  color:#ffb36b;font-size:16px;font-weight:800;
+}
+#notesPage .dailyList.dailyListRows .dailyCardTitle{
+  grid-column:2!important;grid-row:1!important;
+  min-height:0!important;margin:0!important;padding:0!important;
+  border:0!important;background:transparent!important;
+  font-size:14px!important;line-height:1.25!important;
+}
+#notesPage .dailyList.dailyListRows .dailyCardText{
+  grid-column:2!important;grid-row:2!important;
+  display:-webkit-box!important;-webkit-box-orient:vertical!important;
+  -webkit-line-clamp:2!important;line-clamp:2!important;
+  max-height:34px!important;min-height:0!important;
+  margin:0!important;font-size:12px!important;line-height:1.35!important;
+  overflow:hidden!important;overflow-wrap:anywhere!important;
+}
+#notesPage .dailyList.dailyListRows .dailyCardDate{
+  grid-column:2!important;grid-row:3!important;
+  margin:2px 0 0!important;font-size:10px!important;line-height:1.2!important;
+}
+#notesPage .dailyList.dailyListRows .dailyTrashedCard{
+  grid-template-columns:30px minmax(0,1fr) 34px!important;
+}
+#notesPage .dailyList.dailyListRows .dailyTrashedCard .dailyRowNumber{
+  grid-column:1!important;grid-row:1/4!important;
+}
+#notesPage .dailyList.dailyListRows .dailyTrashedCard .dailyCardTitle,
+#notesPage .dailyList.dailyListRows .dailyTrashedCard .dailyCardText,
+#notesPage .dailyList.dailyListRows .dailyTrashedCard .dailyCardDate{grid-column:2!important}
+#notesPage .dailyList.dailyListRows .dailyTrashRestore{
+  position:static!important;grid-column:3!important;grid-row:1/4!important;
+  align-self:center!important;justify-self:end!important;
+  transform:none!important;width:30px!important;height:30px!important;
+  min-width:30px!important;min-height:30px!important;
+}
