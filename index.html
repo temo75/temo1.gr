@@ -8359,7 +8359,7 @@ body>#notesArchiveToggle{
     const remove=[];
     while(walker.nextNode()){
       const node=walker.currentNode;
-      if(/^(?:\\\\n){2,}$/.test((node.nodeValue||'').trim()))remove.push(node);
+      if(/^(?:\\n){2,}$/.test((node.nodeValue||'').trim()))remove.push(node);
     }
     remove.forEach(node=>node.remove());
   }
