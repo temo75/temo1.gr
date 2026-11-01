@@ -8278,7 +8278,8 @@ body>#notesArchiveToggle{
   }
   window.addEventListener('resize',sync);
 })();
-</script>\n\n
+</script>
+
 <!-- TEMO ADMIN CHAT KEYBOARD VISIBILITY FIX -->
 <style id="temo-admin-chat-keyboard-visibility">
 @media(max-width:700px){
@@ -8348,27 +8349,6 @@ body>#notesArchiveToggle{
   if(vv){vv.addEventListener('resize',sync);vv.addEventListener('scroll',sync);}
   window.addEventListener('resize',sync);
 })();
-</script>\n\n
-<!-- TEMO STRAY HEADER ESCAPE TEXT CLEANUP -->
-<script id="temo-header-escape-cleanup">
-(function(){
-  function cleanHeader(){
-    const header=document.querySelector('#mainPage header');
-    if(!header)return;
-    const walker=document.createTreeWalker(header,NodeFilter.SHOW_TEXT);
-    const remove=[];
-    while(walker.nextNode()){
-      const node=walker.currentNode;
-      if(/^(?:\\n){2,}$/.test((node.nodeValue||'').trim()))remove.push(node);
-    }
-    remove.forEach(node=>node.remove());
-  }
-  function start(){
-    cleanHeader();
-    const header=document.querySelector('#mainPage header');
-    if(header)new MutationObserver(cleanHeader).observe(header,{subtree:true,childList:true,characterData:true});
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});
-  else start();
-})();
 </script>
+
+
