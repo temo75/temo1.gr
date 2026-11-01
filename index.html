@@ -8233,31 +8233,18 @@ body>#notesArchiveToggle{
 
 <!-- TEMO BOTTOM NAV VIRTUAL KEYBOARD FIX -->
 <style id="temo-bottom-nav-keyboard-position">
-html body.temo-virtual-keyboard-open #bottomNav{
-  bottom:calc(0px - var(--temo-keyboard-nav-offset,0px))!important;
+@media(max-width:700px){
+  html body.temo-mobile-keyboard-nav-fixed #bottomNav{
+    bottom:calc(0px - 100vh)!important;
+  }
 }
 </style>
 <script id="temo-bottom-nav-keyboard-position-js">
 (function(){
   const viewport=window.visualViewport;
-  const root=document.documentElement;
   const body=document.body;
   if(!body)return;
   let baselineHeight=viewport?viewport.height:window.innerHeight;
-
-  function sync(){
-    const height=viewport?viewport.height:window.innerHeight;
-    const top=viewport?viewport.offsetTop:0;
-    const offset=Math.round(baselineHeight-height-top);
-    if(offset>120){
-      body.classList.add('temo-virtual-keyboard-open');
-      root.style.setProperty('--temo-keyboard-nav-offset',offset+'px');
-    }else{
-      body.classList.remove('temo-virtual-keyboard-open');
-      root.style.removeProperty('--temo-keyboard-nav-offset');
-      baselineHeight=Math.max(240,height+top);
-    }
-  }
 
   function isEditable(el){
     if(!el||!el.matches)return false;
@@ -8265,15 +8252,26 @@ html body.temo-virtual-keyboard-open #bottomNav{
     if(!el.matches('input'))return false;
     return !['button','submit','reset','checkbox','radio','range','color','date','time','month','week','file','hidden'].includes((el.type||'text').toLowerCase());
   }
+  function sync(){
+    const height=viewport?viewport.height:window.innerHeight;
+    const top=viewport?viewport.offsetTop:0;
+    if(body.classList.contains('temo-mobile-keyboard-nav-fixed')){
+      if(height+top>=baselineHeight-100){
+        body.classList.remove('temo-mobile-keyboard-nav-fixed');
+        baselineHeight=Math.max(240,height+top);
+      }
+      return;
+    }
+    if(height+top>baselineHeight-100)baselineHeight=Math.max(240,height+top);
+  }
 
   document.addEventListener('focusin',function(event){
-    if(isEditable(event.target)){
-      if(viewport)baselineHeight=Math.max(baselineHeight,viewport.height+viewport.offsetTop);
-      else baselineHeight=Math.max(baselineHeight,window.innerHeight);
-      setTimeout(sync,80);
-    }
+    if(!isEditable(event.target))return;
+    if(viewport)baselineHeight=Math.max(baselineHeight,viewport.height+viewport.offsetTop);
+    else baselineHeight=Math.max(baselineHeight,window.innerHeight);
+    body.classList.add('temo-mobile-keyboard-nav-fixed');
   });
-  document.addEventListener('focusout',function(){setTimeout(sync,180);});
+  document.addEventListener('focusout',function(){setTimeout(sync,250);});
   if(viewport){
     viewport.addEventListener('resize',sync);
     viewport.addEventListener('scroll',sync);
