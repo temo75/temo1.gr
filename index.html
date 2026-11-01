@@ -8821,3 +8821,77 @@ body>#dailyBottomControls .dailyArchiveToggle[aria-pressed="true"]{
   second.addEventListener('touchcancel',finish,{passive:true});
 })();
 </script>
+
+
+<!-- TEMO AI CHAT VISIBLE KEYBOARD LAYOUT -->
+<style id="temo-ai-chat-visible-keyboard-layout">
+@media(max-width:700px){
+  html body.temo-ai-chat-keyboard-open #aiChatModal{
+    position:fixed!important;
+    inset:var(--temo-ai-vv-top,0px) 0 auto 0!important;
+    height:var(--temo-ai-vv-height,100dvh)!important;
+    max-height:var(--temo-ai-vv-height,100dvh)!important;
+    align-items:flex-start!important;
+    justify-content:center!important;
+    padding:8px!important;
+    overflow:hidden!important;
+    box-sizing:border-box!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatBox{
+    display:flex!important;
+    flex:0 0 auto!important;
+    width:100%!important;
+    max-width:520px!important;
+    height:calc(var(--temo-ai-vv-height,100dvh) - 16px)!important;
+    max-height:calc(var(--temo-ai-vv-height,100dvh) - 16px)!important;
+    min-height:0!important;
+    margin:0!important;
+    box-sizing:border-box!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatMessages{
+    flex:1 1 0!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatInputRow{
+    flex:0 0 auto!important;
+    min-height:66px!important;
+    padding:7px!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatInput{
+    min-height:48px!important;
+    max-height:96px!important;
+    min-width:0!important;
+    flex:1 1 auto!important;
+    font-size:16px!important;
+  }
+}
+</style>
+<script id="temo-ai-chat-visible-keyboard-layout-js">
+(function(){
+  const modal=document.getElementById('aiChatModal');
+  const input=document.getElementById('aiChatInput');
+  const body=document.body,root=document.documentElement,vv=window.visualViewport;
+  if(!modal||!input||!body)return;
+  let clearTimer=0;
+  function sync(){
+    if(!modal.classList.contains('show')||document.activeElement!==input)return;
+    const height=vv?vv.height:window.innerHeight;
+    const top=vv?vv.offsetTop:0;
+    root.style.setProperty('--temo-ai-vv-height',Math.max(220,Math.round(height))+'px');
+    root.style.setProperty('--temo-ai-vv-top',Math.max(0,Math.round(top))+'px');
+    body.classList.add('temo-ai-chat-keyboard-open');
+  }
+  function clear(){
+    body.classList.remove('temo-ai-chat-keyboard-open');
+    root.style.removeProperty('--temo-ai-vv-height');
+    root.style.removeProperty('--temo-ai-vv-top');
+  }
+  input.addEventListener('focus',function(){clearTimeout(clearTimer);sync();setTimeout(sync,120);});
+  input.addEventListener('blur',function(){clearTimeout(clearTimer);clearTimer=setTimeout(clear,220);});
+  const observer=new MutationObserver(function(){if(!modal.classList.contains('show'))clear();});
+  observer.observe(modal,{attributes:true,attributeFilter:['class']});
+  if(vv){vv.addEventListener('resize',sync);vv.addEventListener('scroll',sync);}
+  window.addEventListener('resize',sync);
+})();
+</script>
