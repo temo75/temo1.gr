@@ -8776,3 +8776,48 @@ body>#dailyBottomControls .dailyArchiveToggle[aria-pressed="true"]{
   window.addEventListener('resize',sync);
 })();
 </script>
+
+
+<!-- TEMO DAILY EDITOR BACKGROUND DRAG -->
+<style id="temo-daily-editor-background-drag">
+@media(max-width:700px){
+  html body.temo-daily-editor-keyboard-open #notesPage #notesSecondPage.notes-daily-fullscreen{
+    overflow-y:auto!important;
+    touch-action:pan-y!important;
+    overscroll-behavior-y:contain!important;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyEditorPage{
+    min-height:calc(var(--temo-daily-vv-height,100dvh) + 100px)!important;
+    touch-action:pan-y!important;
+  }
+}
+</style>
+<script id="temo-daily-editor-background-drag-js">
+(function(){
+  const second=document.getElementById('notesSecondPage');
+  const body=document.body;
+  if(!second||!body)return;
+  let startY=0,startX=0,startScroll=0,dragging=false,tracking=false;
+  function editableTarget(target){
+    return !!(target&&target.closest&&target.closest('textarea,input,select,button,[contenteditable="true"]'));
+  }
+  second.addEventListener('touchstart',function(event){
+    if(!body.classList.contains('temo-daily-editor-keyboard-open')||!event.touches||event.touches.length!==1)return;
+    if(editableTarget(event.target)){tracking=false;return;}
+    const touch=event.touches[0];
+    startY=touch.clientY;startX=touch.clientX;startScroll=second.scrollTop;
+    dragging=false;tracking=true;
+  },{passive:true});
+  second.addEventListener('touchmove',function(event){
+    if(!tracking||!event.touches||event.touches.length!==1)return;
+    const touch=event.touches[0],dx=touch.clientX-startX,dy=touch.clientY-startY;
+    if(!dragging&&Math.abs(dy)>7&&Math.abs(dy)>Math.abs(dx)*1.15)dragging=true;
+    if(!dragging)return;
+    if(event.cancelable)event.preventDefault();
+    second.scrollTop=startScroll-dy;
+  },{passive:false});
+  const finish=function(){tracking=false;dragging=false;};
+  second.addEventListener('touchend',finish,{passive:true});
+  second.addEventListener('touchcancel',finish,{passive:true});
+})();
+</script>
