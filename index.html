@@ -8403,3 +8403,47 @@ body>#notesArchiveToggle{
   }
 }
 </style>
+
+
+<!-- TEMO NOTES ARCHIVE BUTTON POLISH -->
+<style id="temo-notes-archive-button-polish">
+body>#notesArchiveToggle{
+  position:fixed!important;
+  right:14px!important;
+  left:auto!important;
+  top:auto!important;
+  bottom:calc(72px + env(safe-area-inset-bottom,0px))!important;
+  z-index:2147483646!important;
+  display:block;
+  width:auto!important;
+  max-width:calc(100vw - 28px)!important;
+  min-height:46px!important;
+  height:auto!important;
+  margin:0!important;
+  padding:10px 16px!important;
+  appearance:none!important;
+  -webkit-appearance:none!important;
+  border:1px solid #ff8a3d!important;
+  border-radius:15px!important;
+  background:linear-gradient(145deg,rgba(55,30,24,.98),rgba(14,27,36,.98))!important;
+  color:#fff!important;
+  font:700 14px/1.2 Arial,sans-serif!important;
+  letter-spacing:.1px;
+  text-align:center;
+  white-space:normal;
+  box-shadow:0 0 7px rgba(255,87,48,.72),0 0 18px rgba(255,87,48,.35),inset 0 1px 0 rgba(255,255,255,.12)!important;
+  text-shadow:0 0 7px rgba(255,156,72,.45);
+  cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:transform .15s ease,box-shadow .15s ease,filter .15s ease;
+}
+body>#notesArchiveToggle:active{
+  transform:scale(.96);
+  filter:brightness(1.15);
+  box-shadow:0 0 10px rgba(255,87,48,.9),0 0 22px rgba(255,87,48,.48),inset 0 1px 0 rgba(255,255,255,.12)!important;
+}
+body>#notesArchiveToggle:focus-visible{
+  outline:2px solid #ffd08a!important;
+  outline-offset:3px;
+}
+</style>
