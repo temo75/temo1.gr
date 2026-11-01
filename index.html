@@ -8677,3 +8677,102 @@ body>#dailyBottomControls .dailyArchiveToggle[aria-pressed="true"]{
   width:28px!important;height:28px!important;min-width:28px!important;min-height:28px!important;
 }
 </style>
+
+
+<!-- TEMO DAILY EDITOR KEYBOARD VISIBILITY -->
+<style id="temo-daily-editor-keyboard-layout">
+@media(max-width:700px){
+  html body.temo-daily-editor-keyboard-open #notesPage #notesSecondPage.notes-daily-fullscreen{
+    inset:var(--temo-daily-vv-top,0px) 0 auto 0!important;
+    height:var(--temo-daily-vv-height,100dvh)!important;
+    max-height:var(--temo-daily-vv-height,100dvh)!important;
+    padding:calc(8px + env(safe-area-inset-top,0px)) 10px 10px!important;
+    overflow-x:hidden!important;overflow-y:auto!important;
+    -webkit-overflow-scrolling:touch;overscroll-behavior:contain;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyEditorPage{
+    min-height:0!important;height:auto!important;
+    padding:10px!important;gap:7px!important;
+    overflow:visible!important;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyEditorPage .dailyEditorHeader{
+    margin-bottom:0!important;gap:9px!important;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyEditorPage .dailyEditorHeader h2{
+    margin:0!important;font-size:18px!important;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyEditorPage .dailyEditorFieldLabel{
+    margin:2px 0 0!important;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyTitle{
+    height:48px!important;min-height:48px!important;padding:8px 11px!important;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyText{
+    flex:0 0 auto!important;
+    height:max(110px,calc(var(--temo-daily-vv-height,100dvh) - 285px))!important;
+    min-height:110px!important;
+    max-height:240px!important;
+    resize:none!important;
+    padding:10px 12px!important;
+    line-height:1.4!important;
+    overflow-y:auto!important;
+    scroll-padding-block:12px;
+  }
+  html body.temo-daily-editor-keyboard-open #notesPage #dailyEditorPage .dailySaveBtn{
+    min-height:44px!important;padding:8px 12px!important;
+  }
+}
+</style>
+<script id="temo-daily-editor-keyboard-visibility-js">
+(function(){
+  const second=document.getElementById('notesSecondPage');
+  const body=document.body;
+  const vv=window.visualViewport;
+  if(!second||!body)return;
+  let active=null,focusTimer=0;
+  function isEditorField(el){return !!(el&&el.matches&&el.matches('#notesPage #dailyTitle, #notesPage #dailyText'));}
+  function alignField(){
+    if(!active||!body.classList.contains('temo-daily-editor-keyboard-open'))return;
+    const rect=active.getBoundingClientRect();
+    const top=vv?vv.offsetTop:0;
+    const bottom=top+(vv?vv.height:window.innerHeight);
+    const margin=12;
+    let delta=0;
+    if(rect.bottom>bottom-margin)delta=rect.bottom-bottom+margin;
+    else if(rect.top<top+margin)delta=rect.top-top-margin;
+    if(delta)second.scrollTop+=delta;
+    try{active.scrollIntoView({block:'nearest',inline:'nearest'});}catch(e){}
+  }
+  function sync(){
+    if(!active||!body.classList.contains('temo-daily-editor-keyboard-open'))return;
+    const height=vv?vv.height:window.innerHeight;
+    const top=vv?vv.offsetTop:0;
+    second.style.setProperty('--temo-daily-vv-height',Math.max(180,Math.round(height))+'px');
+    second.style.setProperty('--temo-daily-vv-top',Math.max(0,Math.round(top))+'px');
+    requestAnimationFrame(alignField);
+  }
+  function clear(){
+    active=null;
+    body.classList.remove('temo-daily-editor-keyboard-open');
+    second.style.removeProperty('--temo-daily-vv-height');
+    second.style.removeProperty('--temo-daily-vv-top');
+  }
+  document.addEventListener('focusin',function(event){
+    if(!isEditorField(event.target))return;
+    active=event.target;
+    body.classList.add('temo-daily-editor-keyboard-open');
+    sync();
+    clearTimeout(focusTimer);
+    focusTimer=setTimeout(function(){sync();alignField();},250);
+  });
+  document.addEventListener('focusout',function(event){
+    if(!isEditorField(event.target))return;
+    setTimeout(function(){
+      if(isEditorField(document.activeElement)){active=document.activeElement;sync();return;}
+      clear();
+    },250);
+  });
+  if(vv){vv.addEventListener('resize',sync);vv.addEventListener('scroll',sync);}
+  window.addEventListener('resize',sync);
+})();
+</script>
