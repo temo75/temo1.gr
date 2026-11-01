@@ -3839,7 +3839,7 @@ function renderDailyEntries(){
   const heading=document.getElementById('dailyListHeading');
   if(heading)heading.textContent=t(dailyTrashView?'🗑️ წაშლილები':dailyArchiveView?'📦 არქივი':'📖 დღიური ჩანაწერები');
   const archiveToggle=document.getElementById('dailyArchiveToggle');
-  if(archiveToggle){archiveToggle.textContent=t(dailyArchiveView?'📖 ჩანაწერები':'📦 არქივი');archiveToggle.setAttribute('aria-pressed',String(dailyArchiveView&&!dailyTrashView));}
+  if(archiveToggle){const archiveLabel=dailyArchiveView?'📖 ჩანაწერები':'📦 არქივი';archiveToggle.textContent=dailyArchiveView?'📖':'📦';archiveToggle.title=t(archiveLabel);archiveToggle.setAttribute('aria-label',t(archiveLabel));archiveToggle.setAttribute('aria-pressed',String(dailyArchiveView&&!dailyTrashView));}
   const trashToggle=document.getElementById('dailyTrashToggle');
   const trashCount=allEntries.filter(e=>Number(e.deletedAt||0)>0).length;
   if(trashToggle){trashToggle.textContent='🗑️';trashToggle.title=t('წაშლილები')+(trashCount?' ('+trashCount+')':'');trashToggle.setAttribute('aria-label',trashToggle.title);trashToggle.setAttribute('aria-pressed',String(dailyTrashView));}
@@ -8519,4 +8519,43 @@ body>#dailyBottomControls .dailyTrashToggle[aria-pressed="true"]{
   cursor:pointer;z-index:2;-webkit-tap-highlight-color:transparent
 }
 #notesPage .dailyTrashRestore:active{transform:translateY(-50%) scale(.92)}
+</style>
+
+
+<style id="temo-daily-controls-equal-compact">
+#notesPage #notesSecondPage .dailyBottomControls,
+body>#dailyBottomControls{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:6px!important;
+  padding:6px!important;
+}
+#notesPage #notesSecondPage .dailyBottomControls>button,
+body>#dailyBottomControls>button{
+  position:static!important;inset:auto!important;
+  display:grid!important;place-items:center!important;
+  width:100%!important;min-width:0!important;
+  height:40px!important;min-height:40px!important;
+  margin:0!important;padding:0!important;
+  border:1px solid #ff8a3d!important;border-radius:11px!important;
+  background:linear-gradient(145deg,#182a35,#0b1720)!important;
+  color:#fff!important;font-size:20px!important;line-height:1!important;
+  box-shadow:0 0 7px rgba(255,138,61,.22)!important;
+  touch-action:manipulation;-webkit-tap-highlight-color:transparent;
+}
+#notesPage #notesSecondPage .dailyBottomControls>button:active,
+body>#dailyBottomControls>button:active{transform:scale(.95)!important}
+#notesPage #notesSecondPage .dailyBottomControls .dailyArchiveToggle,
+body>#dailyBottomControls .dailyArchiveToggle{
+  white-space:nowrap!important;font-size:21px!important;
+}
+#notesPage #notesSecondPage .dailyBottomControls .dailyTrashToggle,
+body>#dailyBottomControls .dailyTrashToggle{color:#ff9aa1!important}
+#notesPage #notesSecondPage .dailyBottomControls .dailyTrashToggle[aria-pressed="true"],
+body>#dailyBottomControls .dailyTrashToggle[aria-pressed="true"]{
+  border-color:#ff5b66!important;box-shadow:0 0 8px rgba(255,65,80,.58)!important;
+}
+#notesPage #notesSecondPage .dailyBottomControls .dailyArchiveToggle[aria-pressed="true"],
+body>#dailyBottomControls .dailyArchiveToggle[aria-pressed="true"]{
+  box-shadow:0 0 8px rgba(255,138,61,.68)!important;
+}
 </style>
