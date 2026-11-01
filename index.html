@@ -8230,3 +8230,54 @@ body>#notesArchiveToggle{
   window.addEventListener('pageshow',mountArchiveButton);
 })();
 </script>
+
+<!-- TEMO BOTTOM NAV VIRTUAL KEYBOARD FIX -->
+<style id="temo-bottom-nav-keyboard-position">
+html body.temo-virtual-keyboard-open #bottomNav{
+  bottom:calc(0px - var(--temo-keyboard-nav-offset,0px))!important;
+}
+</style>
+<script id="temo-bottom-nav-keyboard-position-js">
+(function(){
+  const viewport=window.visualViewport;
+  const root=document.documentElement;
+  const body=document.body;
+  if(!body)return;
+  let baselineHeight=viewport?viewport.height:window.innerHeight;
+
+  function sync(){
+    const height=viewport?viewport.height:window.innerHeight;
+    const top=viewport?viewport.offsetTop:0;
+    const offset=Math.round(baselineHeight-height-top);
+    if(offset>120){
+      body.classList.add('temo-virtual-keyboard-open');
+      root.style.setProperty('--temo-keyboard-nav-offset',offset+'px');
+    }else{
+      body.classList.remove('temo-virtual-keyboard-open');
+      root.style.removeProperty('--temo-keyboard-nav-offset');
+      baselineHeight=Math.max(240,height+top);
+    }
+  }
+
+  function isEditable(el){
+    if(!el||!el.matches)return false;
+    if(el.matches('textarea,[contenteditable="true"]'))return true;
+    if(!el.matches('input'))return false;
+    return !['button','submit','reset','checkbox','radio','range','color','date','time','month','week','file','hidden'].includes((el.type||'text').toLowerCase());
+  }
+
+  document.addEventListener('focusin',function(event){
+    if(isEditable(event.target)){
+      if(viewport)baselineHeight=Math.max(baselineHeight,viewport.height+viewport.offsetTop);
+      else baselineHeight=Math.max(baselineHeight,window.innerHeight);
+      setTimeout(sync,80);
+    }
+  });
+  document.addEventListener('focusout',function(){setTimeout(sync,180);});
+  if(viewport){
+    viewport.addEventListener('resize',sync);
+    viewport.addEventListener('scroll',sync);
+  }
+  window.addEventListener('resize',sync);
+})();
+</script>
