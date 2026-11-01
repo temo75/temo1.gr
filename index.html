@@ -2738,7 +2738,7 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 </div>
 <div class="aiChatModal" id="aiChatModal" onclick="if(event.target===this)closeAIChat()">
   <div class="aiChatBox" role="dialog" aria-modal="true" aria-labelledby="aiChatTitle">
-    <div class="aiChatHeader"><h2 id="aiChatTitle">🤖 TEMO AI</h2><button type="button" class="aiChatClose" onclick="closeAIChat()" aria-label="დახურვა">✕</button></div>
+    <div class="aiChatHeader"><h2 id="aiChatTitle">🤖 TEMO AI</h2><div class="aiChatHeaderActions"><button type="button" id="aiChatVoiceToggle" class="aiChatVoiceToggle" aria-pressed="false" onclick="toggleTEMOAIVoice()">🔇 ხმა გამორთულია</button><button type="button" class="aiChatClose" onclick="closeAIChat()" aria-label="დახურვა">✕</button></div></div>
     <div class="aiChatMessages" id="aiChatMessages"></div>
     <div class="aiChatInputRow"><textarea id="aiChatInput" class="aiChatInput" rows="1" placeholder="ჰკითხე"></textarea><button type="button" id="aiChatMic" class="aiChatMic" onclick="toggleTEMOAIListening()" aria-label="მიკროფონი">🎤</button><button type="button" id="aiChatSend" class="aiChatSend" onclick="sendAIMessage()" aria-label="გაგზავნა">➤</button></div>
   </div>
@@ -4923,7 +4923,7 @@ async function sendAIMessage(){
     const status=Array.from(document.querySelectorAll('#aiChatMessages .aiMsg.system')).find(x=>x.textContent.includes(aiLangText('connecting')));
     if(status)status.remove();
     aiAddMessage('assistant',reply);
-    aiSpeakReply(reply);
+    if(isTEMOAIVoiceEnabled())aiSpeakReply(reply);
     if(data.memoryRequest&&data.memoryText){
       const ok=await saveAIMemory(data.memoryText);
       aiAddMessage('system',ok?'🧠 '+(language==='el'?'Η μνήμη αποθηκεύτηκε.':language==='en'?'🧠 Memory saved.':'🧠 მეხსიერებაში შევინახე.'):'⚠️ '+(language==='el'?'Η μνήμη δεν αποθηκεύτηκε.':language==='en'?'Memory could not be saved.':'მეხსიერებაში შენახვა ვერ მოხერხდა.'));
@@ -8973,5 +8973,63 @@ body>#dailyBottomControls .dailyArchiveToggle[aria-pressed="true"]{
   window.addEventListener('resize',sync);
   new MutationObserver(function(){if(!modal.classList.contains('show'))clear();})
     .observe(modal,{attributes:true,attributeFilter:['class']});
+})();
+</script>
+
+<!-- TEMO AI OPT-IN VOICE -->
+<style id="temo-ai-opt-in-voice-style">
+#aiChatModal .aiChatHeaderActions{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+#aiChatModal .aiChatVoiceToggle{
+  min-height:36px;padding:6px 9px;border:1px solid #315061;border-radius:11px;
+  background:#10232f;color:#d5e7ed;font-size:12px;font-weight:700;line-height:1.2;
+  white-space:nowrap;cursor:pointer;box-shadow:0 0 5px rgba(49,80,97,.25);
+  -webkit-tap-highlight-color:transparent
+}
+#aiChatModal .aiChatVoiceToggle[aria-pressed="true"]{
+  border-color:#00e5ff;background:#10303a;color:#fff;
+  box-shadow:0 0 7px rgba(0,229,255,.72),inset 0 0 8px rgba(0,229,255,.12)
+}
+#aiChatModal .aiChatVoiceToggle:active{transform:scale(.96)}
+@media(max-width:380px){
+  #aiChatModal .aiChatHeader{gap:5px;padding-left:9px;padding-right:8px}
+  #aiChatModal .aiChatHeaderActions{gap:5px}
+  #aiChatModal .aiChatVoiceToggle{font-size:10px;padding:5px 6px}
+  #aiChatModal .aiChatClose{width:34px;height:34px;flex:0 0 34px}
+}
+</style>
+<script id="temo-ai-opt-in-voice-js">
+(function(){
+  const KEY='temoAIVoiceRepliesEnabled';
+  window.isTEMOAIVoiceEnabled=function(){
+    try{return localStorage.getItem(KEY)==='true'}catch(e){return false}
+  };
+  window.syncTEMOAIVoiceToggle=function(){
+    const button=document.getElementById('aiChatVoiceToggle');
+    if(!button)return;
+    const enabled=window.isTEMOAIVoiceEnabled();
+    const lang=typeof aiCurrentLanguage==='function'?aiCurrentLanguage():'ka';
+    const labels=lang==='el'
+      ?{on:'🔊 Ομιλία ενεργή',off:'🔇 Ομιλία ανενεργή'}
+      :lang==='en'
+        ?{on:'🔊 Voice on',off:'🔇 Voice off'}
+        :{on:'🔊 ხმა ჩართულია',off:'🔇 ხმა გამორთულია'};
+    button.textContent=enabled?labels.on:labels.off;
+    button.setAttribute('aria-pressed',String(enabled));
+    button.setAttribute('aria-label',enabled?labels.on:labels.off);
+    button.title=enabled?labels.on:labels.off;
+  };
+  window.toggleTEMOAIVoice=function(){
+    const enabled=!window.isTEMOAIVoiceEnabled();
+    try{localStorage.setItem(KEY,String(enabled))}catch(e){}
+    if(!enabled&&'speechSynthesis'in window){
+      try{window.speechSynthesis.cancel();temoAISpeechRunId++}catch(e){}
+    }
+    window.syncTEMOAIVoiceToggle();
+  };
+  document.addEventListener('DOMContentLoaded',window.syncTEMOAIVoiceToggle);
+  document.addEventListener('click',function(event){
+    if(event.target&&event.target.closest&&event.target.closest('#aiChatVoiceToggle'))return;
+    if(event.target&&event.target.closest&&event.target.closest('#aiChatModal .aiChatHeader'))window.syncTEMOAIVoiceToggle();
+  });
 })();
 </script>
