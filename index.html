@@ -11,7 +11,7 @@
 </script>
 <meta name="google-site-verification" content="vPkaq57GkbGCufy6hasdsXrRhcvq6gQ_SXYJk8t7JG0" />
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=overlays-content">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-visual">
 <style id="temo-auth-boot-style">
 html.auth-booting body{visibility:hidden!important}
 html.auth-booting{background:#071117!important}
@@ -8895,5 +8895,83 @@ body>#dailyBottomControls .dailyArchiveToggle[aria-pressed="true"]{
   observer.observe(modal,{attributes:true,attributeFilter:['class']});
   if(vv){vv.addEventListener('resize',sync);vv.addEventListener('scroll',sync);}
   window.addEventListener('resize',sync);
+})();
+</script>
+
+<!-- TEMO AI KEYBOARD VIEWPORT FIX -->
+<style id="temo-ai-keyboard-viewport-fix">
+@media(max-width:700px){
+  html body.temo-ai-chat-keyboard-open #aiChatModal{
+    position:fixed!important;
+    top:var(--temo-ai-vv-top,0px)!important;
+    right:0!important;bottom:auto!important;left:0!important;
+    width:100%!important;
+    height:var(--temo-ai-vv-height,100dvh)!important;
+    max-height:var(--temo-ai-vv-height,100dvh)!important;
+    padding:6px!important;
+    align-items:stretch!important;justify-content:flex-start!important;
+    overflow:hidden!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatBox{
+    width:100%!important;max-width:520px!important;
+    height:100%!important;max-height:100%!important;min-height:0!important;
+    margin:0 auto!important;flex:1 1 auto!important;
+    display:flex!important;flex-direction:column!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatHeader{flex:0 0 auto!important}
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatMessages{
+    flex:1 1 0!important;min-height:0!important;overflow-y:auto!important;
+    overscroll-behavior:contain!important;-webkit-overflow-scrolling:touch!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatInputRow{
+    position:relative!important;flex:0 0 auto!important;min-height:62px!important;
+    padding:6px!important; padding-bottom:max(6px,env(safe-area-inset-bottom,0px))!important;
+  }
+  html body.temo-ai-chat-keyboard-open #aiChatModal .aiChatInput{
+    min-height:46px!important;max-height:100px!important;flex:1 1 auto!important;
+    background:#fff!important;color:#000!important;-webkit-text-fill-color:#000!important;
+    caret-color:#000!important;font-size:16px!important;
+  }
+}
+</style>
+<script id="temo-ai-keyboard-viewport-fix-js">
+(function(){
+  const modal=document.getElementById('aiChatModal');
+  const input=document.getElementById('aiChatInput');
+  const root=document.documentElement,body=document.body,vv=window.visualViewport;
+  if(!modal||!input||!body)return;
+  let retryTimer=0;
+  function sync(){
+    if(!modal.classList.contains('show')||!input.matches(':focus'))return;
+    const h=vv?vv.height:window.innerHeight;
+    const top=vv?vv.offsetTop:0;
+    root.style.setProperty('--temo-ai-vv-height',Math.max(180,Math.round(h))+'px');
+    root.style.setProperty('--temo-ai-vv-top',Math.max(0,Math.round(top))+'px');
+    body.classList.add('temo-ai-chat-keyboard-open');
+    requestAnimationFrame(function(){
+      const box=modal.querySelector('.aiChatBox');
+      const row=modal.querySelector('.aiChatInputRow');
+      if(box&&row)row.scrollIntoView({block:'end',inline:'nearest'});
+    });
+  }
+  function start(){
+    clearTimeout(retryTimer);
+    body.classList.add('temo-ai-chat-keyboard-open');
+    [0,80,180,350,600].forEach(delay=>setTimeout(sync,delay));
+    retryTimer=setTimeout(sync,900);
+  }
+  function clear(){
+    clearTimeout(retryTimer);
+    body.classList.remove('temo-ai-chat-keyboard-open');
+    root.style.removeProperty('--temo-ai-vv-height');
+    root.style.removeProperty('--temo-ai-vv-top');
+  }
+  input.addEventListener('focus',start);
+  input.addEventListener('blur',function(){setTimeout(function(){if(!input.matches(':focus'))clear();},250);});
+  modal.addEventListener('focusin',function(e){if(e.target===input)start();});
+  if(vv){vv.addEventListener('resize',sync);vv.addEventListener('scroll',sync);}
+  window.addEventListener('resize',sync);
+  new MutationObserver(function(){if(!modal.classList.contains('show'))clear();})
+    .observe(modal,{attributes:true,attributeFilter:['class']});
 })();
 </script>
