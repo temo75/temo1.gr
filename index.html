@@ -3862,6 +3862,7 @@ function renderDailyEntries(){
     const title=document.createElement('div');title.className='dailyCardTitle';title.textContent=e.title||'ჩანაწერი';card.appendChild(title);
     const text=document.createElement('div');text.className='dailyCardText';text.textContent=e.text;card.appendChild(text);
     if(e.createdAt){const date=document.createElement('div');date.className='dailyCardDate';date.textContent=new Date(e.createdAt).toLocaleDateString()+(e.deletedAt?' · წაშლილია '+new Date(e.deletedAt).toLocaleDateString():'');card.appendChild(date);}
+    if(Number(e.deletedAt||0)>0){const restore=document.createElement('button');restore.type='button';restore.className='dailyTrashRestore';restore.textContent='↩';restore.title='ჩანაწერის აღდგენა';restore.setAttribute('aria-label','ჩანაწერის აღდგენა');restore.addEventListener('pointerdown',ev=>ev.stopPropagation());restore.addEventListener('click',ev=>{ev.preventDefault();ev.stopPropagation();dailyActionId=String(e.id);toggleDailyEntryArchive();});card.appendChild(restore);}
     let longPressed=false;
     const startPress=ev=>{if(ev.pointerType==='mouse'&&ev.button!==0)return;longPressed=false;clearTimeout(dailyLongPressTimer);dailyLongPressTimer=setTimeout(()=>{longPressed=true;openDailyActionMenu(e.id);},650);};
     const finishPress=()=>{clearTimeout(dailyLongPressTimer);if(!longPressed)openDailyViewModal(e.id);};
@@ -8485,7 +8486,8 @@ async function deleteArchivedNote(id){
 
 
 <style id="temo-daily-trash-retention-layout">
-#notesPage #notesSecondPage .dailyBottomControls{grid-template-columns:44px minmax(0,1fr) 44px 44px!important;gap:6px!important}
+#notesPage #notesSecondPage .dailyBottomControls,
+body>#dailyBottomControls{grid-template-columns:44px minmax(0,1fr) 44px 44px!important;gap:6px!important}
 #notesPage #notesSecondPage .dailyBottomControls .dailyTrashToggle,
 body>#dailyBottomControls .dailyTrashToggle{
   position:static!important;inset:auto!important;display:grid!important;place-items:center;
@@ -8500,4 +8502,17 @@ body>#dailyBottomControls .dailyTrashToggle[aria-pressed="true"]{
   border-color:#ff5b66!important;box-shadow:0 0 9px rgba(255,65,80,.65),inset 0 0 8px rgba(255,65,80,.18)!important;
 }
 #notesPage .dailyTrashedCard{border-color:rgba(255,91,102,.58)!important}
+</style>
+
+
+<style id="temo-daily-trash-restore-card">
+#notesPage .dailyTrashedCard{position:relative;padding-right:58px!important}
+#notesPage .dailyTrashRestore{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  display:grid;place-items:center;width:34px;height:34px;min-width:34px;min-height:34px;
+  padding:0;border:1px solid #315061;border-radius:10px;background:#10232f;color:#d8f5ff;
+  font-size:20px;font-weight:800;line-height:1;box-shadow:0 0 7px rgba(41,153,223,.25);
+  cursor:pointer;z-index:2;-webkit-tap-highlight-color:transparent
+}
+#notesPage .dailyTrashRestore:active{transform:translateY(-50%) scale(.92)}
 </style>
