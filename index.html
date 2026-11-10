@@ -7826,6 +7826,28 @@ body.temo-pharmacy-panel-open{overflow:hidden}
 @media(prefers-reduced-motion:reduce){
   #temoPharmacyPanel,#temoPharmacySheet{transition:none!important}
 }
+#temoCurrencyPanel{
+  position:fixed;inset:0;z-index:2147483647;background:rgba(0,0,0,.48);
+  opacity:0;visibility:hidden;transition:opacity .28s ease,visibility .28s ease;
+}
+#temoCurrencyPanel.open{opacity:1;visibility:visible}
+#temoCurrencySheet{
+  position:absolute;inset:0;display:flex;flex-direction:column;overflow:hidden;
+  background:#071117;transform:translateX(100%);transition:transform .32s ease;will-change:transform;
+}
+#temoCurrencyPanel.open #temoCurrencySheet{transform:translateX(0)}
+#temoCurrencyHeader{
+  position:relative;z-index:2;flex:0 0 auto;min-height:54px;display:flex;align-items:center;gap:12px;
+  padding:7px 12px;background:#0d1b24;color:#fff;border-bottom:1px solid #29404c;
+  box-shadow:0 4px 14px rgba(0,0,0,.22);font-weight:700;font-size:16px;
+}
+#temoCurrencyBack{
+  min-width:42px;min-height:38px;border:1px solid #315061;border-radius:10px;
+  background:#142b38;color:#fff;font-size:15px;cursor:pointer;
+}
+#temoCurrencyFrame{display:block;flex:1 1 auto;min-width:0;min-height:0;width:100%;height:100%;border:0;background:#fff}
+body.temo-currency-panel-open{overflow:hidden}
+@media(prefers-reduced-motion:reduce){#temoCurrencyPanel,#temoCurrencySheet{transition:none!important}}
 </style>
 <script id="temo-admin-slide-menu-v1">
 (function(){
@@ -7865,6 +7887,24 @@ body.temo-pharmacy-panel-open{overflow:hidden}
     panel.setAttribute('aria-hidden','true');
     document.body.classList.remove('temo-pharmacy-panel-open');
   }
+  function openCurrencyPanel(){
+    var panel=document.getElementById('temoCurrencyPanel');
+    if(!panel)return;
+    var frame=panel.querySelector('#temoCurrencyFrame');
+    if(frame)frame.src='https://currency.boom.ge/?_temo_refresh='+Date.now();
+    panel.classList.add('open');
+    panel.setAttribute('aria-hidden','false');
+    document.body.classList.add('temo-currency-panel-open');
+    var back=panel.querySelector('#temoCurrencyBack');
+    if(back)back.focus();
+  }
+  function closeCurrencyPanel(){
+    var panel=document.getElementById('temoCurrencyPanel');
+    if(!panel)return;
+    panel.classList.remove('open');
+    panel.setAttribute('aria-hidden','true');
+    document.body.classList.remove('temo-currency-panel-open');
+  }
   function setup(){
     if(initialized||!document.body)return;
     initialized=true;
@@ -7872,12 +7912,16 @@ body.temo-pharmacy-panel-open{overflow:hidden}
     toggle.id='temoAdminMenuToggle';toggle.type='button';toggle.textContent='☰';
     toggle.setAttribute('aria-label','მენიუს გახსნა');toggle.setAttribute('aria-expanded','false');
     var overlay=document.createElement('div');overlay.id='temoAdminMenuOverlay';
-    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><div class="temoAdminMenuItems"><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem temoAdminReminderShortcut" data-action="openReminder">🔔 შეტყობინება</button><button type="button" class="temoAdminMenuItem" data-action="openPharmacies">💊 აფთიაქები</button><button type="button" class="temoAdminMenuItem temoAdminMenuLogout" data-action="logout" aria-label="გამოსვლა">🚪 გამოსვლა</button></div></aside>`;
+    overlay.innerHTML=`<aside id="temoAdminMenuDrawer" aria-label="ადმინის მენიუ" role="dialog" aria-modal="true"><div class="temoAdminMenuHead"><span>${typeof window.t === 'function' ? window.t('მენიუ') : 'მენიუ'}</span><button type="button" class="temoAdminMenuClose" aria-label="მენიუს დახურვა">×</button></div><div class="temoAdminMenuItems"><button type="button" class="temoAdminMenuItem" data-action="goHome">🏠 მთავარი</button><button type="button" class="temoAdminMenuItem" data-action="goSettings">⚙️ პარამეტრები</button><button type="button" class="temoAdminMenuItem" data-action="goUsers">👥 მომხმარებლები</button><button type="button" class="temoAdminMenuItem" data-action="goWallet">💰 ფული</button><button type="button" class="temoAdminMenuItem" data-action="goNotes">📖 ჩანაწერები</button><button type="button" class="temoAdminMenuItem" data-action="openBills">💶 ჩემი გადასახადები</button><button type="button" class="temoAdminMenuItem temoAdminReminderShortcut" data-action="openReminder">🔔 შეტყობინება</button><button type="button" class="temoAdminMenuItem" data-action="openPharmacies">💊 აფთიაქები</button><button type="button" class="temoAdminMenuItem" data-action="openCurrency">💱 ვალუტის კურსი</button><button type="button" class="temoAdminMenuItem temoAdminMenuLogout" data-action="logout" aria-label="გამოსვლა">🚪 გამოსვლა</button></div></aside>`;
     var bottomNav=document.getElementById("bottomNav");if(bottomNav){toggle.className="adminMenuNavButton";bottomNav.insertBefore(toggle,bottomNav.firstChild);}else{document.body.appendChild(toggle);}document.body.appendChild(overlay);
     var pharmacyPanel=document.createElement('div');pharmacyPanel.id='temoPharmacyPanel';pharmacyPanel.setAttribute('aria-hidden','true');
     pharmacyPanel.innerHTML='<section id="temoPharmacySheet" role="dialog" aria-modal="true" aria-label="აფთიაქები"><header id="temoPharmacyHeader"><button type="button" id="temoPharmacyBack" aria-label="უკან დაბრუნება">← უკან</button><span>💊 აფთიაქები</span></header><iframe id="temoPharmacyFrame" title="აფთიაქები" src="about:blank" data-src="https://temo75.github.io/Kreta-/pharmacy.html" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>';
     document.body.appendChild(pharmacyPanel);
     pharmacyPanel.addEventListener('click',function(e){if(e.target===pharmacyPanel||e.target.closest('#temoPharmacyBack'))closePharmacyPanel();});
+    var currencyPanel=document.createElement('div');currencyPanel.id='temoCurrencyPanel';currencyPanel.setAttribute('aria-hidden','true');
+    currencyPanel.innerHTML='<section id="temoCurrencySheet" role="dialog" aria-modal="true" aria-label="ვალუტის კურსი"><header id="temoCurrencyHeader"><button type="button" id="temoCurrencyBack" aria-label="დახურვა">← უკან</button><span>💱 ვალუტის კურსი</span></header><iframe id="temoCurrencyFrame" title="ვალუტის კურსი" src="about:blank" loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></section>';
+    document.body.appendChild(currencyPanel);
+    currencyPanel.addEventListener('click',function(e){if(e.target===currencyPanel||e.target.closest('#temoCurrencyBack'))closeCurrencyPanel();});
     toggle.addEventListener('click',function(){
       if(overlay.classList.contains('open')){
         closeMenu();
@@ -7887,8 +7931,8 @@ body.temo-pharmacy-panel-open{overflow:hidden}
       }
     });
     overlay.addEventListener('click',function(e){if(e.target===overlay||e.target.closest('.temoAdminMenuClose'))closeMenu();});
-    overlay.querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){var action=b.getAttribute('data-action');if(action==='openBills'){closeMenu();location.href='./bills.html';return;}if(action==='openReminder'){closeMenu();if(typeof window.goNotes==='function')window.goNotes();if(typeof window.openNoteModal==='function')window.openNoteModal();return;}if(action==='openPharmacies'){closeMenu();openPharmacyPanel();return;}go(action);});});
-    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closePharmacyPanel();closeMenu();}});
+    overlay.querySelectorAll('[data-action]').forEach(function(b){b.addEventListener('click',function(){var action=b.getAttribute('data-action');if(action==='openBills'){closeMenu();location.href='./bills.html';return;}if(action==='openReminder'){closeMenu();if(typeof window.goNotes==='function')window.goNotes();if(typeof window.openNoteModal==='function')window.openNoteModal();return;}if(action==='openPharmacies'){closeMenu();openPharmacyPanel();return;}if(action==='openCurrency'){closeMenu();openCurrencyPanel();return;}go(action);});});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeCurrencyPanel();closePharmacyPanel();closeMenu();}});
     function sync(){
       var admin=isAdmin();
       toggle.style.display='flex';
