@@ -7917,8 +7917,7 @@ body.temo-currency-panel-open{overflow:hidden}
       var trend=diff>0?'up':diff<0?'down':'same';
       var arrow=diff>0?'↑':diff<0?'↓':'—';
       var rate=Number(r.rate).toFixed(4);
-      var quantity=Number(r.quantity||1);
-      return '<tr><td><div class="currencyName"><span class="currencyFlag">'+currencyFlags[code]+'</span><span>'+currencyNames[code]+'</span></div></td><td class="currencyRate">'+(quantity>1?quantity+' ':'')+rate+'</td><td class="temoCurrencyChange '+trend+'">'+arrow+'</td></tr>';
+      return '<tr><td><div class="currencyName"><span class="currencyFlag">'+currencyFlags[code]+'</span><span>'+currencyNames[code]+'</span></div></td><td class="currencyRate">'+rate+'</td><td class="temoCurrencyChange '+trend+'">'+arrow+'</td></tr>';
     }).join('');
     host.innerHTML='<div class="temoCurrencyDate">კურსი • '+dateText+'</div><table class="temoCurrencyTable"><thead><tr><th>ვალუტა</th><th>კურსი (₾)</th><th style="text-align:center">ცვლილება</th></tr></thead><tbody>'+rows+'</tbody></table><div id="temoCurrencyStatus">მონაცემები: საქართველოს ეროვნული ბანკი</div><button id="temoCurrencyRefresh" type="button">↻ განახლება</button>';
     host.querySelector('#temoCurrencyRefresh')?.addEventListener('click',loadCurrencyRates);
