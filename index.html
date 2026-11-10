@@ -7887,14 +7887,22 @@ body.temo-currency-panel-open{overflow:hidden}
     panel.setAttribute('aria-hidden','true');
     document.body.classList.remove('temo-pharmacy-panel-open');
   }
+  var currencyRefreshTimer=null;
+  function refreshCurrencyFrame(){
+    var frame=document.getElementById('temoCurrencyFrame');
+    if(frame)frame.src='https://currency.boom.ge/?_temo_refresh='+Date.now();
+  }
   function openCurrencyPanel(){
     var panel=document.getElementById('temoCurrencyPanel');
     if(!panel)return;
-    var frame=panel.querySelector('#temoCurrencyFrame');
-    if(frame)frame.src='https://currency.boom.ge/?_temo_refresh='+Date.now();
+    refreshCurrencyFrame();
     panel.classList.add('open');
     panel.setAttribute('aria-hidden','false');
     document.body.classList.add('temo-currency-panel-open');
+    if(currencyRefreshTimer)clearInterval(currencyRefreshTimer);
+    currencyRefreshTimer=setInterval(function(){
+      if(document.visibilityState==='visible'&&panel.classList.contains('open'))refreshCurrencyFrame();
+    },5*60*1000);
     var back=panel.querySelector('#temoCurrencyBack');
     if(back)back.focus();
   }
@@ -7904,6 +7912,7 @@ body.temo-currency-panel-open{overflow:hidden}
     panel.classList.remove('open');
     panel.setAttribute('aria-hidden','true');
     document.body.classList.remove('temo-currency-panel-open');
+    if(currencyRefreshTimer){clearInterval(currencyRefreshTimer);currencyRefreshTimer=null;}
   }
   function setup(){
     if(initialized||!document.body)return;
