@@ -7854,7 +7854,7 @@ body.temo-pharmacy-panel-open{overflow:hidden}
 .temoCurrencyTable .currencyName{display:flex;align-items:center;gap:11px}
 .temoCurrencyTable .currencyFlag{font-size:25px;line-height:1}
 .temoCurrencyTable .currencyRate{font-weight:700;color:#eef7f7;font-variant-numeric:tabular-nums;white-space:nowrap}
-.temoCurrencyChange{font-size:20px;font-weight:bold;text-align:center}
+.temoCurrencyChange{font-size:34px;font-weight:900;text-align:center;line-height:1}
 .temoCurrencyChange.up{color:#49d86a}.temoCurrencyChange.down{color:#ef5b67}.temoCurrencyChange.same{color:#71838c}
 #temoCurrencyStatus{padding:18px;text-align:center;color:#9fb0b8}
 #temoCurrencyRefresh{display:block;margin:14px auto 0;padding:10px 16px;border:1px solid #2999df;border-radius:11px;background:#102b3b;color:#eef7f7;box-shadow:0 0 9px rgba(41,153,223,.35)}
@@ -7919,8 +7919,7 @@ body.temo-currency-panel-open{overflow:hidden}
       var rate=Number(r.rate).toFixed(4);
       return '<tr><td><div class="currencyName"><span class="currencyFlag">'+currencyFlags[code]+'</span><span>'+currencyNames[code]+'</span></div></td><td class="currencyRate">'+rate+'</td><td class="temoCurrencyChange '+trend+'">'+arrow+'</td></tr>';
     }).join('');
-    host.innerHTML='<div class="temoCurrencyDate">კურსი • '+dateText+'</div><table class="temoCurrencyTable"><thead><tr><th>ვალუტა</th><th>კურსი (₾)</th><th style="text-align:center">ცვლილება</th></tr></thead><tbody>'+rows+'</tbody></table><div id="temoCurrencyStatus">მონაცემები: საქართველოს ეროვნული ბანკი</div><button id="temoCurrencyRefresh" type="button">↻ განახლება</button>';
-    host.querySelector('#temoCurrencyRefresh')?.addEventListener('click',loadCurrencyRates);
+    host.innerHTML='<div class="temoCurrencyDate">კურსი • '+dateText+'</div><table class="temoCurrencyTable"><thead><tr><th>ვალუტა</th><th>კურსი (₾)</th><th style="text-align:center">ცვლილება</th></tr></thead><tbody>'+rows+'</tbody></table><div id="temoCurrencyStatus">მონაცემები: საქართველოს ეროვნული ბანკი</div>';
   }
   async function loadCurrencyRates(){
     var host=document.getElementById('temoCurrencyContent');
@@ -7930,8 +7929,7 @@ body.temo-currency-panel-open{overflow:hidden}
       if(!response.ok)throw new Error('HTTP '+response.status);
       renderCurrencyRates(await response.json());
     }catch(error){
-      if(host)host.innerHTML='<div id="temoCurrencyStatus">კურსების ჩატვირთვა ვერ მოხერხდა. სცადე ხელახლა.<br><button id="temoCurrencyRefresh" type="button">↻ განახლება</button></div>';
-      host?.querySelector('#temoCurrencyRefresh')?.addEventListener('click',loadCurrencyRates);
+      if(host)host.innerHTML='<div id="temoCurrencyStatus">კურსების ჩატვირთვა ვერ მოხერხდა. ავტომატურად ხელახლა ვცდი.</div>';
       console.warn('Currency rates load failed',error);
     }
   }
