@@ -6625,7 +6625,7 @@ function renderNotes(){
       <div class="noteTime">${noteEsc(formatNoteDate(n.date,n.time))}</div>
       <div class="noteReminder">${reminder}</div>
       <div class="noteActions">
-        <button type="button" onclick="toggleNoteDone('${noteEsc(n.id)}')">${n.done?t('↩️ აქტიური'):t('✅ შესრულდა')}</button>
+        <button type="button" onclick="toggleNoteDone('${noteEsc(n.id)}')">${n.done?'↩️':'✅'}</button>
         <button type="button" onclick="editNote('${noteEsc(n.id)}')">${t('✏️ შეცვლა')}</button>
         <button type="button" onclick="toggleNoteArchive('${noteEsc(n.id)}')">${t('📦 არქივში')}</button>
         <button type="button" class="danger" onclick="deleteNote('${noteEsc(n.id)}')">${t('🗑️ წაშლა')}</button>
