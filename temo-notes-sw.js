@@ -61,6 +61,7 @@ self.addEventListener('push', event => {
   const options = {
     body: data.body || 'შეხსენების დრო მოვიდა',
     icon: data.icon || './icon.png',
+    image: data.image || data.icon || './icon.png',
     badge: data.badge || './badge.png',
     tag: data.tag || 'temo-note-reminder',
     requireInteraction: true,
