@@ -171,7 +171,7 @@ async function runPushCron(env){
         if(!endpoint||seenEndpoints.has(endpoint))continue;
         seenEndpoints.add(endpoint);
         try{
-          const r=await sendPush(s,{title:'📖 TEMO — ჩანაწერის შეხსენება',body:String(n.text||'შეხსენების დრო მოვიდა'),icon:'https://temo75.github.io/t1/icon.png',badge:'https://temo75.github.io/t1/icon.png',tag:'temo-note-'+String(n.id||i),url:'https://temo75.github.io/t1/'},env);
+          const r=await sendPush(s,{title:'📖 TEMO',body:String(n.text||'შეხსენების დრო მოვიდა'),icon:'https://temo75.github.io/t1/icon.png',badge:'https://temo1.gr/badge.png',tag:'temo-note-'+String(n.id||i),url:'https://temo75.github.io/t1/'},env);
           if(r.ok)delivered=true;
           else if(r.status===404||r.status===410)await pfput('/pushSubscriptions/'+uk+'/'+sk,null,env);
           else console.error('TEMO push delivery failed with HTTP '+r.status);

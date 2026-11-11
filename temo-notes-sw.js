@@ -56,12 +56,12 @@ self.addEventListener('push', event => {
     };
   }
 
-  const title = data.title || '📖 TEMO — ჩანაწერის შეხსენება';
+  const title = data.title || '📖 TEMO';
 
   const options = {
     body: data.body || 'შეხსენების დრო მოვიდა',
     icon: data.icon || './icon.png',
-    badge: data.badge || './icon.png',
+    badge: data.badge || './badge.png',
     tag: data.tag || 'temo-note-reminder',
     requireInteraction: true,
     renotify: true,
