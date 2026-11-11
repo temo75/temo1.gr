@@ -8573,11 +8573,24 @@ body>#notesArchiveToggle:focus-visible{
 
 <!-- TEMO NOTE ARCHIVE/DELETE COMPACT POSITION -->
 <style id="temo-note-archive-delete-position">
-#notesPage .noteActions{align-items:center}
-#notesPage .noteActions button:nth-child(3){margin-left:auto}
+#notesPage .noteActions{
+  display:grid!important;
+  grid-template-columns:auto auto minmax(0,1fr) auto!important;
+  align-items:center;gap:7px;
+}
+#notesPage .noteActions button:nth-child(1){grid-column:1;grid-row:1}
+#notesPage .noteActions button:nth-child(2){grid-column:2;grid-row:1}
+#notesPage .noteActions button:nth-child(3){
+  grid-column:3;grid-row:2;justify-self:end;
+}
+#notesPage .noteActions button:nth-child(4){
+  grid-column:4;grid-row:2;
+}
 #notesPage .noteActions button:nth-child(3),
 #notesPage .noteActions button:nth-child(4){
-  min-height:30px;padding:4px 8px;font-size:13px;border-radius:8px
+  min-height:30px!important;height:30px!important;
+  padding:4px 8px!important;font-size:12px!important;
+  border-radius:8px!important;white-space:nowrap;
 }
 </style>
 
