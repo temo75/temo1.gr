@@ -6917,7 +6917,15 @@ function checkNoteReminders(){
     n.notifiedAt=now;changed=true;
     playNoteAlarm();
     if('Notification' in window && Notification.permission==='granted'){
-      try{new Notification('📖 TEMO — ჩანაწერის შეხსენება',{body:n.text+'\n'+formatNoteDate(n.date,n.time),tag:'temo-note-'+n.id});}catch(e){console.warn('Notification failed:',e);}
+      const title='📖 TEMO — ჩანაწერის შეხსენება';
+      const options={body:n.text+'\n'+formatNoteDate(n.date,n.time),tag:'temo-note-'+n.id,icon:'./icon.png',badge:'./badge.png',requireInteraction:true};
+      if('serviceWorker' in navigator){
+        navigator.serviceWorker.ready
+          .then(reg=>reg.showNotification(title,options))
+          .catch(e=>console.warn('Service worker notification failed:',e));
+      }else{
+        try{alert('🔔 '+n.text+'\n'+formatNoteDate(n.date,n.time));}catch(e){}
+      }
     }else{
       try{alert('🔔 '+n.text+'\n'+formatNoteDate(n.date,n.time));}catch(e){}
     }
