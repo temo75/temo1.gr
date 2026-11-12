@@ -2810,7 +2810,7 @@ function rememberSessionUser(raw){
   localStorage.setItem(USERS_KEY,JSON.stringify(users));
   return user;
 }
-async function completeLogin(u,sessionToken){const user=rememberSessionUser(u);if(user.blocked===true||user.authorized!==true||typeof sessionToken!=='string'||!sessionToken){$('loginError').textContent='შესვლა ვერ მოხერხდა';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;expenses=loadLocalExpenses();renderExpenses();localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(BRIDGE_SESSION_KEY,sessionToken);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncExpensesFromFirebase();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
+async function completeLogin(u,sessionToken){const user=rememberSessionUser(u);if(user.blocked===true||user.authorized!==true||typeof sessionToken!=='string'||!sessionToken){$('loginError').textContent='შესვლა ვერ მოხერხდა';$('loginPassword').value='';return;}currentUser=user.name;currentUserId=user.id;expenses=loadLocalExpenses();renderExpenses();localStorage.setItem(SESSION_USER_KEY,currentUser);localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);localStorage.setItem(BRIDGE_SESSION_KEY,sessionToken);localStorage.setItem(AUTH_KEY,'yes');try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();$('loginScreen').classList.add('hidden');if($('bottomNav'))$('bottomNav').style.display='grid';$('loginPassword').value='';$('loginError').textContent='';jobs=loadUserJobs();loadAIMemory();updateUserUI();showTEMOPushWelcomePrompt();render();startJobsSyncWatcher();ensureTEMOPushSubscription().catch(()=>{});startDailySyncWatcher();syncExpensesFromFirebase();syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));}
 async function login(){const name=$('loginName').value.trim(),pass=$('loginPassword').value;$('loginError').textContent='';if(!name||!pass){$('loginError').textContent='შეიყვანე სახელი და პაროლი';return;}try{const result=await bridgeRequest('login',{username:name,password:pass},'');if(!result?.user||!result?.sessionToken)throw new Error('Invalid authentication response');await completeLogin(result.user,result.sessionToken);}catch(error){$('loginError').textContent=error?.status===401?'სახელი ან პაროლი არასწორია ან მომხმარებელი დაბლოკილია':'შესვლა დროებით მიუწვდომელია. სცადე მოგვიანებით.';$('loginPassword').value='';$('loginPassword').focus();}}
 function renderLoginUsers(){}
 window.addEventListener('DOMContentLoaded',async()=>{
@@ -2838,7 +2838,7 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();
     $('loginScreen').classList.add('hidden');
     if($('bottomNav'))$('bottomNav').style.display='grid';
-    jobs=loadUserJobs();loadAIMemory();updateUserUI();render();
+    jobs=loadUserJobs();loadAIMemory();updateUserUI();showTEMOPushWelcomePrompt();render();
     startJobsSyncWatcher();
     syncExpensesFromFirebase();
     syncJobsFromFirebase().then(()=>{updateMonthFilter();render();renderList();renderMonths();renderReceivableModal();}).catch(e=>console.warn('Firebase jobs sync failed:',e));
@@ -6677,6 +6677,29 @@ async function loadTEMOVapidPublicKey(){
   TEMO_VAPID_PUBLIC_KEY=String(data.publicKey);
   return TEMO_VAPID_PUBLIC_KEY;
 }
+
+function showTEMOPushWelcomePrompt(){
+  try{
+    if(!currentUserId||!('Notification' in window)||Notification.permission!=='default')return;
+    const promptKey='temoPushWelcomePromptShownV1';
+    if(localStorage.getItem(promptKey)==='1')return;
+    localStorage.setItem(promptKey,'1');
+    const overlay=document.createElement('div');
+    overlay.id='temoPushWelcomePrompt';
+    overlay.style.cssText='position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68)';
+    const panel=document.createElement('div');
+    panel.style.cssText='width:min(360px,100%);padding:24px 20px;border:1px solid #64b5f6;border-radius:18px;background:#101d29;color:#fff;text-align:center;box-shadow:0 0 22px rgba(70,160,255,.28);font-family:inherit';
+    panel.innerHTML='<div style="font-size:32px;margin-bottom:10px">🔔</div><div style="font-size:19px;font-weight:800;margin-bottom:10px">შეტყობინებები</div><div style="font-size:14px;line-height:1.5;margin-bottom:20px">გინდა TEMO-მ შეხსენებების დროს შეტყობინება გამოგიგზავნოს?</div><div style="display:flex;gap:10px"><button id="temoPushWelcomeLater" style="flex:1;padding:11px 8px;border:1px solid #607080;border-radius:10px;background:#263746;color:#fff;font-weight:700">ახლა არა</button><button id="temoPushWelcomeAllow" style="flex:1;padding:11px 8px;border:0;border-radius:10px;background:#1687df;color:#fff;font-weight:800">დადასტურება</button></div>';
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    panel.querySelector('#temoPushWelcomeLater').addEventListener('click',()=>overlay.remove());
+    panel.querySelector('#temoPushWelcomeAllow').addEventListener('click',async()=>{
+      overlay.remove();
+      await enableTEMOPush();
+    });
+  }catch(e){console.warn('TEMO Push welcome prompt failed:',e);}
+}
+
 async function ensureTEMOPushSubscription(){
   try{
     if(!currentUserId)throw new Error('მომხმარებელი არ არის შესული');
@@ -6758,7 +6781,7 @@ function autoTEMOPushOnEntry(){
 }
 
 window.addEventListener('load',autoTEMOPushOnEntry,{once:true});
-window.addEventListener('DOMContentLoaded',setupTEMOPushFirstGesture,{once:true});
+
 
 function scheduleNativeNoteReminder(note){
   try{
