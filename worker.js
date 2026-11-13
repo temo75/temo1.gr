@@ -168,7 +168,7 @@ async function runPushCron(env){
       const seenEndpoints=new Set();
       for(const [sk,s] of Object.entries(sv)){
         const endpoint=String(s?.endpoint||'');
-        if(!endpoint||seenEndpoints.has(endpoint))continue;
+        if(!endpoint||seenEndpoints.has(endpoint)||s?.platform==='android-native')continue;
         seenEndpoints.add(endpoint);
         try{
           const r=await sendPush(s,{title:'📖 TEMO',body:String(n.text||'შეხსენების დრო მოვიდა'),icon:'https://temo1.gr/notification-T.svg',badge:'https://temo1.gr/badge.png',tag:'temo-note-'+String(n.id||i),url:'https://temo75.github.io/t1/'},env);
@@ -326,6 +326,7 @@ export default {
         }
         await pfput('/pushSubscriptions/'+uk+'/'+dk, {
           ...(deviceId ? { deviceId } : {}),
+          platform: String(body.platform || '') === 'android-native' ? 'android-native' : 'web-push',
           endpoint,
           expirationTime: subscription.expirationTime ?? null,
           keys: {
