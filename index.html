@@ -6918,7 +6918,7 @@ function checkNoteReminders(){
     playNoteAlarm();
     if('Notification' in window && Notification.permission==='granted'){
       const title='📖 TEMO — ჩანაწერის შეხსენება';
-      const options={body:n.text+'\n'+formatNoteDate(n.date,n.time),tag:'temo-note-'+n.id,icon:'./notification-T.svg',badge:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAABMElEQVR4nO3czWmCQRRA0aekABepwXXKSBG2kBIsJ2lBBPfZBFKIRZgaBD8Pxnv28wOXtxtmdfmZy4RZ6ws8uwJgBcAKgBUAKwBWAKwAWAGwAmAFwAqAFQArAFYArADYy5Kb7/Yzn4clT7iP82nmdbPM3k0AVgCsAFgBsAJgBcAKgBUAKwC2eoSnie8fM8fv69f9fs28bW9/n1tqArACYAXACoAVACsAVgCsAFgBsAJgBcAKgBUAKwBWAKwAWAGwAmAFwAqAFQArAFYArABYAbACYAXACoAVACsAVgCsAFgBsAJgBcAKgBUAKwBWAKwAWAGwAmAFwB7ir4j/rAnACoAVACsAVgCsAFgBsAJgBcAKgBUAKwBWAKwAWAGwAmAFwAqAFQArAFYArABYAbACYH/GMxEeQiezagAAAABJRU5ErkJggg==',requireInteraction:true};
+      const options={body:n.text+'\n'+formatNoteDate(n.date,n.time),tag:'temo-note-'+n.id,icon:'./notification-gold.png',image:'./notification-banner.jpg',badge:'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAGAAAABgCAYAAADimHc4AAABMElEQVR4nO3czWmCQRRA0aekABepwXXKSBG2kBIsJ2lBBPfZBFKIRZgaBD8Pxnv28wOXtxtmdfmZy4RZ6ws8uwJgBcAKgBUAKwBWAKwAWAGwAmAFwAqAFQArAFYArADYy5Kb7/Yzn4clT7iP82nmdbPM3k0AVgCsAFgBsAJgBcAKgBUAKwC2eoSnie8fM8fv69f9fs28bW9/n1tqArACYAXACoAVACsAVgCsAFgBsAJgBcAKgBUAKwBWAKwAWAGwAmAFwAqAFQArAFYArABYAbACYAXACoAVACsAVgCsAFgBsAJgBcAKgBUAKwBWAKwAWAGwAmAFwB7ir4j/rAnACoAVACsAVgCsAFgBsAJgBcAKgBUAKwBWAKwAWAGwAmAFwAqAFQArAFYArABYAbACYH/GMxEeQiezagAAAABJRU5ErkJggg==',requireInteraction:true};
       if('serviceWorker' in navigator){
         navigator.serviceWorker.ready
           .then(reg=>reg.showNotification(title,options))
