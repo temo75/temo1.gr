@@ -51,12 +51,12 @@ self.addEventListener('push', event => {
     data = event.data ? event.data.json() : {};
   } catch (e) {
     data = {
-      title: '📖 TEMO',
+      title: '\u200B',
       body: event.data ? event.data.text() : 'ახალი შეხსენება'
     };
   }
 
-  const title = typeof data.title === 'string' ? data.title : '';
+  const title = typeof data.title === 'string' && data.title.length > 0 ? data.title : '\u200B';
 
   const options = {
     body: data.body || 'შეხსენების დრო მოვიდა',
