@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192">
+<defs>
+ <radialGradient id="bg"><stop offset="0" stop-color="#180608"/><stop offset="1" stop-color="#020203"/></radialGradient>
+ <filter id="glow" x="-100%" y="-100%" width="300%" height="300%">
+  <feGaussianBlur stdDeviation="5" result="b"/>
+  <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+ </filter>
+</defs>
+<circle cx="96" cy="96" r="94" fill="url(#bg)"/>
+<path d="M55 57 Q55 48 64 48 H128 Q137 48 137 57 V77 Q137 84 130 84 H116 V143 Q116 151 108 151 H84 Q76 151 76 143 V84 H62 Q55 84 55 77 Z"
+ fill="none" stroke="#ff1828" stroke-width="10" stroke-linejoin="round" opacity=".8" filter="url(#glow)"/>
+<path d="M55 57 Q55 48 64 48 H128 Q137 48 137 57 V77 Q137 84 130 84 H116 V143 Q116 151 108 151 H84 Q76 151 76 143 V84 H62 Q55 84 55 77 Z"
+ fill="none" stroke="#ff5260" stroke-width="5" stroke-linejoin="round"/>
+<path d="M57 57 Q57 50 64 50 H128 Q135 50 135 57 V77 Q135 82 130 82 H114 V143 Q114 149 108 149 H84 Q78 149 78 143 V82 H62 Q57 82 57 77 Z"
+ fill="none" stroke="#fff0f0" stroke-width="1.8" stroke-linejoin="round" opacity=".95"/>
+</svg>
