@@ -56,7 +56,7 @@ self.addEventListener('push', event => {
     };
   }
 
-  const title = data.title || '📖 TEMO';
+  const title = typeof data.title === 'string' ? data.title : '';
 
   const options = {
     body: data.body || 'შეხსენების დრო მოვიდა',
