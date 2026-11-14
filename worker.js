@@ -326,7 +326,7 @@ export default {
             if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth || sub.platform === "android-native") continue;
             try {
               const response = await sendPush(sub, {
-                title: "TEMO",
+                title: "",
                 body: message,
                 icon: "https://temo1.gr/notification-gold.png",
                 badge: "https://temo1.gr/badge-T.svg",
