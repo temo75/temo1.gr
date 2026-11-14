@@ -198,6 +198,7 @@ function parseBridgePath(path) {
   if (/^expenses\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "expenses", id: path.slice("expenses/".length) };
   if (/^jobs\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "jobs", id: path.slice("jobs/".length) };
   if (/^jobDeletes\/[A-Za-z0-9_-]{1,128}$/.test(path)) return { kind: "jobDeletes", id: path.slice("jobDeletes/".length) };
+  if (path === "siteBroadcast") return { kind: "siteBroadcast", id: "" };
   const match = path.match(/^adminMessages(?:\/([A-Za-z0-9_-]{1,128}))?$/);
   return match ? { kind: "adminMessages", id: match[1] || "" } : null;
 }
@@ -369,12 +370,22 @@ export default {
       if (route.id && !claims.admin && route.id !== firebaseUserKey(claims.sub)) return respond({ error: "Forbidden" }, 403);
       if (method === "DELETE" && !claims.admin) return respond({ error: "Forbidden" }, 403);
     }
+    if (route.kind === "siteBroadcast" && method === "PUT" && !claims.admin) return respond({ error: "Forbidden" }, 403);
+    if (route.kind === "siteBroadcast" && method === "DELETE") return respond({ error: "Invalid path or method" }, 400);
     if (method === "PUT" && !Object.prototype.hasOwnProperty.call(input, "data")) return respond({ error: "Missing data" }, 400);
+    if (route.kind === "siteBroadcast" && method === "PUT") {
+      const text = String(input.data?.text || "").trim();
+      if (!text || text.length > 2000) return respond({ error: "Invalid broadcast message" }, 400);
+    }
 
     const dbPath = route.id ? (route.kind + "/" + route.id) : route.kind;
     try {
       if (method === "GET") return respond(await firebaseRequest(env, dbPath, "GET"), 200);
       if (method === "DELETE") return respond(await firebaseRequest(env, dbPath, "DELETE"), 200);
+      if (route.kind === "siteBroadcast" && method === "PUT") {
+        const data = { text: String(input.data.text).trim(), createdAt: Number.isFinite(Number(input.data.createdAt)) ? Number(input.data.createdAt) : Date.now() };
+        return respond(await firebaseRequest(env, "siteBroadcast", "PUT", data), 200);
+      }
       if (route.kind === "adminMessages" && !route.id) return respond({ error: "Forbidden" }, 403);
       if (route.kind === "adminMessages") {
         const existing = await firebaseRequest(env, dbPath, "GET");
