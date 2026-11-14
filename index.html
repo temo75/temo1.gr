@@ -4999,7 +4999,7 @@ function updateUserUI(){
  const aiBtn=$('aiHeaderBtn'); if(aiBtn)aiBtn.style.display='none';
  const aiFloatingBtn=$('aiFloatingBtn'); if(aiFloatingBtn)aiFloatingBtn.style.display=currentUser?'flex':'none';
  const site=$('websiteUpdateSection'); if(site)site.style.display=isAdmin?'':'none';
- const users=$('userManagementSection'); if(users)users.style.display=isAdmin?'':'none'; const neon=$('neonControlSection'); if(neon)neon.style.display=currentUser?'':'none';
+ const users=$('userManagementSection'); if(users)users.style.display=isAdmin?'':'none'; const broadcast=$('adminBroadcastSection'); if(broadcast)broadcast.style.display=isAdmin?'':'none'; const neon=$('neonControlSection'); if(neon)neon.style.display=currentUser?'':'none';
  const chat=$('userChatSection'); if(chat)chat.style.display=currentUser&&!isAdmin?'':'none';
  const adminMessages=$('adminMessagesSection'); if(adminMessages)adminMessages.style.display=isAdmin?'':'none';
  const manageBtn=$('userManagementOpenBtn'); if(manageBtn)manageBtn.style.display=isAdmin?'block':'none';
