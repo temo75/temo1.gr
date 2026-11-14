@@ -5063,10 +5063,14 @@ async function sendAdminBroadcast(){
   if(message.length>2000){if(status)status.textContent='შეტყობინება ძალიან გრძელია.';return;}
   if(status)status.textContent='იგზავნება...';
   try{
-    await bridgeRequest('db',{path:'siteBroadcast',method:'PUT',data:{text:message,createdAt:Date.now()}});
+    const sentAt=Date.now();
+    await bridgeRequest('db',{path:'siteBroadcast',method:'PUT',data:{text:message,createdAt:sentAt}});
+    const pushResponse=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-broadcast',userId:String(currentUserId),sessionToken:localStorage.getItem(BRIDGE_SESSION_KEY)||'',message,createdAt:sentAt})});
+    const pushResult=await pushResponse.json().catch(()=>({}));
+    if(!pushResponse.ok||!pushResult.ok)throw new Error(pushResult.error||'Push გაგზავნა ვერ მოხერხდა');
     adminBroadcastLoadKey='';
     await loadAdminBroadcast();
-    if(status)status.textContent='შეტყობინება ყველას გაეგზავნა.';
+    if(status)status.textContent='Push შეტყობინება გაეგზავნა '+Number(pushResult.sent||0)+' მოწყობილობას.';
   }catch(e){if(status)status.textContent='გაგზავნა ვერ მოხერხდა. სცადე მოგვიანებით.';console.warn('Broadcast send failed:',e);}
 }
 async function sendAdminMessage(){
