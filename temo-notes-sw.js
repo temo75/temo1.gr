@@ -79,8 +79,8 @@ self.addEventListener('push', event => {
     const options = {
       ...options,
       tag: data.tag || 'temo-note-reminder',
-      renotify: isChat ? false : Boolean(data.renotify),
-      requireInteraction: isChat ? false : options.requireInteraction
+      renotify: isChat ? true : Boolean(data.renotify),
+      requireInteraction: isChat ? true : options.requireInteraction
     };
     await self.registration.showNotification(title, options);
   })());
