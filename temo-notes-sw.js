@@ -74,7 +74,12 @@ self.addEventListener('push', event => {
 
   event.waitUntil((async () => {
     const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    if (windows.some(client => client.visibilityState === 'visible')) return;
+    const messengerIsOpen = windows.some(client => {
+      if (client.visibilityState !== 'visible') return false;
+      try { return new URL(client.url).pathname.endsWith('/messenger.html'); }
+      catch (_) { return false; }
+    });
+    if (messengerIsOpen) return;
     const isChat = String(data.tag || '').startsWith('temo-chat-');
     const options = {
       ...options,
