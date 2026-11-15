@@ -358,6 +358,78 @@ export default {
         return respond({ error: "Firebase user delete failed" }, 502);
       }
     }
+
+    if (input.action === "messenger") {
+      const op = String(input.op || "");
+      const groupId = String(input.groupId || "");
+      const targetId = String(input.targetId || "");
+      const validId = value => /^[A-Za-z0-9_-]{1,128}$/.test(value);
+      const blockedBy = async (a,b) => {
+        const value = await firebaseRequest(env, "messenger/blocks/" + firebaseUserKey(a) + "/" + firebaseUserKey(b), "GET");
+        return value === true;
+      };
+      try {
+        if (op === "groups") {
+          const all = await firebaseRequest(env, "messenger/groups", "GET") || {};
+          const joined = Object.values(all).filter(g => g && Array.isArray(g.members) && g.members.includes(claims.sub));
+          return respond(joined, 200);
+        }
+        if (op === "create") {
+          const title = String(input.title || "").trim().slice(0, 50);
+          if (!title) return respond({error:"Group name required"},400);
+          const id = crypto.randomUUID().replace(/-/g,"");
+          const inviteCode = crypto.randomUUID().replace(/-/g,"").slice(0,12).toUpperCase();
+          const group = {id,title,ownerId:claims.sub,ownerName:claims.name,members:[claims.sub],inviteCode,createdAt:Date.now()};
+          await firebaseRequest(env,"messenger/groups/"+id,"PUT",group);
+          return respond(group,201);
+        }
+        if (op === "join") {
+          const code = String(input.inviteCode || "").trim().toUpperCase();
+          if (!code) return respond({error:"Invite code required"},400);
+          const all = await firebaseRequest(env,"messenger/groups","GET") || {};
+          const group = Object.values(all).find(g=>g&&g.inviteCode===code);
+          if (!group) return respond({error:"Group not found"},404);
+          if (group.members.includes(claims.sub)) return respond(group,200);
+          const members = [...group.members];
+          for (const member of members) if (await blockedBy(member,claims.sub)||await blockedBy(claims.sub,member)) return respond({error:"A group member has blocked this account"},403);
+          group.members=[...members,claims.sub];
+          await firebaseRequest(env,"messenger/groups/"+group.id,"PUT",group);
+          return respond(group,200);
+        }
+        if (!validId(groupId)) return respond({error:"Invalid group"},400);
+        const group = await firebaseRequest(env,"messenger/groups/"+groupId,"GET");
+        if (!group || !Array.isArray(group.members) || !group.members.includes(claims.sub)) return respond({error:"Group access denied"},403);
+        if (op === "messages") {
+          const messages = await firebaseRequest(env,"messenger/messages/"+groupId,"GET") || [];
+          return respond(Array.isArray(messages)?messages.slice(-200):Object.values(messages).slice(-200),200);
+        }
+        if (op === "send") {
+          const body = String(input.text || "").trim().slice(0,2000);
+          if (!body) return respond({error:"Message is empty"},400);
+          for (const member of group.members) if (member!==claims.sub && (await blockedBy(member,claims.sub)||await blockedBy(claims.sub,member))) return respond({error:"Messaging unavailable due to a block"},403);
+          const old = await firebaseRequest(env,"messenger/messages/"+groupId,"GET") || [];
+          const messages = Array.isArray(old)?old:(Object.values(old));
+          messages.push({id:crypto.randomUUID().replace(/-/g,""),userId:claims.sub,userName:claims.name,text:body,createdAt:Date.now()});
+          await firebaseRequest(env,"messenger/messages/"+groupId,"PUT",messages.slice(-500));
+          return respond({ok:true},200);
+        }
+        if (op === "block" || op === "unblock") {
+          if (!validId(targetId) || targetId===claims.sub) return respond({error:"Invalid user"},400);
+          const users = normalizedUsers(await firebaseRequest(env,"users","GET"));
+          const target = users.find(u=>safeUser(u).id===targetId);
+          if (!target || safeUser(target).admin) return respond({error:"User not found"},404);
+          await firebaseRequest(env,"messenger/blocks/"+firebaseUserKey(claims.sub)+"/"+firebaseUserKey(targetId),"PUT",op==="block");
+          return respond({ok:true,blocked:op==="block"},200);
+        }
+        if (op === "blocked") {
+          const data = await firebaseRequest(env,"messenger/blocks/"+firebaseUserKey(claims.sub),"GET") || {};
+          return respond(Object.keys(data).filter(k=>data[k]===true),200);
+        }
+        return respond({error:"Unknown messenger operation"},400);
+      } catch (error) {
+        return respond({error:"Messenger database request failed"},502);
+      }
+    }
     if (input.action !== "db") return respond({ error: "Invalid action" }, 400);
 
     const route = parseBridgePath(input.path);
