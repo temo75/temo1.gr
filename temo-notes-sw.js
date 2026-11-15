@@ -72,7 +72,16 @@ self.addEventListener('push', event => {
     data: data.url || './'
   };
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil((async () => {
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    if (windows.some(client => client.visibilityState === 'visible')) return;
+    const isChat = String(data.tag || '').startsWith('temo-chat-');
+    const options = {
+      ...options,
+      tag: data.tag || 'temo-note-reminder',
+      renotify: isChat ? false : Boolean(data.renotify),
+      requireInteraction: isChat ? false : options.requireInteraction
+    };
+    await self.registration.showNotification(title, options);
+  })());
 });
