@@ -388,7 +388,7 @@ export default {
         for (const [uk, subscriptions] of Object.entries(allSubscriptions)) {
           if (!subscriptions || typeof subscriptions !== "object") continue;
           for (const [sk, sub] of Object.entries(subscriptions)) {
-            if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth || sub.platform === "android-native") continue;
+            if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) continue;
             try {
               const response = await sendPush(sub, {
                 title: "",
