@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ka">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TEMO შეტყობინება</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#07131c;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:20px}.card{width:min(100%,520px);background:#102b3b;border:1px solid #49d86a;border-radius:16px;padding:22px;box-shadow:0 0 16px #49d86a33;text-align:center;cursor:pointer}.message{font-size:19px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere}.photo{display:block;width:100%;height:auto;max-height:65vh;object-fit:contain;margin:16px auto 0;border-radius:10px}.hint{margin-top:20px;color:#9bd9ad;font-size:13px}.error{color:#ffd27a}
+</style>
+</head>
+<body>
+<main class="card" id="card" role="button" tabindex="0" aria-label="გადასვლა TEMO მთავარ გვერდზე">
+<div class="message" id="message">იტვირთება...</div>
+<img class="photo" id="photo" hidden alt="შეტყობინების ფოტო">
+<div class="hint" id="hint">გასაგრძელებლად შეეხე ეკრანს</div>
+</main>
+<script>
+const WORKER='https://temo-ai.temo75elia.workers.dev';
+const params=new URLSearchParams(location.search),id=params.get('id')||'';
+const card=document.getElementById('card'),message=document.getElementById('message'),photo=document.getElementById('photo'),hint=document.getElementById('hint');
+let ready=false,used=false;
+(async()=>{
+ if(!id){message.textContent='შეტყობინება ვერ მოიძებნა';hint.textContent='';return;}
+ try{
+  const response=await fetch(WORKER+'?action=push-view&id='+encodeURIComponent(id),{cache:'no-store'});
+  const data=await response.json();
+  if(!response.ok||!data.ok)throw new Error('expired');
+  message.textContent=data.message||'';
+  if(data.imageUrl){photo.src=data.imageUrl;photo.hidden=false;}
+  ready=true;
+ }catch(e){message.textContent='შეტყობინება ვადაგასულია ან ვერ მოიძებნა.';hint.textContent='';card.classList.add('error');}
+})();
+async function openHome(){
+ if(!ready||used)return;used=true;hint.textContent='გადასვლა...';
+ try{await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-view-consume',id})});}catch(e){}
+ location.replace('https://temo1.gr/');
+}
+card.addEventListener('click',openHome);
+card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();openHome();}});
+</script>
+</body>
+</html>
