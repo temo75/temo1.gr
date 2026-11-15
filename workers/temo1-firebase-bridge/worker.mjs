@@ -390,15 +390,22 @@ export default {
           const group = Object.values(all).find(g=>g&&g.inviteCode===code);
           if (!group) return respond({error:"Group not found"},404);
           if (group.members.includes(claims.sub)) return respond(group,200);
-          const members = [...group.members];
-          for (const member of members) if (await blockedBy(member,claims.sub)||await blockedBy(claims.sub,member)) return respond({error:"A group member has blocked this account"},403);
-          group.members=[...members,claims.sub];
+          group.members=[...group.members,claims.sub];
           await firebaseRequest(env,"messenger/groups/"+group.id,"PUT",group);
           return respond(group,200);
         }
         if (!validId(groupId)) return respond({error:"Invalid group"},400);
         const group = await firebaseRequest(env,"messenger/groups/"+groupId,"GET");
         if (!group || !Array.isArray(group.members) || !group.members.includes(claims.sub)) return respond({error:"Group access denied"},403);
+        if (op === "members") {
+          const users = normalizedUsers(await firebaseRequest(env, "users", "GET"));
+          const members = group.members.map(id => {
+            const record = users.find(item => safeUser(item).id === id);
+            return record ? {id, name: safeUser(record).name} : {id, name:"მომხმარებელი"};
+          });
+          const blocked = await firebaseRequest(env, "messenger/blocks/" + firebaseUserKey(claims.sub), "GET") || {};
+          return respond({members, blockedIds:Object.keys(blocked).filter(id=>blocked[id]===true)},200);
+        }
         if (op === "messages") {
           const messages = await firebaseRequest(env,"messenger/messages/"+groupId,"GET") || [];
           return respond(Array.isArray(messages)?messages.slice(-200):Object.values(messages).slice(-200),200);
@@ -406,7 +413,6 @@ export default {
         if (op === "send") {
           const body = String(input.text || "").trim().slice(0,2000);
           if (!body) return respond({error:"Message is empty"},400);
-          for (const member of group.members) if (member!==claims.sub && (await blockedBy(member,claims.sub)||await blockedBy(claims.sub,member))) return respond({error:"Messaging unavailable due to a block"},403);
           const old = await firebaseRequest(env,"messenger/messages/"+groupId,"GET") || [];
           const messages = Array.isArray(old)?old:(Object.values(old));
           messages.push({id:crypto.randomUUID().replace(/-/g,""),userId:claims.sub,userName:claims.name,text:body,createdAt:Date.now()});
