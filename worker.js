@@ -453,7 +453,9 @@ export default {
         const subscriptions = all[recipientKey] || {};
         const entries = Object.entries(subscriptions).filter(([key, sub]) => sub?.endpoint && sub?.keys?.p256dh && sub?.keys?.auth);
         // Deliver each chat message to every registered device for this account.
-        const selected = entries;
+        // Restore the original platform selection for push delivery.
+        const hasAndroidNative = entries.some(([key, sub]) => sub.platform === "android-native");
+        const selected = entries.filter(([key, sub]) => hasAndroidNative ? sub.platform === "android-native" : sub.platform !== "android-native");
         let sent = 0, failed = 0;
         const seen = new Set();
         for (const [key, sub] of selected) {
