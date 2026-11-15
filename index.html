@@ -6795,20 +6795,21 @@ async function loadTEMOVapidPublicKey(){
 
 function showTEMOPushWelcomePrompt(){
   try{
-    if(!currentUserId||!('Notification' in window)||Notification.permission!=='default')return;
-    const promptKey='temoPushWelcomePromptShownV1';
-    if(localStorage.getItem(promptKey)==='1')return;
-    localStorage.setItem(promptKey,'1');
+    if(!currentUserId||!('Notification' in window)||Notification.permission==='denied')return;
+    const promptKey='temoPushWelcomePromptV2_'+String(currentUserId).replace(/[^a-zA-Z0-9_-]/g,'_');
+    if(localStorage.getItem(promptKey)==='done')return;
+    if(document.getElementById('temoPushWelcomePrompt'))return;
     const overlay=document.createElement('div');
     overlay.id='temoPushWelcomePrompt';
     overlay.style.cssText='position:fixed;inset:0;z-index:999999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(0,0,0,.68)';
     const panel=document.createElement('div');
     panel.style.cssText='width:min(360px,100%);padding:24px 20px;border:1px solid #64b5f6;border-radius:18px;background:#101d29;color:#fff;text-align:center;box-shadow:0 0 22px rgba(70,160,255,.28);font-family:inherit';
-    panel.innerHTML='<div style="font-size:32px;margin-bottom:10px">🔔</div><div style="font-size:19px;font-weight:800;margin-bottom:10px">შეტყობინებები</div><div style="font-size:14px;line-height:1.5;margin-bottom:20px">გინდა TEMO-მ შეხსენებების დროს შეტყობინება გამოგიგზავნოს?</div><div style="display:flex;gap:10px"><button id="temoPushWelcomeLater" style="flex:1;padding:11px 8px;border:1px solid #607080;border-radius:10px;background:#263746;color:#fff;font-weight:700">ახლა არა</button><button id="temoPushWelcomeAllow" style="flex:1;padding:11px 8px;border:0;border-radius:10px;background:#1687df;color:#fff;font-weight:800">დადასტურება</button></div>';
+    panel.innerHTML='<div style="font-size:32px;margin-bottom:10px">🔔</div><div style="font-size:19px;font-weight:800;margin-bottom:10px">TEMO შეტყობინებები</div><div style="font-size:14px;line-height:1.5;margin-bottom:20px">გსურს, რომ ახალ წერილებსა და შეხსენებებზე TEMO-მ შეტყობინება გამოგიგზავნოს?</div><div style="display:flex;gap:10px"><button id="temoPushWelcomeLater" style="flex:1;padding:11px 8px;border:1px solid #607080;border-radius:10px;background:#263746;color:#fff;font-weight:700">ახლა არა</button><button id="temoPushWelcomeAllow" style="flex:1;padding:11px 8px;border:0;border-radius:10px;background:#1687df;color:#fff;font-weight:800">დადასტურება</button></div>';
     overlay.appendChild(panel);
     document.body.appendChild(overlay);
-    panel.querySelector('#temoPushWelcomeLater').addEventListener('click',()=>overlay.remove());
+    panel.querySelector('#temoPushWelcomeLater').addEventListener('click',()=>{localStorage.setItem(promptKey,'done');overlay.remove();});
     panel.querySelector('#temoPushWelcomeAllow').addEventListener('click',async()=>{
+      localStorage.setItem(promptKey,'done');
       overlay.remove();
       await enableTEMOPush();
     });
