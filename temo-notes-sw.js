@@ -7,42 +7,25 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('notificationclick', event => {
+  const notificationData = event.notification.data || {};
+  const isChat = String(event.notification.tag || '').startsWith('temo-chat-');
   event.notification.close();
-
   event.waitUntil((async () => {
     const scopeUrl = new URL(self.registration.scope);
     let targetUrl;
-    try {
-      targetUrl = new URL(event.notification.data || './', scopeUrl);
-    } catch (e) {
-      targetUrl = scopeUrl;
+    if (isChat) targetUrl = new URL('messenger.html', scopeUrl);
+    else {
+      try { targetUrl = new URL(typeof notificationData === 'string' ? notificationData : (notificationData.url || './'), scopeUrl); }
+      catch (e) { targetUrl = scopeUrl; }
     }
-    if (targetUrl.origin !== scopeUrl.origin || !targetUrl.pathname.startsWith(scopeUrl.pathname)) {
-      targetUrl = scopeUrl;
-    }
-
-    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const client = clients.find(candidate => {
-      try {
-        const url = new URL(candidate.url);
-        return url.origin === scopeUrl.origin && url.pathname.startsWith(scopeUrl.pathname);
-      } catch (e) {
-        return false;
-      }
+    if (targetUrl.origin !== scopeUrl.origin || !targetUrl.pathname.startsWith(scopeUrl.pathname)) targetUrl = scopeUrl;
+    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const exactClient = windows.find(client => {
+      try { const url = new URL(client.url); return url.origin === targetUrl.origin && url.pathname === targetUrl.pathname; }
+      catch (e) { return false; }
     });
-
-    if (client) {
-      if (client.url !== targetUrl.href && 'navigate' in client) {
-        try {
-          await client.navigate(targetUrl.href);
-          return client.focus();
-        } catch (e) {
-          return self.clients.openWindow(targetUrl.href);
-        }
-      }
-      return client.focus();
-    }
-
+    if (exactClient) return exactClient.focus();
+    // Keep the old home page open; open Messenger in its own window.
     return self.clients.openWindow(targetUrl.href);
   })());
 });
