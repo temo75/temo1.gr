@@ -49,7 +49,7 @@ async function loadPeople(){
  $('contacts').innerHTML=contacts.length?'<div class="muted">ჩემი კონტაქტები</div>'+contacts.map(personRow).join(''):'<div class="muted">კონტაქტები ჯერ არ არის</div>';
  $('allUsers').innerHTML='<div class="muted">რეგისტრირებული მომხმარებლები</div>'+people.map(personRow).join('');
  $('incomingRequests').innerHTML=requests.length?'<b>მეგობრობის მოთხოვნები</b>'+requests.map(r=>'<div class="requestRow"><span>'+esc(r.name)+'</span><span class="personActions"><button data-accept="'+esc(r.from)+'">მიღება</button><button class="danger" data-reject="'+esc(r.from)+'">უარყოფა</button></span></div>').join(''):'';
- document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>openProfile(b.dataset.profile));
+ document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>openDirect(b.dataset.profile));
  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=async()=>{try{await call('requestFriend',{targetId:b.dataset.add});showStatus('მოთხოვნა გაგზავნილია');await loadPeople()}catch(e){showStatus(e.message)}});
  document.querySelectorAll('[data-chat]').forEach(b=>b.onclick=()=>openDirect(b.dataset.chat));
  document.querySelectorAll('[data-video]').forEach(b=>b.onclick=()=>showStatus('ვიდეოზარი ჯერ არ არის ჩართული'));
