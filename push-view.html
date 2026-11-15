@@ -33,6 +33,7 @@ let ready=false,used=false;
 async function openHome(){
  if(!ready||used)return;used=true;hint.textContent='გადასვლა...';
  try{await fetch(WORKER,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-view-consume',id})});}catch(e){}
+ localStorage.setItem('temoLastVisiblePageV1','mainPage');
  location.replace('https://temo1.gr/');
 }
 card.addEventListener('click',openHome);
