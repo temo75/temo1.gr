@@ -109,7 +109,10 @@ async function sendOffer(){
 async function acceptVideo(){
  if(!activeCall)return;
  try{
-  $('videoAccept').hidden=true;await startMedia();makePeer();
+  $('videoAccept').hidden=true;
+  activeCall=await call('callGet',{callId:activeCall.id});
+  if(!activeCall.offer)throw new Error('ზარის კავშირი ჯერ მზად არ არის');
+  await startMedia();makePeer();
   await pc.setRemoteDescription(activeCall.offer);remoteReady=true;
   const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
   await call('callSet',{callId:activeCall.id,field:'answer',value:pc.localDescription.toJSON()});
@@ -150,8 +153,6 @@ async function checkIncoming(){
   if(calls.length){
    activeCall=calls[0];callSide='callee';showVideo('შემომავალი ზარი: '+(activeCall.callerName||'მომხმარებელი'));
    $('videoAccept').hidden=false;
-   await startMedia().catch(()=>{});
-   if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}
   }
  }catch(e){}
 }
