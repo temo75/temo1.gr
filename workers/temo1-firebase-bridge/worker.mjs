@@ -203,6 +203,26 @@ function parseBridgePath(path) {
   return match ? { kind: "adminMessages", id: match[1] || "" } : null;
 }
 export default {
+  async scheduled(controller, env, ctx) {
+    const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    try {
+      const threads = await firebaseRequest(env, "messenger/directMessages", "GET") || {};
+      for (const [threadId, stored] of Object.entries(threads)) {
+        if (!/^[A-Za-z0-9_-]{1,260}$/.test(threadId) || !stored || typeof stored !== "object") continue;
+        const entries = Array.isArray(stored) ? stored.map((message, index) => [String(index), message]) : Object.entries(stored);
+        for (const [messageId, message] of entries) {
+          if (!message || typeof message !== "object") continue;
+          const createdAt = Number(message.createdAt || 0);
+          if (createdAt > 0 && createdAt < cutoff) {
+            await firebaseRequest(env, "messenger/directMessages/" + threadId + "/" + messageId, "DELETE");
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Messenger 7-day cleanup failed", error);
+      throw error;
+    }
+  },
   async fetch(request, env) {
     const origin = request.headers.get("Origin") || "";
     const allowedOrigin = env.ALLOWED_ORIGIN || DEFAULT_ALLOWED_ORIGIN;
