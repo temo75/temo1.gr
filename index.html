@@ -4855,6 +4855,24 @@ async function deleteAIChatReminderCommand(message){
   }
 }
 
+async function sendAIPushBroadcast(message){
+  const text=String(message||'').trim();
+  if(!text)throw new Error('პუშ შეტყობინების ტექსტი ცარიელია.');
+  if(text.length>2000)throw new Error('პუშ შეტყობინება მაქსიმუმ 2000 სიმბოლო უნდა იყოს.');
+  if(currentUser!==ADMIN_USER)throw new Error('Push-ის გაგზავნა მხოლოდ ადმინისტრატორს შეუძლია.');
+  const sentAt=Date.now(),sessionToken=localStorage.getItem(BRIDGE_SESSION_KEY)||'';
+  await bridgeRequest('db',{path:'siteBroadcast',method:'PUT',data:{text,createdAt:sentAt}});
+  const response=await fetch(TEMO_PUSH_WORKER_URL,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({action:'push-broadcast',userId:String(currentUserId),sessionToken,message:text,imageId:'',createdAt:sentAt})
+  });
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||!result.ok)throw new Error(result.error||'Push გაგზავნა ვერ მოხერხდა.');
+  adminBroadcastLoadKey='';
+  return Number(result.sent||0);
+}
+
 async function sendAIMessage(){
   if(!currentUser||aiBusy)return;
   const input=document.getElementById('aiChatInput');
@@ -4930,10 +4948,30 @@ async function sendAIMessage(){
       if(!data.reminderText)data.reminderText=localReminder.reminderText;
     }
 
-    const reply=String(data.reply||'');
-    aiHistory.push({role:'user',content:message},{role:'assistant',content:reply});
     const status=Array.from(document.querySelectorAll('#aiChatMessages .aiMsg.system')).find(x=>x.textContent.includes(aiLangText('connecting')));
     if(status)status.remove();
+    if(data.pushBroadcastRequest){
+      if(!data.pushBroadcastText){
+        const ask=String(data.reply||'მომწერე ტექსტი, რომელიც Push შეტყობინებად გავაგზავნო.');
+        aiHistory.push({role:'user',content:message},{role:'assistant',content:ask});
+        aiAddMessage('assistant',ask);
+        if(isTEMOAIVoiceEnabled())aiSpeakReply(ask);
+        return;
+      }
+      try{
+        const sent=await sendAIPushBroadcast(data.pushBroadcastText);
+        const confirmation='📣 Push შეტყობინება გაეგზავნა '+sent+' მოწყობილობას.';
+        aiHistory.push({role:'user',content:message},{role:'assistant',content:confirmation});
+        aiAddMessage('system',confirmation);
+      }catch(pushError){
+        const failure='⚠️ Push შეტყობინება ვერ გაიგზავნა: '+String(pushError?.message||'უცნობი შეცდომა');
+        aiHistory.push({role:'user',content:message},{role:'assistant',content:failure});
+        aiAddMessage('system',failure);
+      }
+      return;
+    }
+    const reply=String(data.reply||'');
+    aiHistory.push({role:'user',content:message},{role:'assistant',content:reply});
     aiAddMessage('assistant',reply);
     if(isTEMOAIVoiceEnabled())aiSpeakReply(reply);
     if(data.memoryRequest&&data.memoryText){
