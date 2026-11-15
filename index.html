@@ -4312,6 +4312,7 @@ function aiAddMessage(role,text){
 }
 let temoAIRecognition=null;
 let temoAIListening=false;
+let temoAIVoiceAutoSend=false;
 let temoAIMediaRecorder=null;
 let temoAIMediaStream=null;
 let temoAIAudioChunks=[];
@@ -4374,7 +4375,12 @@ async function temoAITranscribeIOS(blob){
     const r=await fetch(TEMO_AI_WORKER_URL,{method:'POST',body:fd});
     const data=await r.json().catch(()=>null);
     if(!r.ok||!data?.ok)throw new Error(data?.error||'transcription failed');
-    temoAIAppendTranscript(data.text||'');
+    const transcript=String(data.text||'').trim();
+    temoAIAppendTranscript(transcript);
+    if(transcript){
+      temoAIVoiceAutoSend=false;
+      setTimeout(()=>sendAIMessage(),150);
+    }
   }catch(e){
     aiAddMessage('system','🎤 ხმის ტექსტად გადაყვანა ვერ მოხერხდა. კიდევ სცადე.');
   }
@@ -4399,6 +4405,7 @@ async function temoAIStartIOSRecording(){
     temoAIMediaStream=stream;
     temoAIAudioChunks=[];
     temoAIHasSpeech=false;
+    temoAIVoiceAutoSend=true;
     const types=['audio/mp4','audio/webm;codecs=opus','audio/webm'];
     const mime=types.find(t=>MediaRecorder.isTypeSupported?.(t))||'';
     const recorder=mime?new MediaRecorder(stream,{mimeType:mime}):new MediaRecorder(stream);
@@ -4494,6 +4501,7 @@ function toggleTEMOAIListening(){
   const recognition=new SR();
   temoAIRecognition=recognition;
   temoAIListening=true;
+  temoAIVoiceAutoSend=true;
   if(mic){mic.classList.add('listening');mic.textContent='⏹️';}
   recognition.lang=aiCurrentLanguage()==='el'?'el-GR':aiCurrentLanguage()==='en'?'en-US':'ka-GE';
   recognition.continuous=false;
@@ -4503,6 +4511,7 @@ function toggleTEMOAIListening(){
     temoAIAppendTranscript(text);
   };
   recognition.onerror=e=>{
+    temoAIVoiceAutoSend=false;
     if(e?.error!=='aborted'){
       const msg=e?.error==='not-allowed'?'🎤 მიკროფონზე წვდომა არ არის დაშვებული.':e?.error==='no-speech'?'🎤 ხმა ვერ გავიგე. კიდევ სცადე.':'🎤 მიკროფონის შეცდომა.';
       aiAddMessage('system',msg);
@@ -4513,6 +4522,10 @@ function toggleTEMOAIListening(){
     temoAIRecognition=null;
     const b=document.getElementById('aiChatMic');
     if(b){b.classList.remove('listening');b.textContent='🎤';}
+    const autoSend=temoAIVoiceAutoSend;
+    temoAIVoiceAutoSend=false;
+    const input=document.getElementById('aiChatInput');
+    if(autoSend&&String(input?.value||'').trim())setTimeout(()=>sendAIMessage(),150);
   };
   try{recognition.start();}catch(e){
     temoAIListening=false;
