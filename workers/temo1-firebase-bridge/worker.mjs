@@ -369,7 +369,72 @@ export default {
         return value === true;
       };
       try {
-        if (op === "groups") {
+        if (op === "users") {
+          const users=normalizedUsers(await firebaseRequest(env,"users","GET"));
+          const blocked=await firebaseRequest(env,"messenger/blocks/"+firebaseUserKey(claims.sub),"GET")||{};
+          return respond(users.map(safeUser).filter(u=>u.id!==claims.sub&&u.authorized&&!u.blocked&&!u.admin&&blocked[firebaseUserKey(u.id)]!==true).map(u=>({id:u.id,name:u.name})),200);
+        }
+        if (op === "contacts") {
+          const data=await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(claims.sub),"GET")||{};
+          const users=normalizedUsers(await firebaseRequest(env,"users","GET"));
+          return respond(Object.keys(data).filter(id=>data[id]===true).map(id=>{const u=users.find(x=>safeUser(x).id===id);return u?{id,name:safeUser(u).name}:null}).filter(Boolean),200);
+        }
+        if (op === "requests") {
+          const data=await firebaseRequest(env,"messenger/requests/"+firebaseUserKey(claims.sub),"GET")||{};
+          const users=normalizedUsers(await firebaseRequest(env,"users","GET"));
+          return respond(Object.entries(data).filter(([,r])=>r&&r.status==="pending").map(([id,r])=>{const u=users.find(x=>safeUser(x).id===r.from);return{id,from:r.from,name:u?safeUser(u).name:"მომხმარებელი",createdAt:r.createdAt}}),200);
+        }
+        if (op === "requestFriend") {
+          if(!validId(targetId)||targetId===claims.sub)return respond({error:"Invalid user"},400);
+          const users=normalizedUsers(await firebaseRequest(env,"users","GET"));
+          const target=users.find(x=>safeUser(x).id===targetId);
+          if(!target||!safeUser(target).authorized||safeUser(target).blocked||safeUser(target).admin)return respond({error:"User not found"},404);
+          if(await blockedBy(claims.sub,targetId)||await blockedBy(targetId,claims.sub))return respond({error:"მომხმარებელი დაბლოკილია"},403);
+          const mine=await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(claims.sub)+"/"+firebaseUserKey(targetId),"GET");
+          if(mine===true)return respond({status:"friends"},200);
+          const pending=await firebaseRequest(env,"messenger/requests/"+firebaseUserKey(targetId)+"/"+firebaseUserKey(claims.sub),"GET");
+          if(pending?.status==="pending")return respond({status:"sent"},200);
+          await firebaseRequest(env,"messenger/requests/"+firebaseUserKey(targetId)+"/"+firebaseUserKey(claims.sub),"PUT",{from:claims.sub,status:"pending",createdAt:Date.now()});
+          return respond({status:"sent"},200);
+        }
+        if (op === "respondFriend") {
+          if(!validId(targetId)||!["accept","reject"].includes(String(input.decision)))return respond({error:"Invalid request"},400);
+          const path="messenger/requests/"+firebaseUserKey(claims.sub)+"/"+firebaseUserKey(targetId);
+          const request=await firebaseRequest(env,path,"GET");
+          if(!request||request.from!==targetId||request.status!=="pending")return respond({error:"Request not found"},404);
+          if(input.decision==="accept"){
+            await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(claims.sub)+"/"+firebaseUserKey(targetId),"PUT",true);
+            await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(targetId)+"/"+firebaseUserKey(claims.sub),"PUT",true);
+          }
+          await firebaseRequest(env,path,"DELETE");
+          return respond({ok:true,accepted:input.decision==="accept"},200);
+        }
+        if (op === "removeFriend") {
+          if(!validId(targetId)||targetId===claims.sub)return respond({error:"Invalid user"},400);
+          await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(claims.sub)+"/"+firebaseUserKey(targetId),"DELETE");
+          await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(targetId)+"/"+firebaseUserKey(claims.sub),"DELETE");
+          return respond({ok:true},200);
+        }
+        if (op === "directMessages" || op === "sendDirect") {
+          if(!validId(targetId)||targetId===claims.sub)return respond({error:"Invalid user"},400);
+          const friend=await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(claims.sub)+"/"+firebaseUserKey(targetId),"GET");
+          if(friend!==true)return respond({error:"კონტაქტი ჯერ არ არის მიღებული"},403);
+          const thread=[claims.sub,targetId].sort().map(firebaseUserKey).join("_");
+          const path="messenger/directMessages/"+thread;
+          if(op==="directMessages"){
+            const stored=await firebaseRequest(env,path,"GET")||{};
+            const list=Array.isArray(stored)?stored:Object.entries(stored).map(([id,item])=>({...item,id:item?.id||id}));
+            list.sort((a,b)=>Number(a.createdAt||0)-Number(b.createdAt||0));
+            return respond(list.slice(-200),200);
+          }
+          const body=String(input.text||"").trim().slice(0,2000);
+          if(!body)return respond({error:"შეტყობინება ცარიელია"},400);
+          const id=crypto.randomUUID().replace(/-/g,"");
+          const message={id,userId:claims.sub,userName:claims.name,text:body,createdAt:Date.now()};
+          await firebaseRequest(env,path+"/"+id,"PUT",message);
+          return respond({ok:true,message},200);
+        }
+      if (op === "groups") {
           const all = await firebaseRequest(env, "messenger/groups", "GET") || {};
           const joined = Object.values(all).filter(g => g && Array.isArray(g.members) && g.members.includes(claims.sub));
           return respond(joined, 200);
