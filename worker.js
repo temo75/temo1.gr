@@ -387,8 +387,19 @@ export default {
         let sent = 0, failed = 0;
         for (const [uk, subscriptions] of Object.entries(allSubscriptions)) {
           if (!subscriptions || typeof subscriptions !== "object") continue;
-          for (const [sk, sub] of Object.entries(subscriptions)) {
-            if (!sub?.endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth) continue;
+          const entries = Object.entries(subscriptions).filter(([sk, sub]) =>
+            sub?.endpoint && sub?.keys?.p256dh && sub?.keys?.auth
+          );
+          // Android: prefer the native subscription and suppress its older web-push subscription.
+          const hasAndroidNative = entries.some(([sk, sub]) => sub?.platform === "android-native");
+          const selected = entries.filter(([sk, sub]) =>
+            hasAndroidNative ? sub?.platform === "android-native" : sub?.platform !== "android-native"
+          );
+          const seenEndpoints = new Set();
+          for (const [sk, sub] of selected) {
+            const endpoint = String(sub.endpoint || "");
+            if (!endpoint || seenEndpoints.has(endpoint)) continue;
+            seenEndpoints.add(endpoint);
             try {
               const response = await sendPush(sub, {
                 title: "",
