@@ -154,6 +154,14 @@ async function runPushCron(env){
   if(!env.VAPID_PRIVATE_JWK)return;
   try{await validateVapidPrivateJwk(env.VAPID_PRIVATE_JWK);}catch(e){console.error('TEMO VAPID configuration is invalid');return;}
   const all=await pfget('/pushSubscriptions',env)||{},now=Date.now();
+  try {
+    const views = await pfget('/pushViews', env) || {};
+    for (const [id, view] of Object.entries(views)) {
+      if (Number(view?.expiresAt || 0) > now) continue;
+      await pfput('/pushViews/' + id, null, env);
+      if (view?.imageId) await pfput('/pushMedia/' + String(view.imageId).replace(/[^a-zA-Z0-9_-]/g, ''), null, env);
+    }
+  } catch (e) { console.error('Temporary push cleanup failed'); }
   for(const [uk,sv] of Object.entries(all)){
     if(!sv||typeof sv!=='object')continue;
     const notes=await pfget('/notes/'+uk,env);
@@ -375,7 +383,7 @@ export default {
         if (!env.VAPID_PRIVATE_JWK) return new Response(JSON.stringify({ ok: false, error: "Push key is not configured" }), { status: 503, headers: corsHeaders });
         const allSubscriptions = await pfget("/pushSubscriptions", env) || {};
         const viewId = "v" + Date.now().toString(36) + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
-        await pfput("/pushViews/" + viewId, { message, imageId: imageId || "", createdAt: Date.now(), expiresAt: Date.now() + 60000 }, env);
+        await pfput("/pushViews/" + viewId, { message, imageId: imageId || "", createdAt: Date.now(), expiresAt: Date.now() + 604800000 }, env);
         let sent = 0, failed = 0;
         for (const [uk, subscriptions] of Object.entries(allSubscriptions)) {
           if (!subscriptions || typeof subscriptions !== "object") continue;
