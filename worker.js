@@ -576,6 +576,7 @@ TEMO AI SMART FEATURES:
 - Duplicate protection: if a new work entry appears to duplicate an existing supplied entry (same date/place/amount), warn about the possible duplicate before saving.
 - Structured entry extraction: understand natural-language work, money, expense, note, and reminder messages and extract useful fields accurately.
 - Reminder creation: if the user clearly commands a reminder and gives a future date/time, set reminderRequest=true and extract reminderDate, reminderTime, and reminderText. The website will immediately save and schedule it after the Worker responds. If date or time is missing, ask only for the missing part instead of inventing it.
+- Push broadcast: only when the user explicitly commands you to send a Push notification to everyone (for example, "პუშ შეტყობინება გაგზავნე: ..."), set pushBroadcastRequest=true and extract the exact message they want sent into pushBroadcastText. Do not trigger this for ordinary chat, reminders, or when merely discussing Push notifications. If the user asks to send a Push but gives no message text, set the request true, leave the text null, and ask what text to send.
 - Time awareness: use the supplied current local date, local time, full ISO timestamp, and IANA timezone as the authoritative clock for this conversation.
 - The website sends the real current phone/browser time. NEVER ask the user what time it is just to determine the current time; use the supplied Current local time / Current ISO timestamp instead.
 - Treat 'now', 'today', 'tomorrow', 'in 2 hours', 'in 30 minutes', morning/evening, and similar expressions relative to that supplied local time.
@@ -661,13 +662,16 @@ Return ONLY valid JSON with exactly this structure:
   "reminderRequest": true or false,
   "reminderDate": "YYYY-MM-DD or null",
   "reminderTime": "HH:MM or null",
-  "reminderText": "reminder text or null"
+  "reminderText": "reminder text or null",
+  "pushBroadcastRequest": true or false,
+  "pushBroadcastText": "exact Push message or null"
 }
 
 If "isWorkEntry" is false, "workEntry" must be null.
 If the user asks for weather, set "weatherRequest" to true and extract the requested city/place into "weatherLocation". If no location is given, set "weatherLocation" to null. For a normal message, set "weatherRequest" to false and "weatherLocation" to null. If the user asks whether weather is good for work, painting, travel, or another activity, set "weatherAdvice" to true; otherwise set it to false.
 If the user explicitly asks you to remember something, set "memoryRequest" to true and put only the useful memory in "memoryText". Otherwise set them to false and null.
 If the user explicitly asks for a reminder, set "reminderRequest" to true. Extract a future date/time when clearly given. If date or time is missing, set the missing field to null and ask for it in the reply.
+If the user explicitly commands a Push broadcast to all users, set "pushBroadcastRequest" to true and extract only the message text into "pushBroadcastText". Otherwise set it to false and null. Do not treat ordinary conversation or reminder requests as Push broadcasts.
 
 ${languageInstruction}
 
@@ -828,7 +832,9 @@ Timezone: ${timezone || "Europe/Athens"}
         reminderRequest: Boolean(parsed.reminderRequest),
         reminderDate: parsed.reminderDate ? String(parsed.reminderDate).trim() : null,
         reminderTime: parsed.reminderTime ? String(parsed.reminderTime).trim() : null,
-        reminderText: parsed.reminderText ? String(parsed.reminderText).trim().slice(0, 1000) : null
+        reminderText: parsed.reminderText ? String(parsed.reminderText).trim().slice(0, 1000) : null,
+        pushBroadcastRequest: Boolean(parsed.pushBroadcastRequest),
+        pushBroadcastText: parsed.pushBroadcastText ? String(parsed.pushBroadcastText).trim().slice(0, 2000) : null
       }), { status: 200, headers: corsHeaders });
     } catch (error) {
       return new Response(JSON.stringify({
