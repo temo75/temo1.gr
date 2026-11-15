@@ -407,17 +407,18 @@ export default {
           return respond({members, blockedIds:Object.keys(blocked).filter(id=>blocked[id]===true)},200);
         }
         if (op === "messages") {
-          const messages = await firebaseRequest(env,"messenger/messages/"+groupId,"GET") || [];
-          return respond(Array.isArray(messages)?messages.slice(-200):Object.values(messages).slice(-200),200);
+          const stored = await firebaseRequest(env, "messenger/messages/" + groupId, "GET") || {};
+          const messages = Array.isArray(stored) ? stored : Object.entries(stored).map(([id, item]) => ({...item, id:item?.id || id}));
+          messages.sort((a,b) => Number(a.createdAt||0)-Number(b.createdAt||0));
+          return respond(messages.slice(-200), 200);
         }
         if (op === "send") {
           const body = String(input.text || "").trim().slice(0,2000);
           if (!body) return respond({error:"Message is empty"},400);
-          const old = await firebaseRequest(env,"messenger/messages/"+groupId,"GET") || [];
-          const messages = Array.isArray(old)?old:(Object.values(old));
-          messages.push({id:crypto.randomUUID().replace(/-/g,""),userId:claims.sub,userName:claims.name,text:body,createdAt:Date.now()});
-          await firebaseRequest(env,"messenger/messages/"+groupId,"PUT",messages.slice(-500));
-          return respond({ok:true},200);
+          const messageId = crypto.randomUUID().replace(/-/g,"");
+          const message = {id:messageId,userId:claims.sub,userName:claims.name,text:body,createdAt:Date.now()};
+          await firebaseRequest(env, "messenger/messages/" + groupId + "/" + messageId, "PUT", message);
+          return respond({ok:true,message},200);
         }
         if (op === "block" || op === "unblock") {
           if (!validId(targetId) || targetId===claims.sub) return respond({error:"Invalid user"},400);
