@@ -435,12 +435,23 @@ export default {
           await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(targetId)+"/"+firebaseUserKey(claims.sub),"DELETE");
           return respond({ok:true},200);
         }
-        if (op === "directMessages" || op === "sendDirect") {
+        if (["directMessages","sendDirect","editDirect","deleteDirect"].includes(op)) {
           if(!validId(targetId)||targetId===claims.sub)return respond({error:"Invalid user"},400);
           const friend=await firebaseRequest(env,"messenger/friends/"+firebaseUserKey(claims.sub)+"/"+firebaseUserKey(targetId),"GET");
           if(friend!==true)return respond({error:"კონტაქტი ჯერ არ არის მიღებული"},403);
           const thread=[claims.sub,targetId].sort().map(firebaseUserKey).join("_");
           const path="messenger/directMessages/"+thread;
+          if(op==="editDirect"||op==="deleteDirect"){
+            const messageId=String(input.messageId||"");
+            if(!/^[A-Za-z0-9_-]{1,128}$/.test(messageId))return respond({error:"Invalid message"},400);
+            const old=await firebaseRequest(env,path+"/"+messageId,"GET");
+            if(!old||old.userId!==claims.sub)return respond({error:"შეგიძლია მხოლოდ შენი წერილის შეცვლა ან წაშლა"},403);
+            if(op==="deleteDirect"){await firebaseRequest(env,path+"/"+messageId,"DELETE");return respond({ok:true},200)}
+            const edited=String(input.text||"").trim().slice(0,2000);
+            if(!edited)return respond({error:"ტექსტი ცარიელია"},400);
+            await firebaseRequest(env,path+"/"+messageId,"PATCH",{text:edited,editedAt:Date.now()});
+            return respond({ok:true},200);
+          }
           if(op==="directMessages"){
             const stored=await firebaseRequest(env,path,"GET")||{};
             const list=Array.isArray(stored)?stored:Object.entries(stored).map(([id,item])=>({...item,id:item?.id||id}));
