@@ -2641,7 +2641,9 @@ html body.site-white-theme #aiChatModal .aiChatClose{
 
 <div class="section adminOnly neonControlled" id="adminBroadcastSection">
 <h2>📢 Push შეტყობინება</h2>
-<textarea id="adminBroadcastText" class="chatText" maxlength="2000" placeholder="დაწერე შეტყობინება ყველა მომხმარებლისთვის..."></textarea>
+<textarea id="adminBroadcastText" class="chatText" maxlength="2000" placeholder="დაწერე შეტყობინება (არასავალდებულო)..."></textarea>
+<input id="adminBroadcastImage" type="file" accept="image/jpeg,image/png,image/webp" aria-label="აირჩიე ფოტო">
+<div id="adminBroadcastImageName" class="chatHint"></div>
 <div class="chatBottomRow adminBroadcastRow"><button type="button" class="chatSendBtn adminBroadcastSend" onclick="sendAdminBroadcast()">📨 ყველასთვის გაგზავნა</button></div>
 <div id="adminBroadcastStatus" class="chatHint" aria-live="polite"></div>
 </div>
@@ -5034,6 +5036,7 @@ function updateUserChatCount(){
   const n=chatWordCount(ta.value);el.textContent=n+' / 100 სიტყვა';el.style.color=n>100?'#ff7c84':'var(--muted)';
 }
 let adminBroadcastLoadKey='';
+document.addEventListener('change',event=>{if(event.target?.id==='adminBroadcastImage'){const label=$('adminBroadcastImageName');if(label)label.textContent=event.target.files?.[0]?.name||'';}});
 async function loadAdminBroadcast(){
   if(currentUser!==ADMIN_USER)return;
   try{
@@ -5046,21 +5049,34 @@ async function loadAdminBroadcast(){
 }
 async function sendAdminBroadcast(){
   if(currentUser!==ADMIN_USER)return;
-  const ta=$('adminBroadcastText'),status=$('adminBroadcastStatus');
-  const message=String(ta?.value||'').trim();
-  if(!message){if(status)status.textContent='ჯერ ჩაწერე შეტყობინება.';return;}
+  const ta=$('adminBroadcastText'),status=$('adminBroadcastStatus'),fileInput=$('adminBroadcastImage');
+  const message=String(ta?.value||'').trim(),file=fileInput?.files?.[0]||null;
+  if(!message&&!file){if(status)status.textContent='ჩაწერე ტექსტი ან აირჩიე ფოტო.';return;}
   if(message.length>2000){if(status)status.textContent='შეტყობინება ძალიან გრძელია.';return;}
+  if(file&&!/^image\/(jpeg|png|webp)$/.test(file.type)){if(status)status.textContent='აირჩიე JPG, PNG ან WEBP ფოტო.';return;}
+  if(file&&file.size>1024*1024){if(status)status.textContent='ფოტოს ზომა მაქსიმუმ 1 MB უნდა იყოს.';return;}
   if(status)status.textContent='იგზავნება...';
   try{
-    const sentAt=Date.now();
-    await bridgeRequest('db',{path:'siteBroadcast',method:'PUT',data:{text:message,createdAt:sentAt}});
-    const pushResponse=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-broadcast',userId:String(currentUserId),sessionToken:localStorage.getItem(BRIDGE_SESSION_KEY)||'',message,createdAt:sentAt})});
+    const sentAt=Date.now(),sessionToken=localStorage.getItem(BRIDGE_SESSION_KEY)||'';
+    let imageId='';
+    if(file){
+      const dataUrl=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result||''));reader.onerror=()=>reject(new Error('ფოტოს წაკითხვა ვერ მოხერხდა'));reader.readAsDataURL(file);});
+      const uploadResponse=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-upload-image',userId:String(currentUserId),sessionToken,dataUrl})});
+      const uploadResult=await uploadResponse.json().catch(()=>({}));
+      if(!uploadResponse.ok||!uploadResult.ok)throw new Error(uploadResult.error||'ფოტოს ატვირთვა ვერ მოხერხდა');
+      imageId=String(uploadResult.id||'');
+    }
+    if(message)await bridgeRequest('db',{path:'siteBroadcast',method:'PUT',data:{text:message,createdAt:sentAt}});
+    const pushResponse=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-broadcast',userId:String(currentUserId),sessionToken,message,imageId,createdAt:sentAt})});
     const pushResult=await pushResponse.json().catch(()=>({}));
     if(!pushResponse.ok||!pushResult.ok)throw new Error(pushResult.error||'Push გაგზავნა ვერ მოხერხდა');
     adminBroadcastLoadKey='';
-    await loadAdminBroadcast();
-    if(status)status.textContent='Push შეტყობინება გაეგზავნა '+Number(pushResult.sent||0)+' მოწყობილობას.';
-  }catch(e){if(status)status.textContent='გაგზავნა ვერ მოხერხდა. სცადე მოგვიანებით.';console.warn('Broadcast send failed:',e);}
+    if(message)await loadAdminBroadcast();
+    if(ta)ta.value='';
+    if(fileInput)fileInput.value='';
+    const imageName=$('adminBroadcastImageName');if(imageName)imageName.textContent='';
+    if(status)status.textContent='Push გაეგზავნა '+Number(pushResult.sent||0)+' მოწყობილობას.';
+  }catch(e){if(status)status.textContent=e.message||'გაგზავნა ვერ მოხერხდა.';console.warn('Broadcast send failed:',e);}
 }
 async function sendAdminMessage(){
   if(!currentUser||currentUser===ADMIN_USER)return;
