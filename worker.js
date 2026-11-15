@@ -219,6 +219,18 @@ export default {
       }
     }
 
+    if (request.method === "GET" && requestUrl.searchParams.get("action") === "push-image") {
+      const id = String(requestUrl.searchParams.get("id") || "").replace(/[^a-zA-Z0-9_-]/g, "");
+      if (!id) return new Response("Not found", { status: 404 });
+      try {
+        const item = await pfget("/pushMedia/" + id, env);
+        if (!item?.data || !/^image\/(jpeg|png|webp)$/.test(String(item.mime || ""))) return new Response("Not found", { status: 404 });
+        const raw = atob(item.data), bytes = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+        return new Response(bytes, { status: 200, headers: { "Content-Type": item.mime, "Cache-Control": "public, max-age=86400", "Access-Control-Allow-Origin": "*" } });
+      } catch (_) { return new Response("Not found", { status: 404 }); }
+    }
+
     if (request.method === "GET") {
       return new Response(JSON.stringify({
         ok: true,
@@ -295,6 +307,24 @@ export default {
 
       const action = String(body.action || "").trim();
 
+      if (action === "push-upload-image") {
+        if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: "Origin not allowed" }), { status: 403, headers: corsHeaders });
+        const userId = String(body.userId || "").trim(), sessionToken = String(body.sessionToken || "").trim();
+        let sessionData;
+        try {
+          if (!sessionToken || !env.FIREBASE_BRIDGE) throw new Error("Session verifier unavailable");
+          const response = await env.FIREBASE_BRIDGE.fetch(new Request("https://firebase-bridge.internal/", { method: "POST", headers: { "Content-Type": "application/json", "Origin": "https://temo1.gr" }, body: JSON.stringify({ action: "session", sessionToken }) }));
+          sessionData = await response.json().catch(() => null);
+          if (!response.ok || !sessionData?.user || String(sessionData.user.id) !== userId) return new Response(JSON.stringify({ ok: false, error: "Authentication required" }), { status: 401, headers: corsHeaders });
+        } catch (_) { return new Response(JSON.stringify({ ok: false, error: "Push authentication unavailable" }), { status: 503, headers: corsHeaders }); }
+        if (String(sessionData.user.name || "").toUpperCase() !== "TEMO" || sessionData.user.authorized !== true || sessionData.user.blocked === true) return new Response(JSON.stringify({ ok: false, error: "Administrator only" }), { status: 403, headers: corsHeaders });
+        const dataUrl = String(body.dataUrl || ""), match = dataUrl.match(/^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/);
+        if (!match || match[2].length > 1400000) return new Response(JSON.stringify({ ok: false, error: "აირჩიე JPG, PNG ან WEBP ფოტო 1 MB-მდე." }), { status: 400, headers: corsHeaders });
+        const id = "p" + Date.now().toString(36) + crypto.randomUUID().replace(/-/g, "").slice(0, 12);
+        await pfput("/pushMedia/" + id, { mime: match[1], data: match[2], createdAt: Date.now() }, env);
+        return new Response(JSON.stringify({ ok: true, id }), { status: 200, headers: corsHeaders });
+      }
+
       if (action === "push-broadcast") {
         const userId = String(body.userId || "").trim();
         if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: "Origin not allowed" }), { status: 403, headers: corsHeaders });
@@ -316,7 +346,8 @@ export default {
           return new Response(JSON.stringify({ ok: false, error: "Administrator only" }), { status: 403, headers: corsHeaders });
         }
         const message = String(body.message || "").trim();
-        if (!message || message.length > 2000) return new Response(JSON.stringify({ ok: false, error: "Invalid message" }), { status: 400, headers: corsHeaders });
+        const imageId = String(body.imageId || "").replace(/[^a-zA-Z0-9_-]/g, "");
+        if ((!message && !imageId) || message.length > 2000) return new Response(JSON.stringify({ ok: false, error: "დაწერე ტექსტი ან აირჩიე ფოტო." }), { status: 400, headers: corsHeaders });
         if (!env.VAPID_PRIVATE_JWK) return new Response(JSON.stringify({ ok: false, error: "Push key is not configured" }), { status: 503, headers: corsHeaders });
         const allSubscriptions = await pfget("/pushSubscriptions", env) || {};
         let sent = 0, failed = 0;
@@ -330,7 +361,7 @@ export default {
                 body: message,
                 icon: "https://temo1.gr/notification-gold.png",
                 badge: "https://temo1.gr/badge-T.svg",
-                image: "https://temo1.gr/notification-banner.jpg",
+                image: imageId ? (new URL(request.url).origin + "?action=push-image&id=" + encodeURIComponent(imageId)) : undefined,
                 tag: "temo-admin-broadcast-" + String(body.createdAt || Date.now()),
                 url: "https://temo1.gr/"
               }, env);
