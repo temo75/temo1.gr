@@ -219,6 +219,19 @@ export default {
       }
     }
 
+    if (request.method === "GET" && requestUrl.searchParams.get("action") === "push-view") {
+      const id = String(requestUrl.searchParams.get("id") || "").replace(/[^a-zA-Z0-9_-]/g, "");
+      if (!id) return new Response(JSON.stringify({ ok: false }), { status: 404, headers: corsHeaders });
+      try {
+        const item = await pfget("/pushViews/" + id, env);
+        if (!item || Number(item.expiresAt || 0) < Date.now()) {
+          await pfput("/pushViews/" + id, null, env);
+          return new Response(JSON.stringify({ ok: false, expired: true }), { status: 404, headers: corsHeaders });
+        }
+        return new Response(JSON.stringify({ ok: true, message: String(item.message || ""), imageUrl: item.imageId ? (new URL(request.url).origin + "?action=push-image&id=" + encodeURIComponent(item.imageId)) : "" }), { status: 200, headers: corsHeaders });
+      } catch (_) { return new Response(JSON.stringify({ ok: false }), { status: 404, headers: corsHeaders }); }
+    }
+
     if (request.method === "GET" && requestUrl.searchParams.get("action") === "push-image") {
       const id = String(requestUrl.searchParams.get("id") || "").replace(/[^a-zA-Z0-9_-]/g, "");
       if (!id) return new Response("Not found", { status: 404 });
@@ -325,6 +338,17 @@ export default {
         return new Response(JSON.stringify({ ok: true, id }), { status: 200, headers: corsHeaders });
       }
 
+      if (action === "push-view-consume") {
+        const id = String(body.id || "").replace(/[^a-zA-Z0-9_-]/g, "");
+        if (!id) return new Response(JSON.stringify({ ok: false }), { status: 400, headers: corsHeaders });
+        try {
+          const item = await pfget("/pushViews/" + id, env);
+          await pfput("/pushViews/" + id, null, env);
+          if (item?.imageId) await pfput("/pushMedia/" + String(item.imageId).replace(/[^a-zA-Z0-9_-]/g, ""), null, env);
+          return new Response(JSON.stringify({ ok: true }), { status: 200, headers: corsHeaders });
+        } catch (_) { return new Response(JSON.stringify({ ok: false }), { status: 500, headers: corsHeaders }); }
+      }
+
       if (action === "push-broadcast") {
         const userId = String(body.userId || "").trim();
         if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: "Origin not allowed" }), { status: 403, headers: corsHeaders });
@@ -350,6 +374,8 @@ export default {
         if ((!message && !imageId) || message.length > 2000) return new Response(JSON.stringify({ ok: false, error: "დაწერე ტექსტი ან აირჩიე ფოტო." }), { status: 400, headers: corsHeaders });
         if (!env.VAPID_PRIVATE_JWK) return new Response(JSON.stringify({ ok: false, error: "Push key is not configured" }), { status: 503, headers: corsHeaders });
         const allSubscriptions = await pfget("/pushSubscriptions", env) || {};
+        const viewId = "v" + Date.now().toString(36) + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
+        await pfput("/pushViews/" + viewId, { message, imageId: imageId || "", createdAt: Date.now(), expiresAt: Date.now() + 60000 }, env);
         let sent = 0, failed = 0;
         for (const [uk, subscriptions] of Object.entries(allSubscriptions)) {
           if (!subscriptions || typeof subscriptions !== "object") continue;
@@ -363,7 +389,7 @@ export default {
                 badge: "https://temo1.gr/badge-T.svg",
                 image: imageId ? (new URL(request.url).origin + "?action=push-image&id=" + encodeURIComponent(imageId)) : undefined,
                 tag: "temo-admin-broadcast-" + String(body.createdAt || Date.now()),
-                url: "https://temo1.gr/"
+                url: "https://temo1.gr/push-view.html?id=" + encodeURIComponent(viewId)
               }, env);
               if (response.ok) sent++;
               else {
