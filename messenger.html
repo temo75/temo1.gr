@@ -110,6 +110,41 @@ $('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!d
 $('directText').addEventListener('keydown',e=>{if(e.key==='Enter')$('directSend').click()});
 $('profileVideo').onclick=beginVideo;
 let activeCall=null,pc=null,localStream=null,callPoll=null,incomingPoll=null,callSide='',seenCandidates=new Set(),remoteReady=false;
+let ringAudio=null,ringOscillator=null,ringGain=null,ringTimer=null,ringPulse=false;
+function unlockRingAudio(){
+ try{
+  const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+  if(!AudioContextClass)return;
+  if(!ringAudio)ringAudio=new AudioContextClass();
+  if(ringAudio.state==='suspended')ringAudio.resume().catch(()=>{});
+ }catch(e){console.warn('Ringtone audio:',e)}
+}
+['pointerdown','touchstart','click','keydown'].forEach(type=>document.addEventListener(type,unlockRingAudio,{passive:true}));
+function startRingtone(){
+ try{
+  unlockRingAudio();
+  if(!ringAudio||ringOscillator)return;
+  ringOscillator=ringAudio.createOscillator();
+  ringGain=ringAudio.createGain();
+  ringOscillator.type='sine';
+  ringOscillator.frequency.value=440;
+  ringGain.gain.value=0;
+  ringOscillator.connect(ringGain);ringGain.connect(ringAudio.destination);
+  ringOscillator.start();
+  ringPulse=false;
+  ringTimer=setInterval(()=>{
+   if(!ringGain||!ringAudio)return;
+   ringPulse=!ringPulse;
+   ringGain.gain.setTargetAtTime(ringPulse?0.12:0,ringAudio.currentTime,0.025);
+  },500);
+ }catch(e){console.warn('Ringtone start:',e)}
+}
+function stopRingtone(){
+ if(ringTimer){clearInterval(ringTimer);ringTimer=null}
+ if(ringGain&&ringAudio)try{ringGain.gain.setTargetAtTime(0,ringAudio.currentTime,0.03)}catch(e){}
+ if(ringOscillator){try{ringOscillator.stop()}catch(e){}try{ringOscillator.disconnect()}catch(e){}}
+ ringOscillator=null;ringGain=null;ringPulse=false;
+}
 const videoBox=$('videoCall'),remoteVideo=$('remoteVideo'),localVideo=$('localVideo');
 function showVideo(title){$('videoTitle').textContent=title;videoBox.classList.add('show')}
 async function startMedia(){
@@ -125,6 +160,7 @@ function makePeer(){
  pc.onconnectionstatechange=()=>{if(pc&&['failed','disconnected'].includes(pc.connectionState))showStatus('ვიდეოკავშირის პრობლემა')};
 }
 async function stopVideo(end=true){
+ stopRingtone();
  if(callPoll)clearInterval(callPoll);callPoll=null;
  if(incomingPoll)clearInterval(incomingPoll);incomingPoll=null;
  if(end&&activeCall)call('callEnd',{callId:activeCall.id}).catch(()=>{});
@@ -139,6 +175,7 @@ async function sendOffer(){
 }
 async function acceptVideo(){
  if(!activeCall)return;
+ stopRingtone();
  try{
   $('videoAccept').hidden=true;
   activeCall=await call('callGet',{callId:activeCall.id});
@@ -182,7 +219,7 @@ async function checkIncoming(){
  try{
   const calls=await call('callIncoming');
   if(calls.length){
-   activeCall=calls[0];callSide='callee';showVideo('შემომავალი ზარი: '+(activeCall.callerName||'მომხმარებელი'));
+   activeCall=calls[0];callSide='callee';startRingtone();showVideo('შემომავალი ზარი: '+(activeCall.callerName||'მომხმარებელი'));
    $('videoAccept').hidden=false;
   }
  }catch(e){}
