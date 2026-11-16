@@ -71,7 +71,7 @@ async function ensureMessengerPush(){
  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:key});
  const deviceKey='temoPushDeviceId';let deviceId=localStorage.getItem(deviceKey);
  if(!deviceId){deviceId=crypto.randomUUID?crypto.randomUUID():'d_'+Date.now();localStorage.setItem(deviceKey,deviceId);}
- const response=await fetch(worker,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-subscribe',userId:me,sessionToken:session,deviceId,platform:'web-push',subscription:sub.toJSON()})});
+ const response=await fetch(worker,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-subscribe',userId:me,sessionToken:session,deviceId,platform:/Android/i.test(navigator.userAgent)?'android-native':'web-push',subscription:sub.toJSON()})});
  const result=await response.json().catch(()=>({}));
  if(!response.ok||!result.ok)throw Error(result.error||('Push subscribe HTTP '+response.status));
 }
