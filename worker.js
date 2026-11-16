@@ -384,67 +384,41 @@ export default {
         const allSubscriptions = await pfget("/pushSubscriptions", env) || {};
         const viewId = "v" + Date.now().toString(36) + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
         await pfput("/pushViews/" + viewId, { message, imageId: imageId || "", createdAt: Date.now(), expiresAt: Date.now() + 604800000 }, env);
-        let sent = 0, failed = 0, total = 0, appleSent = 0, appleFailed = 0, appleTotal = 0;
-        const failureReasons = {};
-        const seenEndpoints = new Set();
-        const targets = [];
+        let sent = 0, failed = 0;
         for (const [uk, subscriptions] of Object.entries(allSubscriptions)) {
           if (!subscriptions || typeof subscriptions !== "object") continue;
-          for (const [sk, sub] of Object.entries(subscriptions)) {
-            const endpoint = String(sub?.endpoint || "");
-            if (!endpoint || !sub?.keys?.p256dh || !sub?.keys?.auth || seenEndpoints.has(endpoint)) continue;
+          const entries = Object.entries(subscriptions).filter(([sk, sub]) =>
+            sub?.endpoint && sub?.keys?.p256dh && sub?.keys?.auth
+          );
+          // Android: prefer the native subscription and suppress its older web-push subscription.
+          const hasAndroidNative = entries.some(([sk, sub]) => sub?.platform === "android-native");
+          const selected = entries.filter(([sk, sub]) =>
+            hasAndroidNative ? sub?.platform === "android-native" : sub?.platform !== "android-native"
+          );
+          const seenEndpoints = new Set();
+          for (const [sk, sub] of selected) {
+            const endpoint = String(sub.endpoint || "");
+            if (!endpoint || seenEndpoints.has(endpoint)) continue;
             seenEndpoints.add(endpoint);
-            const isApplePush = (() => { try { return new URL(endpoint).hostname.endsWith(".push.apple.com"); } catch (_) { return false; } })();
-            targets.push({ uk, sk, sub, isApplePush });
-            total++;
-            if (isApplePush) appleTotal++;
-          }
-        }
-        const pushPayload = {
-          title: "TEMO",
-          body: message,
-          icon: "https://temo1.gr/notification-gold.png",
-          badge: "https://temo1.gr/badge-T.svg",
-          image: imageId ? (new URL(request.url).origin + "?action=push-image&id=" + encodeURIComponent(imageId)) : undefined,
-          tag: "temo-admin-broadcast-" + String(body.createdAt || Date.now()),
-          url: "https://temo1.gr/push-view.html?id=" + encodeURIComponent(viewId)
-        };
-        async function deliverBroadcastTarget(target) {
-          let lastReason = "network";
-          for (let attempt = 0; attempt < 3; attempt++) {
             try {
-              const response = await sendPush(target.sub, pushPayload, env);
-              if (response.ok) return { ok: true };
-              lastReason = "HTTP " + response.status;
-              if (response.status === 404 || response.status === 410) {
-                try { await pfput("/pushSubscriptions/" + target.uk + "/" + target.sk, null, env); } catch (_) {}
-                return { ok: false, reason: lastReason };
+              const response = await sendPush(sub, {
+                title: "",
+                body: message,
+                icon: "https://temo1.gr/notification-gold.png",
+                badge: "https://temo1.gr/badge-T.svg",
+                image: imageId ? (new URL(request.url).origin + "?action=push-image&id=" + encodeURIComponent(imageId)) : undefined,
+                tag: "temo-admin-broadcast-" + String(body.createdAt || Date.now()),
+                url: "https://temo1.gr/push-view.html?id=" + encodeURIComponent(viewId)
+              }, env);
+              if (response.ok) sent++;
+              else {
+                failed++;
+                if (response.status === 404 || response.status === 410) await pfput("/pushSubscriptions/" + uk + "/" + sk, null, env);
               }
-              if (response.status !== 429 && response.status < 500) return { ok: false, reason: lastReason };
-            } catch (_) {
-              lastReason = "network";
-            }
-            if (attempt < 2) await new Promise(resolve => setTimeout(resolve, 300 * (attempt + 1)));
-          }
-          return { ok: false, reason: lastReason };
-        }
-        // Send to every distinct registered endpoint; retry transient provider/network failures.
-        for (let offset = 0; offset < targets.length; offset += 8) {
-          const batch = targets.slice(offset, offset + 8);
-          const results = await Promise.all(batch.map(deliverBroadcastTarget));
-          for (let i = 0; i < results.length; i++) {
-            const target = batch[i], result = results[i];
-            if (result.ok) {
-              sent++;
-              if (target.isApplePush) appleSent++;
-            } else {
-              failed++;
-              if (target.isApplePush) appleFailed++;
-              failureReasons[result.reason] = (failureReasons[result.reason] || 0) + 1;
-            }
+            } catch (_) { failed++; }
           }
         }
-        return new Response(JSON.stringify({ ok: sent > 0, sent, failed, total, appleSent, appleFailed, appleTotal, failureReasons }), { status: 200, headers: corsHeaders });
+        return new Response(JSON.stringify({ ok: true, sent, failed }), { status: 200, headers: corsHeaders });
       }
 
       if (action === "push-direct") {
