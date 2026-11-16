@@ -67,8 +67,9 @@ self.addEventListener('push', event => {
     image: data.image || './notification-banner.jpg',
     badge: data.badge || './badge.png',
     tag: data.tag || 'temo-note-reminder',
-    requireInteraction: true,
-    renotify: true,
+    requireInteraction: data.requireInteraction !== false,
+    renotify: data.renotify !== false,
+    vibrate: Array.isArray(data.vibrate) ? data.vibrate : undefined,
     data: data.url || './'
   };
 
