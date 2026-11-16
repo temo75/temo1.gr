@@ -64,6 +64,16 @@ self.addEventListener('push', event => {
       renotify: isChat ? false : Boolean(data.renotify),
       requireInteraction: isChat ? false : options.requireInteraction
     };
-    await self.registration.showNotification(title, options);
+    try {
+      await self.registration.showNotification(title, options);
+    } catch (displayError) {
+      // Some browsers reject optional image/badge/interaction options.
+      // Retry with the cross-browser minimum so a valid Push is still shown.
+      await self.registration.showNotification(title, {
+        body: String(data.body || 'ახალი შეტყობინება'),
+        tag: String(data.tag || 'temo-note-reminder'),
+        data: { url: typeof data.url === 'string' ? data.url : './' }
+      });
+    }
   })());
 });
