@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" viewBox="0 0 256 256">
+<defs><linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#087d12"/><stop offset=".55" stop-color="#004b08"/><stop offset="1" stop-color="#28e72e"/></linearGradient><linearGradient id="bubble" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e4ffe5"/></linearGradient><linearGradient id="glow" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#b7ff48"/><stop offset="1" stop-color="#00e83c"/></linearGradient></defs>
+<rect x="5" y="5" width="246" height="246" rx="48" fill="url(#bg)"/><circle cx="128" cy="128" r="99" fill="none" stroke="url(#glow)" stroke-width="7"/>
+<path d="M128 82c44 0 79 27 79 61 0 15-7 29-19 39l7 24-31-11c-11 5-23 8-36 8-44 0-79-27-79-61s35-60 79-60z" fill="#50ef51" opacity=".95"/>
+<path d="M118 55c-45 0-81 28-81 63 0 17 9 32 24 43l-8 29 36-14c9 3 19 5 29 5 45 0 81-28 81-63s-36-63-81-63z" fill="url(#bubble)"/>
+<circle cx="86" cy="118" r="10" fill="#087d12"/><circle cx="118" cy="118" r="10" fill="#087d12"/><circle cx="150" cy="118" r="10" fill="#087d12"/>
+</svg>
