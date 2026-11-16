@@ -1,4 +1,8 @@
-# TEMO Push backup — 2026-11-16
+# TEMO Push backup — J01
+
+**Approved working version name: J01**
+
+
 
 This folder is a safety copy of the working Push notification code for temo1.gr.
 
