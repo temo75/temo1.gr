@@ -404,7 +404,7 @@ export default {
               const response = await sendPush(sub, {
                 title: "",
                 body: message,
-                icon: "https://temo1.gr/notification-gold.png",
+                icon: "https://temo1.gr/push-chat.svg",
                 badge: "https://temo1.gr/badge-T.svg",
                 image: imageId ? (new URL(request.url).origin + "?action=push-image&id=" + encodeURIComponent(imageId)) : undefined,
                 tag: "temo-admin-broadcast-" + String(body.createdAt || Date.now()),
@@ -515,7 +515,7 @@ export default {
             const response = await sendPush(sub, {
               title: String(sessionData.user.name || body.callerName || "TEMO"),
               body: "შემომავალი ვიდეოზარი",
-              icon: "https://temo1.gr/notification-gold.png",
+              icon: "https://temo1.gr/push-video.svg",
               badge: "https://temo1.gr/badge-T.svg",
               tag: "temo-video-call-" + callId,
               renotify: false,
