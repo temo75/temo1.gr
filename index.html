@@ -5146,7 +5146,7 @@ async function sendAdminBroadcast(){
     if(status){
       if(total===0)status.textContent='Push ვერ გაიგზავნა: არცერთი მოწყობილობა არ არის გამოწერილი. მომხმარებლებმა უნდა ჩართონ Push შეტყობინებები.';
       else if(sent===0)status.textContent='Push ვერ გაიგზავნა: '+failed+' / '+total+' მოწყობილობა უარყოფილია.'+(reasons?' მიზეზები: '+reasons:'');
-      else status.textContent='Push სერვისმა მიიღო '+sent+' / '+total+' მოწყობილობის შეტყობინება. '+appleStatus+(failed?' ვერ გაიგზავნა '+failed+' მოწყობილობაზე'+(reasons?' ('+reasons+')':'')+'.':'');
+      else status.textContent='Push შეტყობინება გაუგზავნა.';
     }
   }catch(e){if(status)status.textContent=e.message||'გაგზავნა ვერ მოხერხდა.';console.warn('Broadcast send failed:',e);}
 }
