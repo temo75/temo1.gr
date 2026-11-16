@@ -384,7 +384,7 @@ export default {
         const allSubscriptions = await pfget("/pushSubscriptions", env) || {};
         const viewId = "v" + Date.now().toString(36) + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
         await pfput("/pushViews/" + viewId, { message, imageId: imageId || "", createdAt: Date.now(), expiresAt: Date.now() + 604800000 }, env);
-        let sent = 0, failed = 0, total = 0;
+        let sent = 0, failed = 0, total = 0, appleSent = 0, appleFailed = 0, appleTotal = 0;
         const failureReasons = {};
         const seenEndpoints = new Set();
         for (const [uk, subscriptions] of Object.entries(allSubscriptions)) {
@@ -397,9 +397,11 @@ export default {
             if (!endpoint || seenEndpoints.has(endpoint)) continue;
             seenEndpoints.add(endpoint);
             total++;
+            const isApplePush = (() => { try { return new URL(endpoint).hostname.endsWith(".push.apple.com"); } catch (_) { return false; } })();
+            if (isApplePush) appleTotal++;
             try {
               const response = await sendPush(sub, {
-                title: "",
+                title: "TEMO",
                 body: message,
                 icon: "https://temo1.gr/notification-gold.png",
                 badge: "https://temo1.gr/badge-T.svg",
@@ -407,20 +409,24 @@ export default {
                 tag: "temo-admin-broadcast-" + String(body.createdAt || Date.now()),
                 url: "https://temo1.gr/push-view.html?id=" + encodeURIComponent(viewId)
               }, env);
-              if (response.ok) sent++;
-              else {
+              if (response.ok) {
+                sent++;
+                if (isApplePush) appleSent++;
+              } else {
                 failed++;
+                if (isApplePush) appleFailed++;
                 const reason = "HTTP " + response.status;
                 failureReasons[reason] = (failureReasons[reason] || 0) + 1;
                 if (response.status === 404 || response.status === 410) { try { await pfput("/pushSubscriptions/" + uk + "/" + sk, null, env); } catch (_) {} }
               }
             } catch (_) {
               failed++;
+              if (isApplePush) appleFailed++;
               failureReasons.network = (failureReasons.network || 0) + 1;
             }
           }
         }
-        return new Response(JSON.stringify({ ok: sent > 0, sent, failed, total, failureReasons }), { status: 200, headers: corsHeaders });
+        return new Response(JSON.stringify({ ok: sent > 0, sent, failed, total, appleSent, appleFailed, appleTotal, failureReasons }), { status: 200, headers: corsHeaders });
       }
 
       if (action === "push-direct") {
