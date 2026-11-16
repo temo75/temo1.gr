@@ -7,25 +7,42 @@ self.addEventListener('activate', event => {
 });
 
 self.addEventListener('notificationclick', event => {
-  const notificationData = event.notification.data || {};
-  const isChat = String(event.notification.tag || '').startsWith('temo-chat-');
   event.notification.close();
+
   event.waitUntil((async () => {
     const scopeUrl = new URL(self.registration.scope);
     let targetUrl;
-    if (isChat) targetUrl = new URL('messenger.html', scopeUrl);
-    else {
-      try { targetUrl = new URL(typeof notificationData === 'string' ? notificationData : (notificationData.url || './'), scopeUrl); }
-      catch (e) { targetUrl = scopeUrl; }
+    try {
+      targetUrl = new URL(event.notification.data || './', scopeUrl);
+    } catch (e) {
+      targetUrl = scopeUrl;
     }
-    if (targetUrl.origin !== scopeUrl.origin || !targetUrl.pathname.startsWith(scopeUrl.pathname)) targetUrl = scopeUrl;
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    const exactClient = windows.find(client => {
-      try { const url = new URL(client.url); return url.origin === targetUrl.origin && url.pathname === targetUrl.pathname; }
-      catch (e) { return false; }
+    if (targetUrl.origin !== scopeUrl.origin || !targetUrl.pathname.startsWith(scopeUrl.pathname)) {
+      targetUrl = scopeUrl;
+    }
+
+    const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+    const client = clients.find(candidate => {
+      try {
+        const url = new URL(candidate.url);
+        return url.origin === scopeUrl.origin && url.pathname.startsWith(scopeUrl.pathname);
+      } catch (e) {
+        return false;
+      }
     });
-    if (exactClient) return exactClient.focus();
-    // Keep the old home page open; open Messenger in its own window.
+
+    if (client) {
+      if (client.url !== targetUrl.href && 'navigate' in client) {
+        try {
+          await client.navigate(targetUrl.href);
+          return client.focus();
+        } catch (e) {
+          return self.clients.openWindow(targetUrl.href);
+        }
+      }
+      return client.focus();
+    }
+
     return self.clients.openWindow(targetUrl.href);
   })());
 });
@@ -55,25 +72,7 @@ self.addEventListener('push', event => {
     data: data.url || './'
   };
 
-  event.waitUntil((async () => {
-    // Always display incoming Push notifications, even while TEMO is open.
-    const isChat = String(data.tag || '').startsWith('temo-chat-');
-    const options = {
-      ...options,
-      tag: data.tag || 'temo-note-reminder',
-      renotify: isChat ? false : Boolean(data.renotify),
-      requireInteraction: isChat ? false : options.requireInteraction
-    };
-    try {
-      await self.registration.showNotification(title, options);
-    } catch (displayError) {
-      // Some browsers reject optional image/badge/interaction options.
-      // Retry with the cross-browser minimum so a valid Push is still shown.
-      await self.registration.showNotification(title, {
-        body: String(data.body || 'ახალი შეტყობინება'),
-        tag: String(data.tag || 'temo-note-reminder'),
-        data: { url: typeof data.url === 'string' ? data.url : './' }
-      });
-    }
-  })());
+  event.waitUntil(
+    self.registration.showNotification(title, options)
+  );
 });
