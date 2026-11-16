@@ -5131,6 +5131,8 @@ async function sendAdminBroadcast(){
     const pushResult=await pushResponse.json().catch(()=>({}));
     if(!pushResponse.ok)throw new Error(pushResult.error||'Push სერვერთან კავშირი ვერ მოხერხდა.');
     const sent=Number(pushResult.sent||0),failed=Number(pushResult.failed||0),total=Number(pushResult.total||0);
+    const appleSent=Number(pushResult.appleSent||0),appleFailed=Number(pushResult.appleFailed||0),appleTotal=Number(pushResult.appleTotal||0);
+    const appleStatus='Apple Push: '+appleSent+' / '+appleTotal+' მისამართი მიღებულია'+(appleFailed?' ('+appleFailed+' უარყოფილია)':'')+'.';
     const reasons=pushResult.failureReasons&&typeof pushResult.failureReasons==='object'
       ?Object.entries(pushResult.failureReasons).map(([reason,count])=>reason+' × '+count).join(', ')
       :'';
@@ -5144,7 +5146,7 @@ async function sendAdminBroadcast(){
     if(status){
       if(total===0)status.textContent='Push ვერ გაიგზავნა: არცერთი მოწყობილობა არ არის გამოწერილი. მომხმარებლებმა უნდა ჩართონ Push შეტყობინებები.';
       else if(sent===0)status.textContent='Push ვერ გაიგზავნა: '+failed+' / '+total+' მოწყობილობა უარყოფილია.'+(reasons?' მიზეზები: '+reasons:'');
-      else status.textContent='Push სერვისმა მიიღო '+sent+' / '+total+' მოწყობილობის შეტყობინება.'+(failed?' ვერ გაიგზავნა '+failed+' მოწყობილობაზე'+(reasons?' ('+reasons+')':'')+'.':'');
+      else status.textContent='Push სერვისმა მიიღო '+sent+' / '+total+' მოწყობილობის შეტყობინება. '+appleStatus+(failed?' ვერ გაიგზავნა '+failed+' მოწყობილობაზე'+(reasons?' ('+reasons+')':'')+'.':'');
     }
   }catch(e){if(status)status.textContent=e.message||'გაგზავნა ვერ მოხერხდა.';console.warn('Broadcast send failed:',e);}
 }
