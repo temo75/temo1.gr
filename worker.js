@@ -390,11 +390,9 @@ export default {
           const entries = Object.entries(subscriptions).filter(([sk, sub]) =>
             sub?.endpoint && sub?.keys?.p256dh && sub?.keys?.auth
           );
-          // Android: prefer the native subscription and suppress its older web-push subscription.
-          const hasAndroidNative = entries.some(([sk, sub]) => sub?.platform === "android-native");
-          const selected = entries.filter(([sk, sub]) =>
-            hasAndroidNative ? sub?.platform === "android-native" : sub?.platform !== "android-native"
-          );
+          // Browser Push subscriptions are Web Push on Android and iOS too.
+          // Send to every valid registered endpoint; deduplicate by endpoint below.
+          const selected = entries;
           const seenEndpoints = new Set();
           for (const [sk, sub] of selected) {
             const endpoint = String(sub.endpoint || "");
