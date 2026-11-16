@@ -5129,13 +5129,23 @@ async function sendAdminBroadcast(){
     if(message)await bridgeRequest('db',{path:'siteBroadcast',method:'PUT',data:{text:message,createdAt:sentAt}});
     const pushResponse=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-broadcast',userId:String(currentUserId),sessionToken,message,imageId,createdAt:sentAt})});
     const pushResult=await pushResponse.json().catch(()=>({}));
-    if(!pushResponse.ok||!pushResult.ok)throw new Error(pushResult.error||'Push გაგზავნა ვერ მოხერხდა');
+    if(!pushResponse.ok)throw new Error(pushResult.error||'Push სერვერთან კავშირი ვერ მოხერხდა.');
+    const sent=Number(pushResult.sent||0),failed=Number(pushResult.failed||0),total=Number(pushResult.total||0);
+    const reasons=pushResult.failureReasons&&typeof pushResult.failureReasons==='object'
+      ?Object.entries(pushResult.failureReasons).map(([reason,count])=>reason+' × '+count).join(', ')
+      :'';
     adminBroadcastLoadKey='';
     if(message)await loadAdminBroadcast();
-    if(ta)ta.value='';
-    if(fileInput)fileInput.value='';
-    const imageName=$('adminBroadcastImageName');if(imageName)imageName.textContent='';
-    if(status)status.textContent='Push გაეგზავნა '+Number(pushResult.sent||0)+' მოწყობილობას.';
+    if(sent>0){
+      if(ta)ta.value='';
+      if(fileInput)fileInput.value='';
+      const imageName=$('adminBroadcastImageName');if(imageName)imageName.textContent='';
+    }
+    if(status){
+      if(total===0)status.textContent='Push ვერ გაიგზავნა: არცერთი მოწყობილობა არ არის გამოწერილი. მომხმარებლებმა უნდა ჩართონ Push შეტყობინებები.';
+      else if(sent===0)status.textContent='Push ვერ გაიგზავნა: '+failed+' / '+total+' მოწყობილობა უარყოფილია.'+(reasons?' მიზეზები: '+reasons:'');
+      else status.textContent='Push სერვისმა მიიღო '+sent+' / '+total+' მოწყობილობის შეტყობინება.'+(failed?' ვერ გაიგზავნა '+failed+' მოწყობილობაზე'+(reasons?' ('+reasons+')':'')+'.':'');
+    }
   }catch(e){if(status)status.textContent=e.message||'გაგზავნა ვერ მოხერხდა.';console.warn('Broadcast send failed:',e);}
 }
 async function sendAdminMessage(){
