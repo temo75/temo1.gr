@@ -170,6 +170,7 @@ async function stopVideo(end=true){
  remoteVideo.srcObject=null;localVideo.srcObject=null;activeCall=null;callSide='';seenCandidates.clear();remoteReady=false;
  videoBox.classList.remove('show');$('videoAccept').hidden=true;
  startIncomingPolling();
+}
 async function sendOffer(){
  makePeer();const offer=await pc.createOffer();await pc.setLocalDescription(offer);
  await call('callSet',{callId:activeCall.id,field:'offer',value:pc.localDescription.toJSON()});
