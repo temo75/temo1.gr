@@ -56,8 +56,7 @@ self.addEventListener('push', event => {
   };
 
   event.waitUntil((async () => {
-    const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-    if (windows.some(client => client.visibilityState === 'visible')) return;
+    // Always display incoming Push notifications, even while TEMO is open.
     const isChat = String(data.tag || '').startsWith('temo-chat-');
     const options = {
       ...options,
