@@ -199,10 +199,11 @@ async function beginVideo(){
  }catch(e){showStatus(e.message||'ვიდეოზარი ვერ დაიწყო');await stopVideo()}
 }
 async function syncCandidates(data,side){
+ if(!remoteReady||!pc)return;
  const entries=data?.candidates?.[side]||{};
  for(const [id,c] of Object.entries(entries)){
-  if(seenCandidates.has(id))continue;seenCandidates.add(id);
-  if(remoteReady&&pc)try{await pc.addIceCandidate(c)}catch(e){console.warn('ICE candidate',e)}
+  if(seenCandidates.has(id))continue;
+  try{await pc.addIceCandidate(c);seenCandidates.add(id)}catch(e){console.warn('ICE candidate',e)}
  }
 }
 function startCallPolling(){
