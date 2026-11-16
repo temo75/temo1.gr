@@ -109,7 +109,7 @@ $('profileChat').onclick=async()=>{if(!selectedPerson)return;directTarget=select
 $('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!directTarget)return;try{const sent=await call('sendDirect',{targetId:directTarget,text:t});$('directText').value='';await loadDirect();try{const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:token,messageId:sent.message?.id||'',message:t,senderName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Chat push delivery:',pr.status,pd)}catch(e){console.warn('Chat push failed',e)}}catch(e){showStatus(e.message)}};
 $('directText').addEventListener('keydown',e=>{if(e.key==='Enter')$('directSend').click()});
 $('profileVideo').onclick=beginVideo;
-let activeCall=null,pc=null,localStream=null,callPoll=null,incomingPoll=null,callSide='',seenCandidates=new Set(),remoteReady=false;
+let activeCall=null,pc=null,localStream=null,callPoll=null,incomingPoll=null,incomingCheckBusy=false,callSide='',seenCandidates=new Set(),remoteReady=false;
 let ringAudio=null,ringOscillator=null,ringGain=null,ringTimer=null,ringPulse=false;
 function unlockRingAudio(){
  try{
@@ -120,10 +120,12 @@ function unlockRingAudio(){
  }catch(e){console.warn('Ringtone audio:',e)}
 }
 ['pointerdown','touchstart','click','keydown'].forEach(type=>document.addEventListener(type,unlockRingAudio,{passive:true}));
-function startRingtone(){
+async function startRingtone(){
  try{
   unlockRingAudio();
   if(!ringAudio||ringOscillator)return;
+  if(ringAudio.state==='suspended')await ringAudio.resume();
+  if(ringAudio.state!=='running')return;
   ringOscillator=ringAudio.createOscillator();
   ringGain=ringAudio.createGain();
   ringOscillator.type='sine';
@@ -135,7 +137,7 @@ function startRingtone(){
   ringTimer=setInterval(()=>{
    if(!ringGain||!ringAudio)return;
    ringPulse=!ringPulse;
-   ringGain.gain.setTargetAtTime(ringPulse?0.12:0,ringAudio.currentTime,0.025);
+   ringGain.gain.setTargetAtTime(ringPulse?0.18:0,ringAudio.currentTime,0.025);
   },500);
  }catch(e){console.warn('Ringtone start:',e)}
 }
@@ -162,13 +164,12 @@ function makePeer(){
 async function stopVideo(end=true){
  stopRingtone();
  if(callPoll)clearInterval(callPoll);callPoll=null;
- if(incomingPoll)clearInterval(incomingPoll);incomingPoll=null;
  if(end&&activeCall)call('callEnd',{callId:activeCall.id}).catch(()=>{});
  if(pc){pc.close();pc=null}
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}
  remoteVideo.srcObject=null;localVideo.srcObject=null;activeCall=null;callSide='';seenCandidates.clear();remoteReady=false;
  videoBox.classList.remove('show');$('videoAccept').hidden=true;
-}
+ startIncomingPolling();
 async function sendOffer(){
  makePeer();const offer=await pc.createOffer();await pc.setLocalDescription(offer);
  await call('callSet',{callId:activeCall.id,field:'offer',value:pc.localDescription.toJSON()});
@@ -215,20 +216,28 @@ function startCallPolling(){
  },900);
 }
 async function checkIncoming(){
- if(activeCall||videoBox.classList.contains('show'))return;
+ if(incomingCheckBusy||activeCall||videoBox.classList.contains('show')||document.visibilityState==='hidden')return;
+ incomingCheckBusy=true;
  try{
-  const calls=await call('callIncoming');
+  const response=await call('callIncoming');
+  const calls=Array.isArray(response)?response:Array.isArray(response?.calls)?response.calls:Array.isArray(response?.incomingCalls)?response.incomingCalls:Array.isArray(response?.data?.calls)?response.data.calls:response?.call?[response.call]:[];
   if(calls.length){
-   activeCall=calls[0];callSide='callee';startRingtone();showVideo('შემომავალი ზარი: '+(activeCall.callerName||'მომხმარებელი'));
-   $('videoAccept').hidden=false;
+   activeCall=calls[0];callSide='callee';showVideo('შემომავალი ზარი: '+(activeCall.callerName||activeCall.fromName||'მომხმარებელი'));
+   $('videoAccept').hidden=false;startRingtone();
   }
- }catch(e){}
+ }catch(e){console.warn('Incoming call check:',e)}
+ finally{incomingCheckBusy=false}
 }
+function startIncomingPolling(){
+ if(incomingPoll)clearInterval(incomingPoll);
+ checkIncoming();incomingPoll=setInterval(checkIncoming,1000);
+}
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&!activeCall)checkIncoming()});
 $('videoAccept').onclick=acceptVideo;
 $('videoHangup').onclick=()=>stopVideo(true);
 $('videoMute').onclick=()=>{if(localStream){const t=localStream.getAudioTracks()[0];if(t){t.enabled=!t.enabled;$('videoMute').textContent=t.enabled?'🎙️':'🔇'}}};
 $('videoCamera').onclick=()=>{if(localStream){const t=localStream.getVideoTracks()[0];if(t){t.enabled=!t.enabled;$('videoCamera').textContent=t.enabled?'📷':'🚫'}}};
-incomingPoll=setInterval(checkIncoming,2500);
+startIncomingPolling();
 if(location.origin==='https://temo1.gr'){
  ensureMessengerPush().catch(e=>console.warn('Messenger Push registration:',e));
 }
