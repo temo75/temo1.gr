@@ -6790,10 +6790,9 @@ function isTEMOiOSDevice(){
   if(isTEMOAndroidDevice())return false;
   const ua=String(navigator.userAgent||'');
   const platform=String(navigator.userAgentData?.platform||navigator.platform||'');
-  const appleVendor=String(navigator.vendor||'')==='Apple Computer, Inc.';
-  const iphoneOrIpad=/iPhone|iPad|iPod/i.test(ua)||/iPhone|iPad|iPod/i.test(platform)||
+  // iOS browsers can report Google/Mozilla as vendor; do not require Apple vendor.
+  return /iPhone|iPad|iPod/i.test(ua)||/iPhone|iPad|iPod/i.test(platform)||
     (platform==='MacIntel'&&Number(navigator.maxTouchPoints||0)>1);
-  return appleVendor&&iphoneOrIpad;
 }
 async function loadTEMOVapidPublicKey(){
   if(TEMO_VAPID_PUBLIC_KEY)return TEMO_VAPID_PUBLIC_KEY;
