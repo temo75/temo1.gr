@@ -412,7 +412,7 @@ export default {
                 failed++;
                 const reason = "HTTP " + response.status;
                 failureReasons[reason] = (failureReasons[reason] || 0) + 1;
-                if (response.status === 404 || response.status === 410) await pfput("/pushSubscriptions/" + uk + "/" + sk, null, env);
+                if (response.status === 404 || response.status === 410) { try { await pfput("/pushSubscriptions/" + uk + "/" + sk, null, env); } catch (_) {} }
               }
             } catch (_) {
               failed++;
