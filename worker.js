@@ -480,6 +480,59 @@ export default {
         return new Response(JSON.stringify({ ok: true, sent, failed }), { status: 200, headers: corsHeaders });
       }
 
+      if (action === "push-video-call") {
+        const userId = String(body.userId || "").trim();
+        const targetId = String(body.targetId || "").trim();
+        const callId = String(body.callId || "").replace(/[^a-zA-Z0-9_-]/g, "").slice(0, 128);
+        if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: "Origin not allowed" }), { status: 403, headers: corsHeaders });
+        if (!userId || !targetId || userId === targetId || !callId) return new Response(JSON.stringify({ ok: false, error: "Invalid video call notification" }), { status: 400, headers: corsHeaders });
+        let sessionData;
+        try {
+          if (!body.sessionToken || !env.FIREBASE_BRIDGE) throw new Error("Session verifier unavailable");
+          const response = await env.FIREBASE_BRIDGE.fetch(new Request("https://firebase-bridge.internal/", {
+            method: "POST", headers: { "Content-Type": "application/json", "Origin": "https://temo1.gr" },
+            body: JSON.stringify({ action: "session", sessionToken: String(body.sessionToken) })
+          }));
+          sessionData = await response.json().catch(() => null);
+          if (!response.ok || !sessionData?.user || String(sessionData.user.id) !== userId || sessionData.user.blocked === true) {
+            return new Response(JSON.stringify({ ok: false, error: "Authentication required" }), { status: 401, headers: corsHeaders });
+          }
+        } catch (_) {
+          return new Response(JSON.stringify({ ok: false, error: "Push authentication unavailable" }), { status: 503, headers: corsHeaders });
+        }
+        if (!env.VAPID_PRIVATE_JWK) return new Response(JSON.stringify({ ok: false, error: "Push key is not configured" }), { status: 503, headers: corsHeaders });
+        const all = await pfget("/pushSubscriptions", env) || {};
+        const recipientKey = pkey(targetId);
+        const subscriptions = all[recipientKey] || {};
+        const entries = Object.entries(subscriptions).filter(([key, sub]) => sub?.endpoint && sub?.keys?.p256dh && sub?.keys?.auth);
+        let sent = 0, failed = 0;
+        const seen = new Set();
+        for (const [key, sub] of entries) {
+          const endpoint = String(sub.endpoint || "");
+          if (!endpoint || seen.has(endpoint)) continue;
+          seen.add(endpoint);
+          try {
+            const response = await sendPush(sub, {
+              title: String(sessionData.user.name || body.callerName || "TEMO"),
+              body: "შემომავალი ვიდეოზარი",
+              icon: "https://temo1.gr/notification-gold.png",
+              badge: "https://temo1.gr/badge-T.svg",
+              tag: "temo-video-call-" + callId,
+              renotify: false,
+              requireInteraction: true,
+              vibrate: [300, 180, 300, 180, 500],
+              url: "https://temo1.gr/messenger.html"
+            }, env);
+            if (response.ok) sent++;
+            else {
+              failed++;
+              if (response.status === 404 || response.status === 410) await pfput("/pushSubscriptions/" + recipientKey + "/" + key, null, env);
+            }
+          } catch (_) { failed++; }
+        }
+        return new Response(JSON.stringify({ ok: true, sent, failed }), { status: 200, headers: corsHeaders });
+      }
+
       if (action === "push-subscribe") {
         const userId = String(body.userId || "").trim();
         if (!allowedOrigins.has(requestOrigin)) return new Response(JSON.stringify({ ok: false, error: 'Origin not allowed' }), { status: 403, headers: corsHeaders });
