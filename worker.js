@@ -384,20 +384,19 @@ export default {
         const allSubscriptions = await pfget("/pushSubscriptions", env) || {};
         const viewId = "v" + Date.now().toString(36) + crypto.randomUUID().replace(/-/g, "").slice(0, 16);
         await pfput("/pushViews/" + viewId, { message, imageId: imageId || "", createdAt: Date.now(), expiresAt: Date.now() + 604800000 }, env);
-        let sent = 0, failed = 0;
+        let sent = 0, failed = 0, total = 0;
+        const failureReasons = {};
+        const seenEndpoints = new Set();
         for (const [uk, subscriptions] of Object.entries(allSubscriptions)) {
           if (!subscriptions || typeof subscriptions !== "object") continue;
-          const entries = Object.entries(subscriptions).filter(([sk, sub]) =>
+          const entries = Object.entries(subscriptions).filter(([, sub]) =>
             sub?.endpoint && sub?.keys?.p256dh && sub?.keys?.auth
           );
-          // Browser Push subscriptions are Web Push on Android and iOS too.
-          // Send to every valid registered endpoint; deduplicate by endpoint below.
-          const selected = entries;
-          const seenEndpoints = new Set();
-          for (const [sk, sub] of selected) {
+          for (const [sk, sub] of entries) {
             const endpoint = String(sub.endpoint || "");
             if (!endpoint || seenEndpoints.has(endpoint)) continue;
             seenEndpoints.add(endpoint);
+            total++;
             try {
               const response = await sendPush(sub, {
                 title: "",
@@ -411,12 +410,17 @@ export default {
               if (response.ok) sent++;
               else {
                 failed++;
+                const reason = "HTTP " + response.status;
+                failureReasons[reason] = (failureReasons[reason] || 0) + 1;
                 if (response.status === 404 || response.status === 410) await pfput("/pushSubscriptions/" + uk + "/" + sk, null, env);
               }
-            } catch (_) { failed++; }
+            } catch (_) {
+              failed++;
+              failureReasons.network = (failureReasons.network || 0) + 1;
+            }
           }
         }
-        return new Response(JSON.stringify({ ok: true, sent, failed }), { status: 200, headers: corsHeaders });
+        return new Response(JSON.stringify({ ok: sent > 0, sent, failed, total, failureReasons }), { status: 200, headers: corsHeaders });
       }
 
       if (action === "push-direct") {
