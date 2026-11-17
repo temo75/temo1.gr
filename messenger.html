@@ -32,7 +32,7 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 <section class="panel" id="profilePanel" hidden style="margin-top:12px">
  <button id="backUsers" type="button" title="უკან" aria-label="უკან">↩</button>
  <div class="profileHead"><div class="bubble">👤</div><div class="profileIdentity"><h2 id="profileName" style="margin:0 0 4px"></h2><div class="muted" id="profileState"></div></div><div class="profileCallActions"><button type="button" id="profileMore" aria-label="მეტი" title="მეტი">⋮</button><div id="profileMoreMenu" hidden><button type="button" id="profileBlock" class="danger">დაბლოკვა</button><button type="button" id="profileRemove" class="danger">წაშლა</button></div><button id="profileVideo" title="ვიდეოზარი" aria-label="ვიდეოზარი">📹</button></div></div>
- <div class="tools"><button id="profileChat" class="primary" title="ჩატის გახსნა" aria-label="ჩატის გახსნა">💬</button></div>
+
  <div id="profileChatBox" hidden style="margin-top:14px"><div class="messages" id="directLog" style="min-height:220px;max-height:48vh"></div><div class="sendRow"><input id="directText" maxlength="2000" placeholder="შეტყობინება..."><button class="primary" id="directSend" aria-label="გაგზავნა" title="გაგზავნა"><svg viewBox="0 0 24 24" width="27" height="27" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></button></div></div>
 </section>
 
@@ -83,7 +83,7 @@ $('modalCancel').onclick=closeModal;$('modalOk').onclick=async()=>{if(modalActio
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function showStatus(t){$('status').textContent=t}
 let people=[],contacts=[],requests=[],directTarget=null,directPoll=null,selectedPerson=null;
-function personRow(u){const yes=contacts.some(c=>c.id===u.id);return '<div class="personRow"><button class="personName" data-profile="'+esc(u.id)+'"><svg class="personIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4.2"/><path d="M3.5 21c.5-4.5 3.8-7 8.5-7s8 2.5 8.5 7"/></svg><span>'+esc(u.name)+'</span></button><span class="personActions">'+(yes?'<button disabled>✓</button>':'<button data-add="'+esc(u.id)+'">＋ დამატება</button>')+'</span></div>'}
+function personRow(u){const yes=contacts.some(c=>c.id===u.id);return '<div class="personRow"><button class="personName" data-profile="'+esc(u.id)+'"><svg class="personIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4.2"/><path d="M3.5 21c.5-4.5 3.8-7 8.5-7s8 2.5 8.5 7"/></svg><span>'+esc(u.name)+'</span></button><span class="personActions">'+(yes?'<button data-chat="'+esc(u.id)+'" title="ჩატის გახსნა" aria-label="ჩატის გახსნა">💬</button><button disabled>✓</button>':'<button data-add="'+esc(u.id)+'">＋ დამატება</button>')+'</span></div>'}
 async function loadPeople(){
  [people,contacts,requests]=await Promise.all([call('users'),call('contacts'),call('requests')]);
  $('contacts').innerHTML=contacts.length?'<div class="muted">ჩემი კონტაქტები</div>'+contacts.map(personRow).join(''):'<div class="muted">კონტაქტები ჯერ არ არის</div>';
@@ -107,7 +107,7 @@ async function openProfile(id){
 $('backUsers').onclick=()=>{$('profilePanel').hidden=true;selectedPerson=null;if(directPoll)clearInterval(directPoll)};
 $('profileMore').onclick=()=>{$('profileMoreMenu').hidden=!$('profileMoreMenu').hidden};
 document.addEventListener('click',e=>{if(!e.target.closest('.profileCallActions'))$('profileMoreMenu').hidden=true});
-$('profileChat').onclick=async()=>{if(!selectedPerson)return;directTarget=selectedPerson.id;$('profileChatBox').hidden=false;await loadDirect();if(directPoll)clearInterval(directPoll);directPoll=setInterval(()=>loadDirect().catch(()=>{}),3000)};
+
 $('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!directTarget)return;try{const sent=await call('sendDirect',{targetId:directTarget,text:t});$('directText').value='';await loadDirect();try{const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:token,messageId:sent.message?.id||'',message:t,senderName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Chat push delivery:',pr.status,pd)}catch(e){console.warn('Chat push failed',e)}}catch(e){showStatus(e.message)}};
 $('directText').addEventListener('keydown',e=>{if(e.key==='Enter')$('directSend').click()});
 $('profileVideo').onclick=beginVideo;
@@ -251,7 +251,7 @@ if(location.origin==='https://temo1.gr'){
 
 $('profileRemove').onclick=()=>{if(!selectedPerson)return;showModal('კონტაქტის წაშლა','ნამდვილად გინდა კონტაქტიდან წაშლა?',async()=>{await call('removeFriend',{targetId:selectedPerson.id});await loadPeople();$('profilePanel').hidden=true})};
 $('profileBlock').onclick=async()=>{if(!selectedPerson)return;try{await call('block',{targetId:selectedPerson.id});showStatus('მომხმარებელი დაიბლოკა');$('profilePanel').hidden=true}catch(e){showStatus(e.message)}};
-async function openDirect(id){await openProfile(id);if(contacts.some(x=>x.id===id))$('profileChat').click()}
+async function openDirect(id){await openProfile(id);if(contacts.some(x=>x.id===id)){directTarget=id;$('profileChatBox').hidden=false;await loadDirect();if(directPoll)clearInterval(directPoll);directPoll=setInterval(()=>loadDirect().catch(()=>{}),3000)}}
 
 async function loadDirect(){if(!directTarget)return;const list=await call('directMessages',{targetId:directTarget});const log=$('directLog');if(!log||$('profileChatBox').hidden)return;log.innerHTML=list.map(m=>'<div class="msg '+(m.userId===uid?'mine':'')+'" data-message-id="'+esc(m.id||'')+'" data-message-text="'+esc(m.text)+'"><small>'+esc(m.userName)+'</small><div>'+esc(m.text)+'</div></div>').join('');log.scrollTop=log.scrollHeight}
 function messageActions(el){if(!el||!el.classList.contains('mine'))return;const messageId=el.dataset.messageId;if(!messageId)return;showModal('შეტყობინება','<div style="display:flex;gap:10px;justify-content:center"><button type="button" id="editOwnMessage">✏️ შესწორება</button><button type="button" id="deleteOwnMessage">🗑️ წაშლა</button></div>',()=>{});$('modalOk').hidden=true;$('editOwnMessage').onclick=()=>{const current=el.dataset.messageText||'';showModal('შეტყობინების შესწორება','<textarea id="editMessageText" maxlength="2000" style="width:100%;min-height:100px;box-sizing:border-box">'+esc(current)+'</textarea>',async()=>{const text=$('editMessageText').value.trim();if(!text)throw new Error('ტექსტი ცარიელია');await call('editDirect',{targetId:directTarget,messageId,text});await loadDirect()});$('modalOk').hidden=false};$('deleteOwnMessage').onclick=()=>{showModal('შეტყობინების წაშლა','ნამდვილად გინდა ამ ტექსტის წაშლა?',async()=>{await call('deleteDirect',{targetId:directTarget,messageId});await loadDirect()});$('modalOk').hidden=false}}
