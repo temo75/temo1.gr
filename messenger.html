@@ -101,7 +101,7 @@ async function openProfile(id){
  selectedPerson=people.find(x=>x.id===id)||contacts.find(x=>x.id===id);if(!selectedPerson)return;
  const yes=contacts.some(x=>x.id===id);
  $('profileName').textContent=selectedPerson.name;$('profileState').textContent=yes?'კონტაქტებშია':'ჯერ კონტაქტი არ არის';
- $('profileChat').hidden=!yes;$('profileMore').hidden=!yes;$('profileMoreMenu').hidden=true;$('profileChatBox').hidden=true;
+ $('profileMore').hidden=!yes;$('profileMoreMenu').hidden=true;$('profileChatBox').hidden=true;
  $('profilePanel').hidden=false;$('profilePanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 $('backUsers').onclick=()=>{$('profilePanel').hidden=true;selectedPerson=null;if(directPoll)clearInterval(directPoll)};
