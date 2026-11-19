@@ -6827,37 +6827,41 @@ function showTEMOPushWelcomePrompt(){
   }catch(e){console.warn('TEMO Push welcome prompt failed:',e);}
 }
 
+let temoPushRegistrationPromise=null;
 async function ensureTEMOPushSubscription(){
-  try{
-    if(!currentUserId)throw new Error('მომხმარებელი არ არის შესული');
-    if(!('Notification' in window))throw new Error('Notification API მიუწვდომელია');
-    if(Notification.permission!=='granted')throw new Error('Notification permission: '+Notification.permission);
-    if(!('serviceWorker' in navigator))throw new Error('Service Worker მიუწვდომელია');
-    if(!('PushManager' in window))throw new Error('PushManager მიუწვდომელია');
-    await loadTEMOVapidPublicKey();
-    const applicationServerKey=temoB64UrlToBytes(TEMO_VAPID_PUBLIC_KEY);
-    await navigator.serviceWorker.register('./temo-notes-sw.js',{scope:'./'});
-    const reg=await navigator.serviceWorker.ready;
-    let sub=await reg.pushManager.getSubscription();
-    if(sub&&!temoPushKeysMatch(sub.options?.applicationServerKey,applicationServerKey)){
-      await sub.unsubscribe();
-      sub=null;
+  if(temoPushRegistrationPromise)return temoPushRegistrationPromise;
+  temoPushRegistrationPromise=(async()=>{
+    try{
+      if(!currentUserId)throw new Error('მომხმარებელი არ არის შესული');
+      if(!('Notification' in window))throw new Error('Notification API მიუწვდომელია');
+      if(Notification.permission!=='granted')throw new Error('Notification permission: '+Notification.permission);
+      if(!('serviceWorker' in navigator))throw new Error('Service Worker მიუწვდომელია');
+      if(!('PushManager' in window))throw new Error('PushManager მიუწვდომელია');
+      await loadTEMOVapidPublicKey();
+      const applicationServerKey=temoB64UrlToBytes(TEMO_VAPID_PUBLIC_KEY);
+      await navigator.serviceWorker.register('./temo-notes-sw.js',{scope:'./'});
+      const reg=await navigator.serviceWorker.ready;
+      let sub=await reg.pushManager.getSubscription();
+      if(sub&&!temoPushKeysMatch(sub.options?.applicationServerKey,applicationServerKey)){
+        await sub.unsubscribe();
+        sub=null;
+      }
+      if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey});
+      const payload=sub.toJSON();
+      if(!payload?.endpoint||!payload?.keys?.p256dh||!payload?.keys?.auth)throw new Error('Push subscription მონაცემები არასრულია');
+      const response=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-subscribe',userId:String(currentUserId),sessionToken:localStorage.getItem(BRIDGE_SESSION_KEY)||'',deviceId:temoPushDeviceId(),platform:isTEMOAndroidDevice()?'android-native':'web-push',subscription:payload})});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok||result.ok!==true)throw new Error(result.error||'Push რეგისტრაცია ვერ დადასტურდა (HTTP '+response.status+')');
+      const b=document.getElementById('notesPushEnableBtn');if(b)b.textContent=t('✅ შეტყობინებები ჩართულია');
+      return true;
+    }catch(e){
+      console.warn('TEMO Push subscription failed:',e);
+      return false;
+    }finally{
+      temoPushRegistrationPromise=null;
     }
-    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey});
-    const payload=sub.toJSON();
-    if(!payload?.endpoint||!payload?.keys?.p256dh||!payload?.keys?.auth)throw new Error('Push subscription მონაცემები არასრულია');
-    const r=await fetch(TEMO_PUSH_WORKER_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-subscribe',userId:String(currentUserId),sessionToken:localStorage.getItem(BRIDGE_SESSION_KEY)||'',deviceId:temoPushDeviceId(),platform:isTEMOAndroidDevice()?'android-native':'web-push',subscription:payload})});
-    if(!r.ok){
-      let detail='';
-      try{detail=(await r.text()).slice(0,300);}catch(_){}
-      throw new Error('Worker HTTP '+r.status+(detail?' — '+detail:''));
-    }
-    const b=document.getElementById('notesPushEnableBtn');if(b)b.textContent=t('✅ შეტყობინებები ჩართულია');
-    return true;
-  }catch(e){
-    console.warn('TEMO Push subscription failed:',e);
-    return false;
-  }
+  })();
+  return temoPushRegistrationPromise;
 }
 async function enableTEMOPush(){
   try{
@@ -6908,6 +6912,15 @@ function autoTEMOPushOnEntry(){
 }
 
 window.addEventListener('load',autoTEMOPushOnEntry,{once:true});
+let temoPushRetryAt=0;
+function retryTEMOPushRegistration(){
+  if(!currentUserId||!('Notification' in window)||Notification.permission!=='granted')return;
+  const now=Date.now();if(now-temoPushRetryAt<30000)return;temoPushRetryAt=now;
+  ensureTEMOPushSubscription();
+}
+window.addEventListener('online',retryTEMOPushRegistration);
+window.addEventListener('focus',retryTEMOPushRegistration);
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')retryTEMOPushRegistration();});
 
 
 function scheduleNativeNoteReminder(note){
