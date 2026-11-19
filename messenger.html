@@ -185,7 +185,15 @@ async function acceptVideo(){
  try{
   $('videoAccept').hidden=true;
   activeCall=await call('callGet',{callId:activeCall.id});
-  if(!activeCall.offer)throw new Error('ზარის კავშირი ჯერ მზად არ არის');
+  if(!activeCall.offer){
+   const callId=activeCall.id,deadline=Date.now()+15000;
+   while(!activeCall.offer&&Date.now()<deadline){
+    await new Promise(resolve=>setTimeout(resolve,300));
+    activeCall=await call('callGet',{callId});
+    if(activeCall.status==='ended')throw new Error('ზარი დასრულდა');
+   }
+  }
+  if(!activeCall.offer)throw new Error('ზარის კავშირი ვერ დამყარდა. სცადეთ ხელახლა.');
   await startMedia();makePeer();
   await pc.setRemoteDescription(activeCall.offer);remoteReady=true;
   const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
