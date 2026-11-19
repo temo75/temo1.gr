@@ -196,6 +196,7 @@ async function acceptVideo(){
 }
 async function beginVideo(){
  if(!selectedPerson||!contacts.some(x=>x.id===selectedPerson.id))return;
+ showVideo('კამერას ვრთავ...');
  try{
   await startMedia();activeCall=await call('callCreate',{targetId:selectedPerson.id});callSide='caller';
   try{const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-video-call',userId:uid,targetId:selectedPerson.id,callId:activeCall.id,sessionToken:token,callerName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Video call Push:',pr.status,pd)}catch(pushError){console.warn('Video call Push failed:',pushError)}
