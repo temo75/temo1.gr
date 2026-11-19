@@ -29,7 +29,7 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 <header><div class="brand"><span>MESSENGER</span></div><div class="user" id="userName"></div></header>
 <div style="display:flex;justify-content:flex-start;margin-top:10px"><button type="button" onclick="location.href='/'" aria-label="უკან დაბრუნება">← უკან</button></div>
 <div class="layout">
-<section class="panel" style="margin-top:14px"><h2>მომხმარებლები</h2><div id="incomingRequests" class="muted"></div><div id="contacts" class="groupList" style="margin-bottom:12px"></div><div id="allUsers" class="groupList"></div></section>
+<section class="panel" style="margin-top:14px"><h2>მეგობრები</h2><div id="incomingRequests" class="muted"></div><div id="contacts" class="groupList" style="margin-bottom:12px"></div><div id="allUsers" class="groupList"></div></section>
 <section class="panel" id="profilePanel" hidden style="margin-top:12px">
  <button id="backUsers" type="button" title="უკან" aria-label="უკან">↩</button>
  <div class="profileHead"><div class="bubble">👤</div><div class="profileIdentity"><h2 id="profileName" style="margin:0 0 4px"></h2><div class="muted" id="profileState"></div></div><div class="profileCallActions"><button type="button" id="profileMore" aria-label="მეტი" title="მეტი">⋮</button><div id="profileMoreMenu" hidden><button type="button" id="profileBlock" class="danger">დაბლოკვა</button><button type="button" id="profileRemove" class="danger">წაშლა</button></div><button id="profileVideo" title="ვიდეოზარი" aria-label="ვიდეოზარი">📹</button></div></div>
@@ -87,7 +87,7 @@ let people=[],contacts=[],requests=[],directTarget=null,directPoll=null,selected
 function personRow(u){const yes=contacts.some(c=>c.id===u.id);return '<div class="personRow"><button class="personName" data-profile="'+esc(u.id)+'"><svg class="personIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4.2"/><path d="M3.5 21c.5-4.5 3.8-7 8.5-7s8 2.5 8.5 7"/></svg><span>'+esc(u.name)+'</span></button><span class="personActions">'+(yes?'<button data-chat="'+esc(u.id)+'" title="ჩატის გახსნა" aria-label="ჩატის გახსნა">💬</button><button disabled>✓</button>':'<button data-add="'+esc(u.id)+'">＋ დამატება</button>')+'</span></div>'}
 async function loadPeople(){
  [people,contacts,requests]=await Promise.all([call('users'),call('contacts'),call('requests')]);
- $('contacts').innerHTML=contacts.length?'<div class="muted">ჩემი კონტაქტები</div>'+contacts.map(personRow).join(''):'<div class="muted">კონტაქტები ჯერ არ არის</div>';
+ $('contacts').innerHTML=contacts.length?contacts.map(personRow).join(''):'<div class="muted">კონტაქტები ჯერ არ არის</div>';
  $('allUsers').innerHTML='<div class="muted">რეგისტრირებული მომხმარებლები</div>'+people.filter(u=>!contacts.some(c=>String(c.id)===String(u.id))).map(personRow).join('');
  $('incomingRequests').innerHTML=requests.length?'<b>მეგობრობის მოთხოვნები</b>'+requests.map(r=>'<div class="requestRow"><span>'+esc(r.name)+'</span><span class="personActions"><button data-accept="'+esc(r.from)+'">მიღება</button><button class="danger" data-reject="'+esc(r.from)+'">უარყოფა</button></span></div>').join(''):'';
  document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>openDirect(b.dataset.profile));
