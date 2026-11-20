@@ -147,7 +147,7 @@ async function startRingtone(){
    ringGain.gain.setValueAtTime(0,now+0.78);
   };
   ringPattern();
-  ringTimer=setInterval(ringPattern,1600);
+  ringTimer=setInterval(ringPattern,1200);
  }catch(e){console.warn('Ringtone start:',e)}
 }
 function stopRingtone(){
