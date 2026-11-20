@@ -136,12 +136,18 @@ async function startRingtone(){
   ringGain.gain.value=0;
   ringOscillator.connect(ringGain);ringGain.connect(ringAudio.destination);
   ringOscillator.start();
-  ringPulse=false;
-  ringTimer=setInterval(()=>{
+  const ringPattern=()=>{
    if(!ringGain||!ringAudio)return;
-   ringPulse=!ringPulse;
-   ringGain.gain.setTargetAtTime(ringPulse?0.18:0,ringAudio.currentTime,0.025);
-  },500);
+   const now=ringAudio.currentTime;
+   ringGain.gain.cancelScheduledValues(now);
+   ringGain.gain.setValueAtTime(0,now);
+   ringGain.gain.setValueAtTime(0.18,now+0.03);
+   ringGain.gain.setValueAtTime(0,now+0.28);
+   ringGain.gain.setValueAtTime(0.18,now+0.48);
+   ringGain.gain.setValueAtTime(0,now+0.78);
+  };
+  ringPattern();
+  ringTimer=setInterval(ringPattern,1600);
  }catch(e){console.warn('Ringtone start:',e)}
 }
 function stopRingtone(){
