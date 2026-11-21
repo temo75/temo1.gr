@@ -191,12 +191,15 @@ async function stopVideo(end=true){
  startIncomingPolling();
 }
 async function waitForIceGathering(){
+ if(!pc)throw new Error('ვიდეოკავშირი შეწყდა');
  if(pc.iceGatheringState==='complete')return;
- await new Promise(resolve=>{
+ await new Promise((resolve,reject)=>{
   let finished=false;
-  const done=()=>{if(finished)return;finished=true;clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',check);resolve()};
-  const check=()=>{if(pc.iceGatheringState==='complete')done()};
-  const timer=setTimeout(done,15000);
+  const cleanup=()=>{clearTimeout(timer);pc?.removeEventListener('icegatheringstatechange',check)};
+  const done=()=>{if(finished)return;finished=true;cleanup();resolve()};
+  const fail=()=>{if(finished)return;finished=true;cleanup();reject(new Error('ICE კანდიდატების შეგროვება ვერ დასრულდა'))};
+  const check=()=>{if(pc?.iceGatheringState==='complete')done()};
+  const timer=setTimeout(fail,20000);
   pc.addEventListener('icegatheringstatechange',check);
   check();
  });
@@ -277,10 +280,23 @@ async function checkIncoming(){
   const response=await call('callIncoming');
   const calls=Array.isArray(response)?response:Array.isArray(response?.calls)?response.calls:Array.isArray(response?.incomingCalls)?response.incomingCalls:Array.isArray(response?.data?.calls)?response.data.calls:response?.call?[response.call]:[];
   if(calls.length){
-   activeCall=calls[0];callSide='callee';showVideo('შემომავალი ზარი: '+(activeCall.callerName||activeCall.fromName||'მომხმარებელი'));
-   $('videoAccept').hidden=false;startRingtone();
+   const incoming=calls[0],callId=incoming.id,deadline=Date.now()+60000;
+   activeCall=incoming;callSide='callee';
+   // The push is sent first. Do not show an answer button until the caller
+   // has finished gathering ICE candidates and saved the complete offer.
+   while(Date.now()<deadline&&document.visibilityState!=='hidden'){
+    const latest=await call('callGet',{callId});
+    if(latest.status==='ended')throw new Error('ზარი დასრულდა');
+    if(latest.offer){activeCall=latest;showVideo('შემომავალი ზარი: '+(latest.callerName||latest.fromName||'მომხმარებელი'));$('videoAccept').hidden=false;startRingtone();break}
+    await new Promise(resolve=>setTimeout(resolve,300));
+   }
+   if(activeCall&&activeCall.id===callId&&!activeCall.offer){
+    await call('callEnd',{callId}).catch(()=>{});
+    activeCall=null;callSide='';
+    showStatus('ზარის შეთავაზება დროულად ვერ მომზადდა');
+   }
   }
- }catch(e){console.warn('Incoming call check:',e)}
+ }catch(e){console.warn('Incoming call check:',e);if(activeCall&&!videoBox.classList.contains('show')){activeCall=null;callSide=''}}
  finally{incomingCheckBusy=false}
 }
 function startIncomingPolling(){
