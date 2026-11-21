@@ -26,7 +26,7 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 </head>
 <body>
 <div class="app" id="app" hidden>
-<header><div class="brand"><span>MESSENGER</span></div><div class="user" id="userName"></div></header>
+<header><div class="brand"><span>MESSENGER</span> <span style="display:inline-block;margin-left:7px;padding:4px 9px;border:1px solid #c99b35;border-radius:7px;background:#3b2d12;color:#ffd66b;font-size:12px;letter-spacing:1px;vertical-align:middle">ტესტი</span></div><div class="user" id="userName"></div></header>
 <div style="display:flex;justify-content:flex-start;margin-top:10px"><button type="button" onclick="location.href='/'" aria-label="უკან დაბრუნება">← უკან</button></div>
 <div class="layout">
 <section class="panel" style="margin-top:14px"><h2>მეგობრები</h2><div id="incomingRequests" class="muted"></div><div id="contacts" class="groupList" style="margin-bottom:12px"></div><div id="allUsers" class="groupList"></div></section>
@@ -163,7 +163,7 @@ async function startMedia(){
  localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
  localVideo.srcObject=localStream;
 }
-async function makePeer(){
+async async function makePeer(){
  const turnResponse=await fetch('https://temo1-messenger-webrtc-test.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'turnCredentials',sessionToken:token})});
  const turnData=await turnResponse.json().catch(()=>({}));
  if(!turnResponse.ok||!Array.isArray(turnData.iceServers))throw new Error(turnData.error||'TURN სერვერი მიუწვდომელია');
@@ -195,7 +195,7 @@ async function acceptVideo(){
   $('videoAccept').hidden=true;
   activeCall=await call('callGet',{callId:activeCall.id});
   if(!activeCall.offer){
-   const callId=activeCall.id,deadline=Date.now()+15000;
+   const callId=activeCall.id,deadline=Date.now()+60000;
    while(!activeCall.offer&&Date.now()<deadline){
     await new Promise(resolve=>setTimeout(resolve,300));
     activeCall=await call('callGet',{callId});
@@ -295,6 +295,22 @@ async function loadDirect(){if(!directTarget)return;const list=await call('direc
 let messageActionPopup=null;function closeMessageActionPopup(){if(messageActionPopup){messageActionPopup.remove();messageActionPopup=null}document.removeEventListener('pointerdown',outsideMessageActionPopup,true)}function outsideMessageActionPopup(e){if(messageActionPopup&&!messageActionPopup.contains(e.target))closeMessageActionPopup()}function messageActions(el){if(!el||!el.classList.contains('mine'))return;const messageId=el.dataset.messageId;if(!messageId)return;closeMessageActionPopup();const popup=document.createElement('div');popup.className='messageActionPopup';popup.innerHTML='<button type="button" id="editOwnMessage" aria-label="შესწორება" title="შესწორება"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16.5-.8 4.3 4.3-.8L20 7.5 16.5 4 4 16.5Z"/><path d="m14.8 5.7 3.5 3.5"/></svg></button><button type="button" id="deleteOwnMessage" aria-label="წაშლა" title="წაშლა"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button>';document.body.appendChild(popup);messageActionPopup=popup;const rect=el.getBoundingClientRect();const width=popup.offsetWidth,height=popup.offsetHeight;popup.style.left=Math.max(8,Math.min(innerWidth-width-8,rect.left+(rect.width-width)/2))+'px';popup.style.top=Math.max(8,rect.top-height-9)+'px';$('editOwnMessage').onclick=()=>{closeMessageActionPopup();const current=el.dataset.messageText||'';showModal('შეტყობინების შესწორება','<textarea id="editMessageText" maxlength="2000" style="width:100%;min-height:100px;box-sizing:border-box">'+esc(current)+'</textarea>',async()=>{const text=$('editMessageText').value.trim();if(!text)throw new Error('ტექსტი ცარიელია');await call('editDirect',{targetId:directTarget,messageId,text});await loadDirect()})};$('deleteOwnMessage').onclick=()=>{closeMessageActionPopup();showModal('შეტყობინების წაშლა','ნამდვილად გინდა ამ ტექსტის წაშლა?',async()=>{await call('deleteDirect',{targetId:directTarget,messageId});await loadDirect()})};setTimeout(()=>document.addEventListener('pointerdown',outsideMessageActionPopup,true),0)}
 const directLog=$('directLog');let pressTimer=null,pressStart=null,lastLongPressAt=0;function clearMessagePress(){if(pressTimer)clearTimeout(pressTimer);pressTimer=null;pressStart=null}directLog.addEventListener('pointerdown',e=>{if(e.button!==0)return;const el=e.target.closest('.msg.mine');if(!el)return;clearMessagePress();pressStart={x:e.clientX,y:e.clientY};pressTimer=setTimeout(()=>{pressTimer=null;lastLongPressAt=Date.now();messageActions(el)},600)});directLog.addEventListener('pointermove',e=>{if(!pressStart)return;if(Math.hypot(e.clientX-pressStart.x,e.clientY-pressStart.y)>14)clearMessagePress()},{passive:true});['pointerup','pointercancel','pointerleave'].forEach(type=>directLog.addEventListener(type,clearMessagePress,{passive:true}));directLog.addEventListener('contextmenu',e=>{const el=e.target.closest('.msg.mine');if(el){e.preventDefault();if(Date.now()-lastLongPressAt>900)messageActions(el)}});
 async function init(){if(!user||!uid||!token){showStatus('ჯერ TEMO1.gr-ზე შედი.');return}try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'session',sessionToken:token})});if(!r.ok)throw new Error('სესია ვადაგასულია. შედი თავიდან TEMO1.gr-ზე.');$('userName').textContent=user;$('app').hidden=false;showStatus('');try{await loadPeople()}catch(e){showStatus('მომხმარებლების სია ვერ ჩაიტვირთა. საჭიროა Cloudflare Worker-ის განახლება.')}}catch(e){$('app').hidden=false;$('userName').textContent=user;showStatus(e.message||'კავშირის შეცდომა')}}
+
+// Pull down at the top of the page to refresh
+let pullStartY=0, pullStartX=0, pullEligible=false;
+document.addEventListener('touchstart',e=>{
+ const t=e.target;
+ pullEligible=window.scrollY<=0 && !t.closest('input,textarea,button,.messages,#profilePanel');
+ if(pullEligible&&e.touches.length===1){pullStartY=e.touches[0].clientY;pullStartX=e.touches[0].clientX}else pullEligible=false;
+},{passive:true});
+document.addEventListener('touchend',e=>{
+ if(!pullEligible||!e.changedTouches.length)return;
+ const dy=e.changedTouches[0].clientY-pullStartY;
+ const dx=Math.abs(e.changedTouches[0].clientX-pullStartX);
+ pullEligible=false;
+ if(dy>85&&dy>dx*1.4)window.location.reload();
+},{passive:true});
+
 init();
 setInterval(()=>loadPeople().catch(()=>{}),5000);
 })();
