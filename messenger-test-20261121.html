@@ -218,12 +218,29 @@ async function acceptVideo(){
 }
 async function beginVideo(){
  if(!selectedPerson||!contacts.some(x=>x.id===selectedPerson.id))return;
+ const target={id:selectedPerson.id,name:selectedPerson.name};
  showVideo('კამერას ვრთავ...');
  try{
-  await startMedia();activeCall=await call('callCreate',{targetId:selectedPerson.id});callSide='caller';
-  try{const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-video-call',userId:uid,targetId:selectedPerson.id,callId:activeCall.id,sessionToken:token,callerName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Video call Push:',pr.status,pd)}catch(pushError){console.warn('Video call Push failed:',pushError)}
-  showVideo('ვურეკავ: '+selectedPerson.name);await sendOffer();startCallPolling();
- }catch(e){showStatus(e.message||'ვიდეოზარი ვერ დაიწყო');await stopVideo()}
+  await startMedia();
+  activeCall=await call('callCreate',{targetId:target.id});
+  callSide='caller';
+  showVideo('ვურეკავ: '+target.name);
+  await sendOffer();
+  startCallPolling();
+  fetch('https://temo-ai.temo75elia.workers.dev',{
+   method:'POST',
+   headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({action:'push-video-call',userId:uid,targetId:target.id,callId:activeCall.id,sessionToken:token,callerName:user}),
+   signal:AbortSignal.timeout(8000)
+  }).then(async pr=>{
+   const pd=await pr.json().catch(()=>({}));
+   if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Video call Push:',pr.status,pd);
+  }).catch(pushError=>console.warn('Video call Push failed:',pushError));
+ }catch(e){
+  console.error('Video call start failed:',e);
+  showStatus(e.message||'ვიდეოზარი ვერ დაიწყო');
+  await stopVideo();
+ }
 }
 async function syncCandidates(data,side){
  if(!remoteReady||!pc)return;
