@@ -164,10 +164,15 @@ async function startMedia(){
  localVideo.srcObject=localStream;
 }
 async function makePeer(){
- const turnResponse=await fetch('https://temo1-messenger-webrtc-test.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'turnCredentials',sessionToken:token})});
- const turnData=await turnResponse.json().catch(()=>({}));
- if(!turnResponse.ok||!Array.isArray(turnData.iceServers))throw new Error(turnData.error||'TURN სერვერი მიუწვდომელია');
- pc=new RTCPeerConnection({iceServers:[...turnData.iceServers,{urls:'stun:stun.l.google.com:19302'}]});
+ let iceServers=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
+ try{
+  const turnResponse=await fetch('https://temo1-messenger-webrtc-test.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'turnCredentials',sessionToken:token}),signal:AbortSignal.timeout(8000)});
+  const turnData=await turnResponse.json().catch(()=>({}));
+  if(turnResponse.ok&&Array.isArray(turnData.iceServers)&&turnData.iceServers.length){
+   iceServers=[...turnData.iceServers,...iceServers];
+  }else console.warn('TURN unavailable; using STUN fallback:',turnData.error||turnResponse.status);
+ }catch(e){console.warn('TURN request failed; using STUN fallback:',e)}
+ pc=new RTCPeerConnection({iceServers});
  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
  pc.ontrack=e=>{if(e.streams&&e.streams[0])remoteVideo.srcObject=e.streams[0];else{if(!remoteVideo.srcObject)remoteVideo.srcObject=new MediaStream();remoteVideo.srcObject.addTrack(e.track)}remoteVideo.play().catch(()=>{});showStatus('მეორე მხარის ვიდეო მიღებულია')};
  pc.onicecandidate=e=>{if(e.candidate&&activeCall)call('callSet',{callId:activeCall.id,field:'candidate',value:e.candidate.toJSON()}).catch(()=>{})};
@@ -300,7 +305,7 @@ async function init(){$('app').hidden=false;if(!user||!uid||!token){showStatus('
 let pullStartY=0, pullStartX=0, pullEligible=false;
 document.addEventListener('touchstart',e=>{
  const t=e.target;
- pullEligible=window.scrollY<=0 && !t.closest('input,textarea,button,.messages,#profilePanel');
+ pullEligible=window.scrollY<=0 && !t.closest('input,textarea,button,.messages,#profilePanel,#videoCall,.videoBox');
  if(pullEligible&&e.touches.length===1){pullStartY=e.touches[0].clientY;pullStartX=e.touches[0].clientX}else pullEligible=false;
 },{passive:true});
 document.addEventListener('touchend',e=>{
