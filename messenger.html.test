@@ -195,7 +195,7 @@ async function acceptVideo(){
   $('videoAccept').hidden=true;
   activeCall=await call('callGet',{callId:activeCall.id});
   if(!activeCall.offer){
-   const callId=activeCall.id,deadline=Date.now()+15000;
+   const callId=activeCall.id,deadline=Date.now()+60000;
    while(!activeCall.offer&&Date.now()<deadline){
     await new Promise(resolve=>setTimeout(resolve,300));
     activeCall=await call('callGet',{callId});
