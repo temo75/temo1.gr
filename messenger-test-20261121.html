@@ -163,7 +163,7 @@ async function startMedia(){
  localStream=await navigator.mediaDevices.getUserMedia({video:true,audio:true});
  localVideo.srcObject=localStream;
 }
-async async function makePeer(){
+async async async function makePeer(){
  const turnResponse=await fetch('https://temo1-messenger-webrtc-test.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'turnCredentials',sessionToken:token})});
  const turnData=await turnResponse.json().catch(()=>({}));
  if(!turnResponse.ok||!Array.isArray(turnData.iceServers))throw new Error(turnData.error||'TURN სერვერი მიუწვდომელია');
