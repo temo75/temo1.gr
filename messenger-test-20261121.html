@@ -175,7 +175,8 @@ async function makePeer(){
  pc=new RTCPeerConnection({iceServers});
  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
  pc.ontrack=e=>{if(e.streams&&e.streams[0])remoteVideo.srcObject=e.streams[0];else{if(!remoteVideo.srcObject)remoteVideo.srcObject=new MediaStream();remoteVideo.srcObject.addTrack(e.track)}remoteVideo.play().catch(()=>{});showStatus('მეორე მხარის ვიდეო მიღებულია')};
- pc.onicecandidate=e=>{if(e.candidate&&activeCall)call('callSet',{callId:activeCall.id,field:'candidate',value:e.candidate.toJSON()}).catch(()=>{})};
+ // Use complete SDP (non-trickle ICE) so both sides receive all STUN/TURN candidates.
+ pc.onicecandidate=null;
  pc.oniceconnectionstatechange=()=>{if(pc){console.log('ICE state:',pc.iceConnectionState);showStatus('ICE: '+pc.iceConnectionState)}};
  pc.onconnectionstatechange=()=>{if(pc){console.log('Peer state:',pc.connectionState);if(['failed','disconnected'].includes(pc.connectionState))showStatus('ვიდეოკავშირის პრობლემა: '+pc.connectionState)}};
 }
@@ -189,8 +190,20 @@ async function stopVideo(end=true){
  videoBox.classList.remove('show');$('videoAccept').hidden=true;
  startIncomingPolling();
 }
+async function waitForIceGathering(){
+ if(pc.iceGatheringState==='complete')return;
+ await new Promise(resolve=>{
+  let finished=false;
+  const done=()=>{if(finished)return;finished=true;clearTimeout(timer);pc.removeEventListener('icegatheringstatechange',check);resolve()};
+  const check=()=>{if(pc.iceGatheringState==='complete')done()};
+  const timer=setTimeout(done,15000);
+  pc.addEventListener('icegatheringstatechange',check);
+  check();
+ });
+}
 async function sendOffer(){
  await makePeer();const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+ await waitForIceGathering();
  await call('callSet',{callId:activeCall.id,field:'offer',value:pc.localDescription.toJSON()});
 }
 async function acceptVideo(){
@@ -211,6 +224,7 @@ async function acceptVideo(){
   await startMedia();await makePeer();
   await pc.setRemoteDescription(activeCall.offer);remoteReady=true;
   const answer=await pc.createAnswer();await pc.setLocalDescription(answer);
+  await waitForIceGathering();
   await call('callSet',{callId:activeCall.id,field:'answer',value:pc.localDescription.toJSON()});
   callSide='callee';showVideo('ვიდეოზარი — '+(activeCall.callerName||'მომხმარებელი'));
   startCallPolling();
@@ -242,14 +256,6 @@ async function beginVideo(){
   await stopVideo();
  }
 }
-async function syncCandidates(data,side){
- if(!remoteReady||!pc)return;
- const entries=data?.candidates?.[side]||{};
- for(const [id,c] of Object.entries(entries)){
-  if(seenCandidates.has(id))continue;
-  try{await pc.addIceCandidate(c);seenCandidates.add(id)}catch(e){console.warn('ICE candidate',e)}
- }
-}
 function startCallPolling(){
  if(callPoll)clearInterval(callPoll);
  callPoll=setInterval(async()=>{
@@ -258,7 +264,7 @@ function startCallPolling(){
    const c=await call('callGet',{callId:activeCall.id});
    if(c.status==='ended'){showStatus('ზარი დასრულდა');await stopVideo(false);return}
    if(callSide==='caller'&&c.answer&&!remoteReady){await pc.setRemoteDescription(c.answer);remoteReady=true}
-   await syncCandidates(c,callSide==='caller'?'callee':'caller');
+
   }catch(e){console.warn('Call sync',e)}
  },900);
 }
