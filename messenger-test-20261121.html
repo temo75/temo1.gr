@@ -52,13 +52,13 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 <div id="videoCall"><div class="videoBox"><h2 id="videoTitle">ვიდეოზარი</h2><div id="videoStage"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay muted playsinline></video></div><div class="videoControls"><button id="videoMute">🎙️</button><button id="videoCamera">📷</button><button class="danger" id="videoHangup">☎️ გათიშვა</button><button id="videoAccept" class="primary" hidden>პასუხი</button></div></div></div>
 <script>
 (()=>{
-const API='https://temo1-firebase-bridge.temo75elia.workers.dev',user=localStorage.getItem('temoWorkTrackerUser')||'',uid=localStorage.getItem('temoWorkTrackerUserId')||'',token=localStorage.getItem('temoFirebaseBridgeSession')||'';
+const API='https://temo1-firebase-bridge.temo75elia.workers.dev',user=localStorage.getItem('temoWorkTrackerUser')||'',uid=localStorage.getItem('temoWorkTrackerUserId')||'';\nconst getToken=()=>localStorage.getItem('temoFirebaseBridgeSession')||'';
 const $=id=>document.getElementById(id);let modalAction=null;
 
 async function ensureMessengerPush(){
  if(location.origin!=='https://temo1.gr'||Notification.permission!=='granted'||!('serviceWorker'in navigator)||!('PushManager'in window))return;
  const me=localStorage.getItem('temoWorkTrackerUserId')||uid;
- const session=localStorage.getItem('temoFirebaseBridgeSession')||token;
+ const session=localStorage.getItem('temoFirebaseBridgeSession')||getToken();
  if(!me||!session)return;
  const worker='https://temo-ai.temo75elia.workers.dev';
  const cfg=await fetch(worker+'?action=push-config',{cache:'no-store'}).then(r=>{if(!r.ok)throw Error('Push config HTTP '+r.status);return r.json()});
@@ -77,7 +77,7 @@ async function ensureMessengerPush(){
  const result=await response.json().catch(()=>({}));
  if(!response.ok||!result.ok)throw Error(result.error||('Push subscribe HTTP '+response.status));
 }
-const call=async(op,data={})=>{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'messenger',op,...data,sessionToken:token})});const j=await r.json();if(!r.ok)throw new Error(j.error||'შეცდომა');return j};
+const call=async(op,data={})=>{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'messenger',op,...data,sessionToken:getToken()})});const j=await r.json();if(!r.ok)throw new Error(j.error||'შეცდომა');return j};
 const VOICE_API='https://temo-messenger-test-voice.temo75elia.workers.dev';
 let voiceRecorder=null,voiceChunks=[],pendingVoice=null,voiceStartedAt=0,voiceDurationMs=0,voiceHoldActive=false,voiceReleasePending=false,voiceStarting=false;
 const voiceButton=$('voiceRecord');
@@ -117,20 +117,20 @@ $('voiceSend').onclick=async()=>{
  if(!pendingVoice||!directTarget)return;
  const btn=$('voiceSend');btn.disabled=true;$('voiceStatus').textContent='იგზავნება...';
  try{
-  const up=await fetch(VOICE_API+'/upload',{method:'POST',headers:{'Content-Type':pendingVoice.type||'audio/webm','X-Session-Token':token},body:pendingVoice});
+  const up=await fetch(VOICE_API+'/upload',{method:'POST',headers:{'Content-Type':pendingVoice.type||'audio/webm','X-Session-Token':getToken()},body:pendingVoice});
   const result=await up.json();if(!up.ok)throw Error(result.error||'აუდიო ვერ აიტვირთა');
   const duration=voiceDurationMs;
   const marker='[[TEMO_VOICE:'+result.id+':'+encodeURIComponent(result.mime||pendingVoice.type||'audio/webm')+':'+duration+']]';
   const sent=await call('sendDirect',{targetId:directTarget,text:marker});
   pendingVoice=null;btn.hidden=true;$('voiceStatus').textContent='ხმოვანი გაიგზავნა';await loadDirect();
-  try{await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:token,messageId:sent.message?.id||'',message:'ხმოვანი შეტყობინება',senderName:user})})}catch(e){}
+  try{await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId:sent.message?.id||'',message:'ხმოვანი შეტყობინება',senderName:user})})}catch(e){}
  }catch(e){$('voiceStatus').textContent=e.message||'გაგზავნა ვერ მოხერხდა'}finally{btn.disabled=false}
 };
 $('directLog').addEventListener('click',async e=>{
  const b=e.target.closest('.voicePlay');if(!b)return;
  if(b.dataset.loading==='1')return;b.dataset.loading='1';b.textContent='იტვირთება...';
  try{
-  const r=await fetch(VOICE_API+'/audio/'+encodeURIComponent(b.dataset.voiceId),{headers:{'X-Session-Token':token}});
+  const r=await fetch(VOICE_API+'/audio/'+encodeURIComponent(b.dataset.voiceId),{headers:{'X-Session-Token':getToken()}});
   if(!r.ok){const j=await r.json().catch(()=>({}));throw Error(j.error||'ხმოვანი ვერ ჩაიტვირთა')}
   const blob=await r.blob(),src=URL.createObjectURL(blob),audio=new Audio(src);
   b.textContent='Ⅱ დაკვრა';audio.onended=()=>{b.textContent='▶ მოსმენა';URL.revokeObjectURL(src);b.dataset.loading='0'};
@@ -170,7 +170,7 @@ $('backUsers').onclick=()=>{const panel=$('profilePanel');panel.classList.remove
 $('profileMore').onclick=()=>{$('profileMoreMenu').hidden=!$('profileMoreMenu').hidden};
 document.addEventListener('click',e=>{if(!e.target.closest('.profileCallActions'))$('profileMoreMenu').hidden=true});
 
-$('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!directTarget)return;try{const sent=await call('sendDirect',{targetId:directTarget,text:t});$('directText').value='';$('directText').style.height='';await loadDirect();try{const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:token,messageId:sent.message?.id||'',message:t,senderName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Chat push delivery:',pr.status,pd)}catch(e){console.warn('Chat push failed',e)}}catch(e){showStatus(e.message)}};
+$('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!directTarget)return;try{const sent=await call('sendDirect',{targetId:directTarget,text:t});$('directText').value='';$('directText').style.height='';await loadDirect();try{const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId:sent.message?.id||'',message:t,senderName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Chat push delivery:',pr.status,pd)}catch(e){console.warn('Chat push failed',e)}}catch(e){showStatus(e.message)}};
 $('directText').addEventListener('input',()=>{const el=$('directText');el.style.height='auto';el.style.height=Math.min(el.scrollHeight,window.innerHeight*.30)+'px'});
 $('profileVideo').onclick=beginVideo;
 let activeCall=null,pc=null,localStream=null,callPoll=null,incomingPoll=null,incomingCheckBusy=false,callSide='',seenCandidates=new Set(),remoteReady=false;
@@ -227,7 +227,7 @@ async function startMedia(){
 async function makePeer(){
  let iceServers=[{urls:'stun:stun.l.google.com:19302'},{urls:'stun:stun1.l.google.com:19302'}];
  try{
-  const turnResponse=await fetch('https://temo1-messenger-webrtc-test.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'turnCredentials',sessionToken:token}),signal:AbortSignal.timeout(8000)});
+  const turnResponse=await fetch('https://temo1-messenger-webrtc-test.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'turnCredentials',sessionToken:getToken()}),signal:AbortSignal.timeout(8000)});
   const turnData=await turnResponse.json().catch(()=>({}));
   if(turnResponse.ok&&Array.isArray(turnData.iceServers)&&turnData.iceServers.length){
    iceServers=[...turnData.iceServers,...iceServers];
@@ -304,7 +304,7 @@ async function beginVideo(){
   const pushResponse=await fetch('https://temo-ai.temo75elia.workers.dev',{
    method:'POST',
    headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({action:'push-video-call',userId:uid,targetId:target.id,callId:activeCall.id,sessionToken:token,callerName:user}),
+   body:JSON.stringify({action:'push-video-call',userId:uid,targetId:target.id,callId:activeCall.id,sessionToken:getToken(),callerName:user}),
    signal:AbortSignal.timeout(12000)
   });
   const pushData=await pushResponse.json().catch(()=>({}));
@@ -407,7 +407,7 @@ async function loadDirect(){if(!directTarget)return;const list=await call('direc
 
 let messageActionPopup=null;function closeMessageActionPopup(){if(messageActionPopup){messageActionPopup.remove();messageActionPopup=null}document.removeEventListener('pointerdown',outsideMessageActionPopup,true)}function outsideMessageActionPopup(e){if(messageActionPopup&&!messageActionPopup.contains(e.target))closeMessageActionPopup()}function messageActions(el){if(!el||!el.classList.contains('mine'))return;const messageId=el.dataset.messageId;if(!messageId)return;closeMessageActionPopup();const popup=document.createElement('div');popup.className='messageActionPopup';popup.innerHTML='<button type="button" id="editOwnMessage" aria-label="შესწორება" title="შესწორება"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m4 16.5-.8 4.3 4.3-.8L20 7.5 16.5 4 4 16.5Z"/><path d="m14.8 5.7 3.5 3.5"/></svg></button><button type="button" id="deleteOwnMessage" aria-label="წაშლა" title="წაშლა"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6m4-6v6M5 7l1 14h12l1-14M9 7V4h6v3"/></svg></button>';document.body.appendChild(popup);messageActionPopup=popup;const rect=el.getBoundingClientRect();const width=popup.offsetWidth,height=popup.offsetHeight;popup.style.left=Math.max(8,Math.min(innerWidth-width-8,rect.left+(rect.width-width)/2))+'px';popup.style.top=Math.max(8,rect.top-height-9)+'px';$('editOwnMessage').onclick=()=>{closeMessageActionPopup();const current=el.dataset.messageText||'';showModal('შეტყობინების შესწორება','<textarea id="editMessageText" maxlength="2000" style="width:100%;min-height:100px;box-sizing:border-box">'+esc(current)+'</textarea>',async()=>{const text=$('editMessageText').value.trim();if(!text)throw new Error('ტექსტი ცარიელია');await call('editDirect',{targetId:directTarget,messageId,text});await loadDirect()})};$('deleteOwnMessage').onclick=()=>{closeMessageActionPopup();showModal('შეტყობინების წაშლა','ნამდვილად გინდა ამ ტექსტის წაშლა?',async()=>{await call('deleteDirect',{targetId:directTarget,messageId});await loadDirect()})};setTimeout(()=>document.addEventListener('pointerdown',outsideMessageActionPopup,true),0)}
 const directLog=$('directLog');let pressTimer=null,pressStart=null,lastLongPressAt=0;function clearMessagePress(){if(pressTimer)clearTimeout(pressTimer);pressTimer=null;pressStart=null}directLog.addEventListener('pointerdown',e=>{if(e.button!==0)return;const el=e.target.closest('.msg.mine');if(!el)return;clearMessagePress();pressStart={x:e.clientX,y:e.clientY};pressTimer=setTimeout(()=>{pressTimer=null;lastLongPressAt=Date.now();messageActions(el)},600)});directLog.addEventListener('pointermove',e=>{if(!pressStart)return;if(Math.hypot(e.clientX-pressStart.x,e.clientY-pressStart.y)>14)clearMessagePress()},{passive:true});['pointerup','pointercancel','pointerleave'].forEach(type=>directLog.addEventListener(type,clearMessagePress,{passive:true}));directLog.addEventListener('contextmenu',e=>{const el=e.target.closest('.msg.mine');if(el){e.preventDefault();if(Date.now()-lastLongPressAt>900)messageActions(el)}});
-async function init(){$('app').hidden=false;if(!user||!uid||!token){showStatus('სესია ვერ მოიძებნა. გახსენი TEMO1.GR-ზე შესული ანგარიშით.');return}try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'session',sessionToken:token})});if(!r.ok)throw new Error('სესია ვადაგასულია. შედი თავიდან TEMO1.gr-ზე.');$('userName').textContent=user;$('app').hidden=false;showStatus('');try{await loadPeople()}catch(e){showStatus('მომხმარებლების სია ვერ ჩაიტვირთა. საჭიროა Cloudflare Worker-ის განახლება.')}}catch(e){$('app').hidden=false;$('userName').textContent=user;showStatus(e.message||'კავშირის შეცდომა')}}
+async function init(){$('app').hidden=false;const activeToken=getToken();if(!user||!uid||!activeToken){showStatus('სესია ვერ მოიძებნა. გახსენი TEMO1.GR-ზე შესული ანგარიშით.');return}try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'session',sessionToken:activeToken})});if(!r.ok)throw new Error('სესია ვადაგასულია. TEMO1.gr-ზე თავიდან შედი.');$('userName').textContent=user;$('app').hidden=false;showStatus('');try{await loadPeople()}catch(e){showStatus('მომხმარებლების სია ვერ ჩაიტვირთა. საჭიროა Cloudflare Worker-ის განახლება.')}}catch(e){$('app').hidden=false;$('userName').textContent=user;showStatus(e.message||'კავშირის შეცდომა')}}
 
 // Pull down at the top of the page to refresh
 let pullStartY=0, pullStartX=0, pullEligible=false;
