@@ -377,7 +377,7 @@ $('directText').addEventListener('focus',()=>setTimeout(syncKeyboardViewport,80)
 $('directText').addEventListener('blur',()=>setTimeout(syncKeyboardViewport,100));
 
 
-const VOICE_RE=/^\\[\\[TEMO_VOICE:([^:]+):([^:]+):(\\d+)\\]\\]$/;
+const VOICE_RE=/^\[\[TEMO_VOICE:([^:]+):([^:]+):(\d+)\]\]$/;
 function voiceMarkup(text){
  const m=String(text||"").match(VOICE_RE);if(!m)return null;
  return '<div class="voiceMessage"><button type="button" class="voicePlay" data-voice-id="'+esc(m[1])+'" data-voice-mime="'+esc(decodeURIComponent(m[2]))+'">▶ მოსმენა</button><span class="muted">'+Math.max(1,Math.round(Number(m[3])/1000))+' წმ.</span></div>';
