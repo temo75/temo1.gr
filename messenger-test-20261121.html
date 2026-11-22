@@ -52,7 +52,8 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 <div id="videoCall"><div class="videoBox"><h2 id="videoTitle">ვიდეოზარი</h2><div id="videoStage"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay muted playsinline></video></div><div class="videoControls"><button id="videoMute">🎙️</button><button id="videoCamera">📷</button><button class="danger" id="videoHangup">☎️ გათიშვა</button><button id="videoAccept" class="primary" hidden>პასუხი</button></div></div></div>
 <script>
 (()=>{
-const API='https://temo1-firebase-bridge.temo75elia.workers.dev',user=localStorage.getItem('temoWorkTrackerUser')||'',uid=localStorage.getItem('temoWorkTrackerUserId')||'';\nconst getToken=()=>localStorage.getItem('temoFirebaseBridgeSession')||'';
+const API='https://temo1-firebase-bridge.temo75elia.workers.dev',user=localStorage.getItem('temoWorkTrackerUser')||'',uid=localStorage.getItem('temoWorkTrackerUserId')||'';
+const getToken=()=>localStorage.getItem('temoFirebaseBridgeSession')||'';
 const $=id=>document.getElementById(id);let modalAction=null;
 
 async function ensureMessengerPush(){
