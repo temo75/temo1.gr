@@ -156,7 +156,10 @@ $('directLog').addEventListener('click',async e=>{
  try{
   const r=await fetch(VOICE_API+'/audio/'+encodeURIComponent(b.dataset.voiceId),{headers:{'X-Session-Token':getToken()}});
   if(!r.ok){const j=await r.json().catch(()=>({}));throw Error(j.error||'ხმოვანი ვერ ჩაიტვირთა')}
-  const blob=await r.blob(),src=URL.createObjectURL(blob),audio=new Audio(src);
+  const data=await r.arrayBuffer();
+  const mime=b.dataset.voiceMime||r.headers.get('Content-Type')||'audio/mp4';
+  const blob=new Blob([data],{type:mime}),src=URL.createObjectURL(blob),audio=new Audio();
+  audio.preload='auto';audio.src=src;
   b.textContent='Ⅱ დაკვრა';audio.onended=()=>{b.textContent='▶ მოსმენა';URL.revokeObjectURL(src);b.dataset.loading='0'};
   audio.onerror=()=>{b.textContent='▶ მოსმენა';URL.revokeObjectURL(src);b.dataset.loading='0'};
   await audio.play();
