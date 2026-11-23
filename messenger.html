@@ -137,14 +137,46 @@ voiceButton.addEventListener('pointerup',e=>{e.preventDefault();stopVoiceHold()}
 voiceButton.addEventListener('pointercancel',stopVoiceHold);
 voiceButton.addEventListener('lostpointercapture',()=>{if(voiceHoldActive)stopVoiceHold()});
 voiceButton.addEventListener('contextmenu',e=>e.preventDefault());
+async function convertVoiceToWav(blob){
+ const AudioCtx=window.AudioContext||window.webkitAudioContext;
+ if(!AudioCtx)throw new Error('აუდიოს ფორმატის გარდაქმნა მიუწვდომელია');
+ const ctx=new AudioCtx();
+ try{
+  const decoded=await ctx.decodeAudioData(await blob.arrayBuffer());
+  const sourceRate=decoded.sampleRate,targetRate=16000;
+  const length=Math.ceil(decoded.duration*targetRate);
+  const samples=new Float32Array(length);
+  for(let i=0;i<length;i++){
+   const pos=i*sourceRate/targetRate,index=Math.floor(pos),frac=pos-index;
+   let value=0;
+   for(let ch=0;ch<decoded.numberOfChannels;ch++){
+    const data=decoded.getChannelData(ch);
+    const a=data[index]||0,b=data[Math.min(index+1,data.length-1)]||0;
+    value+=(a+(b-a)*frac)/decoded.numberOfChannels;
+   }
+   samples[i]=Math.max(-1,Math.min(1,value));
+  }
+  const wav=new ArrayBuffer(44+samples.length*2),view=new DataView(wav);
+  const write=(offset,str)=>{for(let i=0;i<str.length;i++)view.setUint8(offset+i,str.charCodeAt(i))};
+  write(0,'RIFF');view.setUint32(4,36+samples.length*2,true);write(8,'WAVE');write(12,'fmt ');
+  view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);
+  view.setUint32(24,targetRate,true);view.setUint32(28,targetRate*2,true);
+  view.setUint16(32,2,true);view.setUint16(34,16,true);write(36,'data');
+  view.setUint32(40,samples.length*2,true);
+  for(let i=0;i<samples.length;i++)view.setInt16(44+i*2,samples[i]<0?samples[i]*32768:samples[i]*32767,true);
+  return new Blob([wav],{type:'audio/wav'});
+ }finally{await ctx.close().catch(()=>{})}
+}
 async function sendPendingVoice(){
  if(!pendingVoice||!directTarget)return;
- $('voiceStatus').textContent='იგზავნება...';
+ $('voiceStatus').textContent='აუდიო მზადდება...';
  try{
-  const up=await fetch(VOICE_API+'/upload',{method:'POST',headers:{'Content-Type':pendingVoice.type||'audio/webm','X-Session-Token':getToken()},body:pendingVoice});
+  const compatibleVoice=await convertVoiceToWav(pendingVoice);
+  $('voiceStatus').textContent='იგზავნება...';
+  const up=await fetch(VOICE_API+'/upload',{method:'POST',headers:{'Content-Type':'audio/wav','X-Session-Token':getToken()},body:compatibleVoice});
   const result=await up.json();if(!up.ok)throw Error(result.error||'აუდიო ვერ აიტვირთა');
   const duration=voiceDurationMs;
-  const marker='[[TEMO_VOICE:'+result.id+':'+encodeURIComponent(result.mime||pendingVoice.type||'audio/webm')+':'+duration+']]';
+  const marker='[[TEMO_VOICE:'+result.id+':'+encodeURIComponent('audio/wav')+':'+duration+']]';
   const sent=await call('sendDirect',{targetId:directTarget,text:marker});
   pendingVoice=null;$('voiceStatus').textContent='ხმოვანი გაიგზავნა';await loadDirect();
   try{await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId:sent.message?.id||'',message:'ხმოვანი შეტყობინება',senderName:user})})}catch(e){}
