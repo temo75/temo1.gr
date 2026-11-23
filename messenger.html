@@ -120,7 +120,7 @@ async function ensureMessengerPush(){
  const result=await response.json().catch(()=>({}));
  if(!response.ok||!result.ok)throw Error(result.error||('Push subscribe HTTP '+response.status));
 }
-const call=async(op,data={})=>{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'messenger',op,...data,sessionToken:getToken()})});const j=await r.json();if(!r.ok)throw new Error(j.error||'შეცდომა');return j};
+const call=async(op,data={})=>{const r=await fetch(API,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json','Cache-Control':'no-cache'},body:JSON.stringify({action:'messenger',op,...data,sessionToken:getToken()})});const j=await r.json();if(!r.ok)throw new Error(j.error||'შეცდომა');return j};
 const VOICE_API='https://temo-messenger-test-voice.temo75elia.workers.dev';
 let voiceRecorder=null,voiceChunks=[],pendingVoice=null,voiceStartedAt=0,voiceDurationMs=0,voiceHoldActive=false,voiceReleasePending=false,voiceStarting=false,voiceLimitTimer=null;
 const voiceButton=$('voiceRecord');
