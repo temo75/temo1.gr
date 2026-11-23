@@ -67,14 +67,14 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 <div id="voiceWaveOverlay" class="voiceWaveOverlay" aria-hidden="true"><div class="voiceWaveLabel">ჩაწერა მიმდინარეობს</div><div class="voiceWaveBars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="voiceWaveHint">გაუშვი თითი გასაგზავნად</div></div>
 
 <style>
-.voiceWaveOverlay{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;width:min(300px,calc(100vw - 40px));padding:15px;border:1px solid #b65cff;border-radius:20px;background:#091426;box-shadow:0 0 12px #b65cff,0 0 30px #8b3dff;text-align:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s}
+.voiceWaveOverlay{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;width:min(300px,calc(100vw - 40px));padding:13px;border:1px solid #b65cff88;border-radius:18px;background:rgba(9,20,38,.48);-webkit-backdrop-filter:blur(9px);backdrop-filter:blur(9px);box-shadow:0 0 7px #b65cff66,0 0 16px #8b3dff44;text-align:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s}
 .voiceWaveOverlay.show{opacity:1;visibility:visible}
-.voiceWaveLabel{color:#e8c8ff;font-weight:700;margin-bottom:10px;text-shadow:0 0 8px #c45cff}
-.voiceWaveBars{height:40px;display:flex;align-items:center;justify-content:center;gap:4px}
-.voiceWaveBars i{width:4px;height:8px;border-radius:4px;background:#c66aff;box-shadow:0 0 8px #b44dff;animation:voiceNeonWave .65s ease-in-out infinite alternate}
-.voiceWaveBars i:nth-child(3n){animation-delay:-.2s}.voiceWaveBars i:nth-child(4n){background:#35d9ff;box-shadow:0 0 8px #19cfff}
-@keyframes voiceNeonWave{to{height:34px;opacity:1}}
-.voiceWaveHint{font-size:12px;color:#c8b5dd;margin-top:8px}
+.voiceWaveLabel{color:#e8c8ff;font-weight:600;margin-bottom:8px;text-shadow:0 0 5px #c45cff88}
+.voiceWaveBars{height:32px;display:flex;align-items:center;justify-content:center;gap:4px}
+.voiceWaveBars i{width:2px;height:6px;border-radius:3px;background:#c66aff;box-shadow:0 0 4px #b44dff88;animation:voiceNeonWave .7s ease-in-out infinite alternate}
+.voiceWaveBars i:nth-child(3n){animation-delay:-.2s}.voiceWaveBars i:nth-child(4n){background:#35d9ff;box-shadow:0 0 4px #19cfff88}
+@keyframes voiceNeonWave{to{height:21px;opacity:.9}}
+.voiceWaveHint{font-size:12px;color:#c8b5dd;margin-top:7px}
 #videoCall{position:fixed;inset:0;background:#02080df2;z-index:80;display:none;align-items:center;justify-content:center;padding:14px}
 #videoCall.show{display:flex}.videoBox{width:min(760px,100%);background:#10232f;border:1px solid #285269;border-radius:18px;padding:14px}
 #remoteVideo{width:100%;max-height:58vh;background:#000;border-radius:12px;object-fit:cover}
