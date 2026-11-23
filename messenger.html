@@ -416,6 +416,25 @@ let validatedToken='';let validating=false;async function init(){const activeTok
 init();
 window.addEventListener('focus',()=>{const latest=getToken();if(latest&&latest!==validatedToken)init()});
 document.addEventListener('visibilitychange',()=>{if(!document.hidden){const latest=getToken();if(latest&&latest!==validatedToken)init()}});
+
+let pullStartY=0,pullStartX=0,pullRefreshing=false;
+document.addEventListener('touchstart',e=>{
+ if(e.touches.length!==1||!$('profilePanel').hidden)return;
+ if(window.scrollY>0)return;
+ pullStartY=e.touches[0].clientY;pullStartX=e.touches[0].clientX;
+},{passive:true});
+document.addEventListener('touchend',async e=>{
+ if(!pullStartY||pullRefreshing||!$('profilePanel').hidden)return;
+ const dy=e.changedTouches[0].clientY-pullStartY;
+ const dx=Math.abs(e.changedTouches[0].clientX-pullStartX);
+ pullStartY=0;
+ if(dy<85||dx>65||window.scrollY>0)return;
+ pullRefreshing=true;
+ try{showStatus('განახლება...');await loadPeople();showStatus('განახლებულია');}
+ catch(err){showStatus(err.message||'განახლება ვერ მოხერხდა');}
+ finally{pullRefreshing=false;setTimeout(()=>{if(!$('profilePanel').hidden)return;showStatus('')},1200);}
+},{passive:true});
+
 setInterval(()=>loadPeople().catch(()=>{}),5000);
 })();
 </script>
