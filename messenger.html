@@ -8,7 +8,7 @@
 <style>
 :root{color-scheme:dark;--bg:#071117;--panel:#0d1b24;--panel2:#10232f;--line:#1e3542;--blue:#2999df;--text:#eef7f7;--muted:#9fb0b8}
 *{box-sizing:border-box}html,body{overscroll-behavior-y:none;overscroll-behavior-x:none}body{margin:0;overscroll-behavior:none;background:linear-gradient(145deg,#061015,#0b1c27);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
-.app{max-width:900px;margin:auto;padding:12px 12px 30px}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px 16px;border-bottom:1px solid var(--line)}
+.app{max-width:900px;margin:auto;padding:12px 12px 30px}.app.pullRefreshBounce{animation:pullRefreshBounce .32s ease-out}@keyframes pullRefreshBounce{0%{transform:translateY(0)}35%{transform:translateY(9px)}70%{transform:translateY(-3px)}100%{transform:translateY(0)}}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px 16px;border-bottom:1px solid var(--line)}
 .brand{font-size:22px;font-weight:800}.brand span{color:var(--blue)}.user{font-size:13px;color:var(--muted);text-align:right}
 button,input{font:inherit}button{border:1px solid #285269;border-radius:10px;padding:10px 13px;background:#183445;color:white;font-weight:700;cursor:pointer}button.primary{background:#126ba0;border-color:#2999df}button.danger{background:#4a2228;border-color:#74333d}input{width:100%;padding:12px;border:1px solid #29404c;border-radius:10px;background:#071117;color:white;min-width:0}
 .layout{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;margin-top:14px}.panel{border:1px solid var(--line);border-radius:16px;background:linear-gradient(145deg,var(--panel),var(--panel2));padding:14px;min-width:0}#profilePanel{position:fixed;inset:0;height:100dvh;z-index:30;overflow-y:auto;overscroll-behavior:contain;margin:0!important;border-radius:0;padding:18px 14px 76px;background:linear-gradient(145deg,var(--panel),var(--panel2));box-sizing:border-box}#profilePanel.profileSlideIn{animation:profileSlideIn .85s cubic-bezier(.22,.75,.25,1) both}#profilePanel.profileSlideOut{animation:profileSlideOut .65s cubic-bezier(.55,.05,.75,.3) both}@keyframes profileSlideIn{from{transform:translateX(-100%)}to{transform:translateX(0)}}@keyframes profileSlideOut{from{transform:translateX(0)}to{transform:translateX(-100%)}}#backUsers{position:fixed;right:12px;bottom:12px;transform:translateY(0);width:42px;height:42px;min-width:42px;padding:0;border-radius:11px;display:grid;place-items:center;font-size:21px;line-height:1;z-index:45}
@@ -433,7 +433,7 @@ let pullStartY=null,pullStartX=0,pullAtTop=false,pullRefreshing=false;
 async function refreshPeopleByPull(){
  if(pullRefreshing)return;
  pullRefreshing=true;
- try{showStatus('განახლება...');await loadPeople();showStatus('განახლებულია');}
+ try{showStatus('განახლება...');await loadPeople();const app=$('app');app.classList.remove('pullRefreshBounce');void app.offsetWidth;app.classList.add('pullRefreshBounce');app.addEventListener('animationend',()=>app.classList.remove('pullRefreshBounce'),{once:true});showStatus('განახლებულია');}
  catch(err){showStatus(err.message||'განახლება ვერ მოხერხდა');}
  finally{pullRefreshing=false;setTimeout(()=>showStatus(''),1200);}
 }
