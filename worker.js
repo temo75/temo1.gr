@@ -468,7 +468,7 @@ export default {
               badge: "https://temo1.gr/badge-T.svg",
               tag: "temo-chat-" + messageId,
               renotify: false,
-              url: "https://temo1.gr/messenger.html"
+              url: "https://temo1.gr/messenger.html?chat=" + encodeURIComponent(userId) + "&messageId=" + encodeURIComponent(messageId)
             }, env);
             if (response.ok) sent++;
             else {
