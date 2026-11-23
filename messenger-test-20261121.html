@@ -34,7 +34,7 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
  <button id="backUsers" type="button" title="უკან" aria-label="უკან">↩</button>
  <div class="profileHead"><div class="bubble">👤</div><div class="profileIdentity"><h2 id="profileName" style="margin:0 0 4px"></h2></div><div class="profileCallActions"><button id="profileVideo" title="ვიდეოზარი" aria-label="ვიდეოზარი">📹</button><button type="button" id="profileMore" aria-label="მეტი" title="მეტი">⋮</button><div id="profileMoreMenu" hidden><button type="button" id="profileBlock" class="danger">დაბლოკვა</button><button type="button" id="profileRemove" class="danger">წაშლა</button></div></div></div>
 
- <div id="profileChatBox" hidden style="margin-top:14px"><div class="messages" id="directLog" style="min-height:0;max-height:none"></div><div class="sendRow"><button type="button" id="voiceRecord" title="ხმოვანი ჩაწერა" aria-label="ხმოვანი ჩაწერა">🎙️</button><textarea id="directText" rows="2" maxlength="2000" placeholder="შეტყობინება..." enterkeyhint="enter"></textarea><button type="button" id="voiceSend" hidden title="ხმოვანის გაგზავნა" aria-label="ხმოვანის გაგზავნა">➤</button><button class="primary" id="directSend" aria-label="გაგზავნა" title="გაგზავნა"><svg viewBox="0 0 24 24" width="27" height="27" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></button></div><div id="voiceStatus" class="muted" style="padding-top:5px"></div></div>
+ <div id="profileChatBox" hidden style="margin-top:14px"><div class="messages" id="directLog" style="min-height:0;max-height:none"></div><div class="sendRow"><button type="button" id="voiceRecord" title="ხმოვანი ჩაწერა" aria-label="ხმოვანი ჩაწერა">🎙️</button><textarea id="directText" rows="2" maxlength="2000" placeholder="შეტყობინება..." enterkeyhint="enter"></textarea><button class="primary" id="directSend" aria-label="გაგზავნა" title="გაგზავნა"><svg viewBox="0 0 24 24" width="27" height="27" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="m22 2-7 20-4-9-9-4 20-7Z"/></svg></button></div><div id="voiceStatus" class="muted" style="padding-top:5px"></div></div>
 </section>
 
 </div>
@@ -98,7 +98,7 @@ async function beginVoiceHold(){
    voiceDurationMs=Math.max(500,Date.now()-voiceStartedAt);
    voiceRecorder=null;voiceHoldActive=false;voiceButton.textContent='🎙️';voiceButton.classList.remove('recording');
    $('voiceStatus').textContent='იგზავნება...';
-   $('voiceSend').click();
+   sendPendingVoice();
   };
   voiceRecorder.start();voiceButton.textContent='●';voiceButton.classList.add('recording');$('voiceStatus').textContent='იწერება... აუშვი გასაგზავნად';
   if(voiceReleasePending||!voiceHoldActive)stopVoiceHold();
@@ -114,18 +114,18 @@ voiceButton.addEventListener('pointerup',e=>{e.preventDefault();stopVoiceHold()}
 voiceButton.addEventListener('pointercancel',stopVoiceHold);
 voiceButton.addEventListener('lostpointercapture',()=>{if(voiceHoldActive)stopVoiceHold()});
 voiceButton.addEventListener('contextmenu',e=>e.preventDefault());
-$('voiceSend').onclick=async()=>{
+async function sendPendingVoice(){
  if(!pendingVoice||!directTarget)return;
- const btn=$('voiceSend');btn.disabled=true;$('voiceStatus').textContent='იგზავნება...';
+ $('voiceStatus').textContent='იგზავნება...';
  try{
   const up=await fetch(VOICE_API+'/upload',{method:'POST',headers:{'Content-Type':pendingVoice.type||'audio/webm','X-Session-Token':getToken()},body:pendingVoice});
   const result=await up.json();if(!up.ok)throw Error(result.error||'აუდიო ვერ აიტვირთა');
   const duration=voiceDurationMs;
   const marker='[[TEMO_VOICE:'+result.id+':'+encodeURIComponent(result.mime||pendingVoice.type||'audio/webm')+':'+duration+']]';
   const sent=await call('sendDirect',{targetId:directTarget,text:marker});
-  pendingVoice=null;btn.hidden=true;$('voiceStatus').textContent='ხმოვანი გაიგზავნა';await loadDirect();
+  pendingVoice=null;$('voiceStatus').textContent='ხმოვანი გაიგზავნა';await loadDirect();
   try{await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId:sent.message?.id||'',message:'ხმოვანი შეტყობინება',senderName:user})})}catch(e){}
- }catch(e){$('voiceStatus').textContent=e.message||'გაგზავნა ვერ მოხერხდა'}finally{btn.disabled=false}
+ }catch(e){$('voiceStatus').textContent=e.message||'გაგზავნა ვერ მოხერხდა'}
 };
 $('directLog').addEventListener('click',async e=>{
  const b=e.target.closest('.voicePlay');if(!b)return;
