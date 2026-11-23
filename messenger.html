@@ -16,6 +16,29 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 #modal:has(#editOwnMessage) .modalBox{width:min(210px,calc(100% - 40px));padding:8px;border-radius:12px}#modal:has(#editOwnMessage) #modalTitle,#modal:has(#editOwnMessage) .modalActions{display:none!important}#modal:has(#editOwnMessage) #modalBody{margin:0}.messageActionPopup{position:fixed;z-index:1000;display:flex;flex-direction:row;align-items:center;gap:7px;padding:6px 8px;background:#0b1b25;border:1px solid #8da5b1;border-radius:15px;box-shadow:0 5px 16px #0009}.messageActionPopup:after{content:'';position:absolute;left:50%;margin-left:-7px;bottom:-8px;width:13px;height:13px;background:#0b1b25;border-right:1px solid #8da5b1;border-bottom:1px solid #8da5b1;transform:rotate(45deg)}.messageActionPopup button{width:38px;height:36px;display:grid;place-items:center;padding:0;border-radius:10px;background:#102b3b;color:#eef7f7;box-shadow:none;text-shadow:none}.messageActionPopup button svg{width:19px;height:19px;display:block}.messageActionPopup #editOwnMessage{border:1.5px solid #08bce9;color:#dff8ff}.messageActionPopup #deleteOwnMessage{border:1.5px solid #e51d35;color:#ffdfe3}
 @media(max-width:680px){.layout{grid-template-columns:1fr}.chat{min-height:58vh}.messages{max-height:48vh;min-height:220px}.groupList{grid-template-columns:1fr}.groupItem{font-size:13px;padding:10px}.app{padding:8px 8px 20px}.personRow{flex-direction:row;align-items:center;gap:8px;padding:9px}.personName{font-size:20px}.personActions{width:auto;display:flex;gap:5px}.personActions button{font-size:11px;padding:8px 9px}.panel{padding:12px}}
 .personName{display:flex;align-items:center;gap:9px}.personIcon{width:20px;height:20px;min-width:20px;fill:#2999df;stroke:#2999df;stroke-width:1.2;stroke-linecap:round;stroke-linejoin:round}.voiceMessage{display:flex;align-items:center;gap:10px}.voicePlay{padding:8px 12px;border-radius:20px;background:#123d52;border-color:#2999df}.sendRow #voiceRecord{width:42px;min-width:42px;height:42px;min-height:42px;padding:0;font-size:18px;background:#3b2028;border-color:#9a4050;touch-action:none;user-select:none;-webkit-user-select:none}.sendRow #voiceRecord.recording{background:#a51f36;border-color:#ff526b;box-shadow:0 0 12px #ff526b}
+<style>
+@media(max-width:680px){
+ .app{padding:12px 15px 30px}
+ header{padding:27px 8px 34px;gap:12px}
+ .brand{font-size:42px;line-height:1.1}
+ .user{font-size:23px}
+ .usersBack{display:flex;justify-content:flex-start;margin-top:19px}
+ .usersBack button{min-width:167px;min-height:84px;padding:18px 25px;border-radius:19px;font-size:27px}
+ .layout{margin-top:54px;gap:12px}
+ .layout>.panel:first-child{padding:24px;border-radius:31px}
+ .layout>.panel:first-child>h2{font-size:30px;margin:0 0 25px}
+ #contacts,#allUsers{gap:15px}
+ .personRow{min-height:107px;padding:18px 20px;border-radius:25px;gap:10px}
+ .personName{font-size:38px;gap:17px;padding:4px 0}
+ .personIcon{width:34px;height:34px;min-width:34px}
+ .personActions{display:flex;gap:10px;align-items:center}
+ .personActions button{width:64px;height:64px;min-width:64px;padding:0;border-radius:17px;font-size:21px}
+ #allUsers>.muted,#contacts>.muted{font-size:22px;padding:4px}
+ #allUsers>.personRow .personActions button{width:auto;min-width:176px;padding:0 18px;font-size:22px}
+ #incomingRequests{font-size:18px}
+ .requestRow{padding:12px 2px}
+}
+</style>
 <script>
 (function(){
   if(location.hostname==='temo75.github.io'){
@@ -27,7 +50,7 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 <body>
 <div class="app" id="app" hidden>
 <header><div class="brand"><span>MESSENGER</span></div><div class="user" id="userName"></div></header>
-<div style="display:flex;justify-content:flex-start;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap"><button type="button" onclick="location.href='/'" aria-label="უკან დაბრუნება">← უკან</button><button type="button" onclick="location.href='/messenger-test-20261121.html'" aria-label="ხმოვანი შეტყობინებების ტესტი">🎙️ ტესტის გვერდი</button></div>
+<div class="usersBack"><button type="button" onclick="location.href='/'" aria-label="უკან დაბრუნება">← უკან</button></div>
 <div class="layout">
 <section class="panel" style="margin-top:14px"><h2>მეგობრები</h2><div id="incomingRequests" class="muted"></div><div id="contacts" class="groupList" style="margin-bottom:12px"></div><div id="allUsers" class="groupList"></div></section>
 <section class="panel" id="profilePanel" hidden style="margin-top:12px">
