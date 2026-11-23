@@ -64,8 +64,17 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 <div class="status" id="status">მოწმდება შესვლა...</div>
 </div>
 <div class="modal" id="modal"><div class="modalBox"><h2 id="modalTitle"></h2><div id="modalBody"></div><div class="modalActions"><button id="modalCancel">დახურვა</button><button class="primary" id="modalOk">კარგი</button></div></div></div>
+<div id="voiceWaveOverlay" class="voiceWaveOverlay" aria-hidden="true"><div class="voiceWaveLabel">ჩაწერა მიმდინარეობს</div><div class="voiceWaveBars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="voiceWaveHint">გაუშვი თითი გასაგზავნად</div></div>
 
 <style>
+.voiceWaveOverlay{position:fixed;left:50%;bottom:calc(150px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:9999;width:min(300px,calc(100vw - 40px));padding:15px;border:1px solid #b65cff;border-radius:20px;background:#091426;box-shadow:0 0 12px #b65cff,0 0 30px #8b3dff;text-align:center;opacity:0;visibility:hidden;pointer-events:none;transition:opacity .15s}
+.voiceWaveOverlay.show{opacity:1;visibility:visible}
+.voiceWaveLabel{color:#e8c8ff;font-weight:700;margin-bottom:10px;text-shadow:0 0 8px #c45cff}
+.voiceWaveBars{height:40px;display:flex;align-items:center;justify-content:center;gap:4px}
+.voiceWaveBars i{width:4px;height:8px;border-radius:4px;background:#c66aff;box-shadow:0 0 8px #b44dff;animation:voiceNeonWave .65s ease-in-out infinite alternate}
+.voiceWaveBars i:nth-child(3n){animation-delay:-.2s}.voiceWaveBars i:nth-child(4n){background:#35d9ff;box-shadow:0 0 8px #19cfff}
+@keyframes voiceNeonWave{to{height:34px;opacity:1}}
+.voiceWaveHint{font-size:12px;color:#c8b5dd;margin-top:8px}
 #videoCall{position:fixed;inset:0;background:#02080df2;z-index:80;display:none;align-items:center;justify-content:center;padding:14px}
 #videoCall.show{display:flex}.videoBox{width:min(760px,100%);background:#10232f;border:1px solid #285269;border-radius:18px;padding:14px}
 #remoteVideo{width:100%;max-height:58vh;background:#000;border-radius:12px;object-fit:cover}
@@ -105,6 +114,8 @@ const call=async(op,data={})=>{const r=await fetch(API,{method:'POST',headers:{'
 const VOICE_API='https://temo-messenger-test-voice.temo75elia.workers.dev';
 let voiceRecorder=null,voiceChunks=[],pendingVoice=null,voiceStartedAt=0,voiceDurationMs=0,voiceHoldActive=false,voiceReleasePending=false,voiceStarting=false;
 const voiceButton=$('voiceRecord');
+const voiceWaveOverlay=$('voiceWaveOverlay');
+function setVoiceWave(on){voiceWaveOverlay?.classList.toggle('show',!!on)}
 async function beginVoiceHold(){
  if(voiceStarting||voiceRecorder||pendingVoice)return;
  voiceHoldActive=true;voiceReleasePending=false;voiceStarting=true;
@@ -119,17 +130,17 @@ async function beginVoiceHold(){
    stream.getTracks().forEach(t=>t.stop());
    pendingVoice=new Blob(voiceChunks,{type:voiceRecorder.mimeType||'audio/webm'});
    voiceDurationMs=Math.max(500,Date.now()-voiceStartedAt);
-   voiceRecorder=null;voiceHoldActive=false;voiceButton.textContent='🎙️';voiceButton.classList.remove('recording');
+   voiceRecorder=null;voiceHoldActive=false;setVoiceWave(false);voiceButton.textContent='🎙️';voiceButton.classList.remove('recording');
    $('voiceStatus').textContent='იგზავნება...';
    sendPendingVoice();
   };
-  voiceRecorder.start();voiceButton.textContent='●';voiceButton.classList.add('recording');$('voiceStatus').textContent='იწერება... აუშვი გასაგზავნად';
+  voiceRecorder.start();voiceButton.textContent='●';voiceButton.classList.add('recording');$('voiceStatus').textContent='იწერება... აუშვი გასაგზავნად';setVoiceWave(true);
   if(voiceReleasePending||!voiceHoldActive)stopVoiceHold();
- }catch(e){voiceHoldActive=false;voiceButton.textContent='🎙️';$('voiceStatus').textContent=e.message||'მიკროფონის შეცდომა'}
+ }catch(e){voiceHoldActive=false;setVoiceWave(false);voiceButton.textContent='🎙️';$('voiceStatus').textContent=e.message||'მიკროფონის შეცდომა'}
  finally{voiceStarting=false}
 }
 function stopVoiceHold(){
- voiceReleasePending=true;voiceHoldActive=false;
+ voiceReleasePending=true;voiceHoldActive=false;setVoiceWave(false);
  if(voiceRecorder&&voiceRecorder.state==='recording'){voiceRecorder.stop();$('voiceStatus').textContent='ჩანაწერი მზადდება...'}
 }
 voiceButton.addEventListener('pointerdown',e=>{if(e.button!==undefined&&e.button!==0)return;e.preventDefault();voiceButton.setPointerCapture?.(e.pointerId);beginVoiceHold()});
