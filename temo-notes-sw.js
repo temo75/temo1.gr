@@ -79,7 +79,7 @@ self.addEventListener('push', event => {
     badge: data.badge || './badge.png',
     tag: notificationTag,
     requireInteraction: data.requireInteraction !== false,
-    renotify: isVideoCall ? true : data.renotify !== false,
+    renotify: data.renotify !== false,
     ...(isVideoCall ? {} : (Array.isArray(data.vibrate) ? { vibrate: data.vibrate } : {})),
     data: data.url || './'
   };
