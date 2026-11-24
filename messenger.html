@@ -248,7 +248,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.profileCallActions'
 $('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!directTarget)return;try{const sent=await call('sendDirect',{targetId:directTarget,text:t});$('directText').value='';$('directText').style.height='';await loadDirect();try{const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId:sent.message?.id||'',message:t,senderName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Chat push delivery:',pr.status,pd)}catch(e){console.warn('Chat push failed',e)}}catch(e){showStatus(e.message)}};
 $('directText').addEventListener('input',()=>{const el=$('directText');el.style.height='auto';el.style.height=Math.min(el.scrollHeight,window.innerHeight*.30)+'px'});
 $('profileVideo').onclick=beginVideo;
-let activeCall=null,pc=null,localStream=null,callPoll=null,callPushTimer=null,incomingPoll=null,incomingCheckBusy=false,callSide='',seenCandidates=new Set(),remoteReady=false;
+let activeCall=null,pc=null,localStream=null,callPoll=null,incomingPoll=null,incomingCheckBusy=false,callSide='',seenCandidates=new Set(),remoteReady=false;
 let ringAudio=null,ringOscillator=null,ringGain=null,ringTimer=null,ringPulse=false;
 function unlockRingAudio(){
  try{
@@ -310,7 +310,6 @@ function makePeer(){
 async function stopVideo(end=true){
  stopRingtone();
  if(callPoll)clearInterval(callPoll);callPoll=null;
- if(callPushTimer)clearInterval(callPushTimer);callPushTimer=null;
  if(end&&activeCall)call('callEnd',{callId:activeCall.id}).catch(()=>{});
  if(pc){pc.close();pc=null}
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}
@@ -353,24 +352,12 @@ async function sendVideoCallPush(){
   if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Video call Push:',pr.status,pd);
  }catch(pushError){console.warn('Video call Push failed:',pushError)}
 }
-function startVideoCallPushRepeat(){
- if(callPushTimer)clearInterval(callPushTimer);
- sendVideoCallPush();
- callPushTimer=setInterval(async()=>{
-  if(!activeCall||callSide!=='caller'){clearInterval(callPushTimer);callPushTimer=null;return;}
-  try{
-   const state=await call('callGet',{callId:activeCall.id});
-   if(state.status==='ended'||state.answer){clearInterval(callPushTimer);callPushTimer=null;return;}
-   await sendVideoCallPush();
-  }catch(e){console.warn('Video call Push status:',e)}
- },2500);
-}
 async function beginVideo(){
  if(!selectedPerson||!contacts.some(x=>x.id===selectedPerson.id))return;
  showVideo('კამერას ვრთავ...');
  try{
   await startMedia();activeCall=await call('callCreate',{targetId:selectedPerson.id});callSide='caller';
-  startVideoCallPushRepeat();
+  sendVideoCallPush();
   showVideo('ვურეკავ: '+selectedPerson.name);await sendOffer();startCallPolling();
  }catch(e){showStatus(e.message||'ვიდეოზარი ვერ დაიწყო');await stopVideo()}
 }
