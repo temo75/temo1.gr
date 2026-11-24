@@ -512,20 +512,26 @@ export default {
           if (!endpoint || seen.has(endpoint)) continue;
           seen.add(endpoint);
           try {
-            const response = await sendPush(sub, {
-              title: String(sessionData.user.name || body.callerName || "TEMO"),
-              body: "შემომავალი ვიდეოზარი",
-              icon: "https://temo1.gr/push-video.svg",
-              badge: "https://temo1.gr/badge-T.svg",
-              tag: "temo-video-call-" + callId,
-              renotify: false,
-              requireInteraction: true,
-              url: "https://temo1.gr/messenger.html"
-            }, env);
-            if (response.ok) sent++;
-            else {
-              failed++;
-              if (response.status === 404 || response.status === 410) await pfput("/pushSubscriptions/" + recipientKey + "/" + key, null, env);
+            for (let ring = 0; ring < 10; ring++) {
+              if (ring > 0) await new Promise(resolve => setTimeout(resolve, 1200));
+              const response = await sendPush(sub, {
+                title: String(sessionData.user.name || body.callerName || "TEMO"),
+                body: "შემომავალი ვიდეოზარი",
+                icon: "https://temo1.gr/push-video.svg",
+                badge: "https://temo1.gr/badge-T.svg",
+                tag: "temo-video-call-" + callId,
+                renotify: true,
+                requireInteraction: true,
+                url: "https://temo1.gr/messenger.html"
+              }, env);
+              if (response.ok) sent++;
+              else {
+                failed++;
+                if (response.status === 404 || response.status === 410) {
+                  await pfput("/pushSubscriptions/" + recipientKey + "/" + key, null, env);
+                  break;
+                }
+              }
             }
           } catch (_) { failed++; }
         }
