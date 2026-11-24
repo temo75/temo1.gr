@@ -61,19 +61,26 @@ self.addEventListener('push', event => {
 
   const title = typeof data.title === 'string' && data.title.length > 0 ? data.title : '\u200B';
 
+  const isVideoCall = String(data.tag || '').startsWith('temo-video-call');
+  const notificationTag = isVideoCall ? 'temo-video-call' : (data.tag || 'temo-note-reminder');
+
   const options = {
     body: data.body || 'შეხსენების დრო მოვიდა',
     icon: data.icon || './icon.png',
     image: data.image || './notification-banner.jpg',
     badge: data.badge || './badge.png',
-    tag: data.tag || 'temo-note-reminder',
+    tag: notificationTag,
     requireInteraction: data.requireInteraction !== false,
     renotify: data.renotify !== false,
     vibrate: Array.isArray(data.vibrate) ? data.vibrate : undefined,
     data: data.url || './'
   };
 
-  event.waitUntil(
-    self.registration.showNotification(title, options)
-  );
+  event.waitUntil((async () => {
+    if (isVideoCall && self.registration.getNotifications) {
+      const previous = await self.registration.getNotifications({ tag: notificationTag });
+      previous.forEach(notification => notification.close());
+    }
+    await self.registration.showNotification(title, options);
+  })());
 });
