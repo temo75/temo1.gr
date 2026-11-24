@@ -78,8 +78,10 @@ self.addEventListener('push', event => {
 
   event.waitUntil((async () => {
     if (isVideoCall && self.registration.getNotifications) {
-      const previous = await self.registration.getNotifications({ tag: notificationTag });
-      previous.forEach(notification => notification.close());
+      const previous = await self.registration.getNotifications();
+      previous
+        .filter(notification => String(notification.tag || '').startsWith('temo-video-call'))
+        .forEach(notification => notification.close());
     }
     await self.registration.showNotification(title, options);
   })());
