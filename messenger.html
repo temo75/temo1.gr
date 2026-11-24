@@ -196,7 +196,7 @@ async function sendPendingVoice(){
   const marker='[[TEMO_VOICE:'+result.id+':'+encodeURIComponent('audio/wav')+':'+duration+']]';
   const sent=await call('sendDirect',{targetId:directTarget,text:marker});
   pendingVoice=null;$('voiceStatus').textContent='ხმოვანი გაიგზავნა';await loadDirect();
-  try{await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId:sent.message?.id||'',message:'ხმოვანი შეტყობინება',senderName:user})})}catch(e){}
+  try{await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId:String(sent.message?.id||sent.messageId||sent.id||('voice-'+Date.now())),message:'ხმოვანი შეტყობინება',senderName:user})})}catch(e){}
  }catch(e){$('voiceStatus').textContent=e.message||'გაგზავნა ვერ მოხერხდა'}
 };
 $('directLog').addEventListener('click',async e=>{
