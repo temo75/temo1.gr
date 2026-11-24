@@ -7,7 +7,7 @@
 <title>TEMO Messenger</title>
 <style>
 :root{color-scheme:dark;--bg:#071117;--panel:#0d1b24;--panel2:#10232f;--line:#1e3542;--blue:#2999df;--text:#eef7f7;--muted:#9fb0b8}
-*{box-sizing:border-box}html,body{overscroll-behavior-y:none;overscroll-behavior-x:none}body{margin:0;overscroll-behavior:none;background:linear-gradient(145deg,#061015,#0b1c27);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
+*{box-sizing:border-box}html,body{overscroll-behavior-x:none;overscroll-behavior-y:auto}body{margin:0;overscroll-behavior-x:none;overscroll-behavior-y:auto;background:linear-gradient(145deg,#061015,#0b1c27);color:var(--text);font-family:Arial,sans-serif;min-height:100vh}
 .app{max-width:900px;margin:auto;padding:12px 12px 30px}.app.pullRefreshBounce{animation:pullRefreshBounce .32s ease-out}@keyframes pullRefreshBounce{0%{transform:translateY(0)}35%{transform:translateY(9px)}70%{transform:translateY(-3px)}100%{transform:translateY(0)}}header{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 4px 16px;border-bottom:1px solid var(--line)}
 .brand{font-size:22px;font-weight:800}.brand span{color:var(--blue)}.user{font-size:13px;color:var(--muted);text-align:right}
 button,input{font:inherit}button{border:1px solid #285269;border-radius:10px;padding:10px 13px;background:#183445;color:white;font-weight:700;cursor:pointer}button.primary{background:#126ba0;border-color:#2999df}button.danger{background:#4a2228;border-color:#74333d}input{width:100%;padding:12px;border:1px solid #29404c;border-radius:10px;background:#071117;color:white;min-width:0}
@@ -440,34 +440,7 @@ const directLog=$('directLog');let pressTimer=null,pressStart=null,lastLongPress
 let validatedToken='';let validating=false;async function init(){const activeToken=getToken();if(!user||!uid||!activeToken){showStatus('ჯერ TEMO1.gr-ზე შედი.');return}if(validating)return;validating=true;try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'session',sessionToken:activeToken})});if(!r.ok)throw new Error('სესია ვადაგასულია. TEMO1.gr-ზე თავიდან შედი.');validatedToken=activeToken;$('userName').textContent=user;$('app').hidden=false;showStatus('');try{await loadPeople();const chatId=new URLSearchParams(location.search).get('chat');if(chatId&&contacts.some(c=>String(c.id)===String(chatId))){history.replaceState(null,'',location.pathname);await openDirect(chatId)}}catch(e){showStatus('მომხმარებლების სია ვერ ჩაიტვირთა. საჭიროა Cloudflare Worker-ის განახლება.')}}catch(e){$('app').hidden=false;$('userName').textContent=user;showStatus(e.message||'კავშირის შეცდომა')}finally{validating=false}}
 init();
 window.addEventListener('focus',()=>{const latest=getToken();if(latest&&latest!==validatedToken)init()});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){const latest=getToken();if(latest&&latest!==validatedToken)init()}});
-
-let pullStartY=null,pullStartX=0,pullAtTop=false,pullRefreshing=false;
-async function refreshPeopleByPull(){
- if(pullRefreshing)return;
- pullRefreshing=true;
- try{showStatus('განახლება...');await loadPeople();const app=$('app');app.classList.remove('pullRefreshBounce');void app.offsetWidth;app.classList.add('pullRefreshBounce');app.addEventListener('animationend',()=>app.classList.remove('pullRefreshBounce'),{once:true});showStatus('განახლებულია');}
- catch(err){showStatus(err.message||'განახლება ვერ მოხერხდა');}
- finally{pullRefreshing=false;setTimeout(()=>showStatus(''),1200);}
-}
-document.addEventListener('touchstart',e=>{
- if(e.touches.length!==1||!$('profilePanel').hidden){pullStartY=null;return;}
- const scroller=document.scrollingElement||document.documentElement;
- pullAtTop=scroller.scrollTop<=3;
- pullStartY=e.touches[0].clientY;
- pullStartX=e.touches[0].clientX;
-},{passive:true,capture:true});
-document.addEventListener('touchmove',e=>{
- if(pullStartY===null||pullRefreshing||!pullAtTop||!$('profilePanel').hidden||e.touches.length!==1)return;
- const dy=e.touches[0].clientY-pullStartY;
- const dx=Math.abs(e.touches[0].clientX-pullStartX);
- if(dy>=55&&dx<70){
-  pullStartY=null;
-  refreshPeopleByPull();
- }
-},{passive:true,capture:true});
-document.addEventListener('touchend',()=>{pullStartY=null},{passive:true,capture:true});
-document.addEventListener('touchcancel',()=>{pullStartY=null},{passive:true,capture:true});
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){const latest=getToken();if(latest&&latest!assive:true,capture:true});
 
 setInterval(()=>loadPeople().catch(()=>{}),5000);
 })();
