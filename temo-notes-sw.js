@@ -3,7 +3,15 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  event.waitUntil(self.clients.claim());
+  event.waitUntil((async () => {
+    await self.clients.claim();
+    if (self.registration.getNotifications) {
+      const previous = await self.registration.getNotifications();
+      previous
+        .filter(notification => String(notification.tag || '').startsWith('temo-video-call'))
+        .forEach(notification => notification.close());
+    }
+  })());
 });
 
 self.addEventListener('notificationclick', event => {
