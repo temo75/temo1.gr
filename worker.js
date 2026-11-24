@@ -520,7 +520,7 @@ export default {
               tag: "temo-video-call-" + callId,
               renotify: false,
               requireInteraction: true,
-              vibrate: [300, 180, 300, 180, 500],
+              vibrate: [...Array(10).fill([220, 140]).flat(), 220],
               url: "https://temo1.gr/messenger.html"
             }, env);
             if (response.ok) sent++;
