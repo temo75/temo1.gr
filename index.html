@@ -2856,6 +2856,11 @@ window.addEventListener('DOMContentLoaded',async()=>{
   const sessionValid=savedSessionUsable&&((!!matched&&String(matched.id)===String(savedUserId)&&matched.authorized===true&&matched.blocked===false)||sessionCheckUnavailable);
   if(sessionValid){
     if(matched){currentUser=matched.name;currentUserId=matched.id;}
+    // Push რეგისტრაცია გავუშვათ სესიის შემოწმებისა და განახლების შემდეგაც,
+    // რათა Worker-ში მოწყობილობის გამოწერა Messenger-ის გახსნაზე აღარ იყოს დამოკიდებული.
+    if('Notification' in window && Notification.permission==='granted'){
+      setTimeout(()=>ensureTEMOPushSubscription().catch(e=>console.warn('TEMO Push restore failed:',e)),0);
+    }
     expenses=loadLocalExpenses();renderExpenses();
     try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}
     localStorage.setItem(SESSION_USER_KEY,currentUser);
