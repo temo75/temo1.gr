@@ -2860,10 +2860,6 @@ window.addEventListener('DOMContentLoaded',async()=>{
     try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}
     localStorage.setItem(SESSION_USER_KEY,currentUser);
     localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);
-    // სესიის აღდგენის დასრულებისთანავე დავარეგისტრიროთ Push, Messenger-ის გახსნის ლოდინის გარეშე.
-    if('Notification' in window && Notification.permission==='granted'){
-      await ensureTEMOPushSubscription();
-    }
     if(typeof window.loadNeonSettings==='function')await window.loadNeonSettings();
     $('loginScreen').classList.add('hidden');
     if($('bottomNav'))$('bottomNav').style.display='grid';
