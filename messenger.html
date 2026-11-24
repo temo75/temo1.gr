@@ -440,8 +440,7 @@ const directLog=$('directLog');let pressTimer=null,pressStart=null,lastLongPress
 let validatedToken='';let validating=false;async function init(){const activeToken=getToken();if(!user||!uid||!activeToken){showStatus('ჯერ TEMO1.gr-ზე შედი.');return}if(validating)return;validating=true;try{const r=await fetch(API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'session',sessionToken:activeToken})});if(!r.ok)throw new Error('სესია ვადაგასულია. TEMO1.gr-ზე თავიდან შედი.');validatedToken=activeToken;$('userName').textContent=user;$('app').hidden=false;showStatus('');try{await loadPeople();const chatId=new URLSearchParams(location.search).get('chat');if(chatId&&contacts.some(c=>String(c.id)===String(chatId))){history.replaceState(null,'',location.pathname);await openDirect(chatId)}}catch(e){showStatus('მომხმარებლების სია ვერ ჩაიტვირთა. საჭიროა Cloudflare Worker-ის განახლება.')}}catch(e){$('app').hidden=false;$('userName').textContent=user;showStatus(e.message||'კავშირის შეცდომა')}finally{validating=false}}
 init();
 window.addEventListener('focus',()=>{const latest=getToken();if(latest&&latest!==validatedToken)init()});
-document.addEventListener('visibilitychange',()=>{if(!document.hidden){const latest=getToken();if(latest&&latest!assive:true,capture:true});
-
+document.addEventListener('visibilitychange',()=>{if(!document.hidden){const latest=getToken();if(latest&&latest!==validatedToken)init()}});
 setInterval(()=>loadPeople().catch(()=>{}),5000);
 })();
 </script>
