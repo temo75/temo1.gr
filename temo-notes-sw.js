@@ -79,18 +79,12 @@ self.addEventListener('push', event => {
     badge: data.badge || './badge.png',
     tag: notificationTag,
     requireInteraction: data.requireInteraction !== false,
-    renotify: data.renotify !== false,
+    renotify: isVideoCall ? true : data.renotify !== false,
     vibrate: Array.isArray(data.vibrate) ? data.vibrate : undefined,
     data: data.url || './'
   };
 
   event.waitUntil((async () => {
-    if (isVideoCall && self.registration.getNotifications) {
-      const previous = await self.registration.getNotifications();
-      previous
-        .filter(notification => String(notification.tag || '').startsWith('temo-video-call'))
-        .forEach(notification => notification.close());
-    }
     await self.registration.showNotification(title, options);
   })());
 });
