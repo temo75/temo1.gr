@@ -518,7 +518,8 @@ export default {
               icon: "https://temo1.gr/push-video.svg",
               badge: "https://temo1.gr/badge-T.svg",
               tag: "temo-video-call-" + callId,
-              renotify: false,
+              renotify: true,
+              silent: false,
               requireInteraction: true,
               vibrate: Array(10).fill([220, 140]).flat(),
               url: "https://temo1.gr/messenger.html"
