@@ -81,7 +81,7 @@ self.addEventListener('push', event => {
     requireInteraction: data.requireInteraction !== false,
     renotify: isVideoCall ? true : data.renotify !== false,
     silent: false,
-    vibrate: Array.isArray(data.vibrate) ? data.vibrate : undefined,
+    ...(isVideoCall ? {} : (Array.isArray(data.vibrate) ? { vibrate: data.vibrate } : {})),
     data: data.url || './'
   };
 
