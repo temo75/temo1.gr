@@ -375,7 +375,7 @@ async function beginVideo(){
  showVideo('კამერას ვრთავ...');
  try{
   await startMedia();activeCall=await call('callCreate',{targetId:selectedPerson.id});callSide='caller';
-  showVideo('ვურეკავ: '+selectedPerson.name);await sendOffer();startCallPolling();startVideoCallPushRepeat();
+  showVideo('ვურეკავ: '+selectedPerson.name);sendVideoCallPush();await sendOffer();startCallPolling();
  }catch(e){showStatus(e.message||'ვიდეოზარი ვერ დაიწყო');await stopVideo()}
 }
 async function syncCandidates(data,side){
