@@ -2795,7 +2795,7 @@ function makeUserId(){return window.crypto&&crypto.randomUUID?crypto.randomUUID(
 function makeLegacyUserId(name,password){const str=String(name||'').trim().toLowerCase()+'\u0000'+String(password??'');let h=2166136261;for(let i=0;i<str.length;i++){h^=str.charCodeAt(i);h=Math.imul(h,16777619)}return 'legacy_'+(h>>>0).toString(16);}
 function firebaseUserKey(id){return encodeURIComponent(String(id)).replace(/%/g,'_');}
 function expireBridgeSession(){if(!localStorage.getItem(BRIDGE_SESSION_KEY))return;localStorage.removeItem(AUTH_KEY);localStorage.removeItem(SESSION_USER_KEY);localStorage.removeItem(SESSION_USER_ID_KEY);localStorage.removeItem(BRIDGE_SESSION_KEY);currentUser='';currentUserId='';const screen=$('loginScreen');if(screen)screen.classList.remove('hidden');if($('bottomNav'))$('bottomNav').style.display='none';if(typeof updateUserUI==='function')updateUserUI();}
-async function bridgeRequest(action,payload={},sessionToken){const token=sessionToken===undefined?(localStorage.getItem(BRIDGE_SESSION_KEY)||''):sessionToken;const response=await fetch(FIREBASE_BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload,sessionToken:token})});const result=await response.json().catch(()=>({error:'Invalid bridge response'}));if(!response.ok){if(response.status===401&&action!=='login'&&token)expireBridgeSession();throw Object.assign(new Error(result?.error||'Bridge request failed'),{status:response.status});}return result;}
+async function bridgeRequest(action,payload={},sessionToken){const token=sessionToken===undefined?(localStorage.getItem(BRIDGE_SESSION_KEY)||''):sessionToken;const response=await fetch(FIREBASE_BRIDGE_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action,...payload,sessionToken:token})});const result=await response.json().catch(()=>({error:'Invalid bridge response'}));if(!response.ok){if(response.status===401&&action!=='login'&&token)expireBridgeSession();throw Object.assign(new Error(result?.error||'Bridge request failed'),{status:response.status});}if(typeof result?.sessionToken==='string'&&result.sessionToken)localStorage.setItem(BRIDGE_SESSION_KEY,result.sessionToken);return result;}
 async function loadUsersFromFirebase(){try{const data=await bridgeRequest('listUsers');if(!Array.isArray(data))return null;return data.filter(Boolean).map(normalizeUser).filter(u=>!isRemovedUser(u));}catch(e){console.warn('Authenticated user list read failed:',e);return null}}
 function normalizeUser(raw){const u=(raw&&typeof raw==='object')?raw:{};const name=String(u.name||'').trim(),email=String(u.email||'').trim(),password=String(u.password??'');const admin=(name.toUpperCase()===ADMIN_USER)||u.admin===true;const blocked=admin?false:(typeof u.blocked==='boolean'?u.blocked:u.authorized===false);const id=String(u.id||'').trim()||makeLegacyUserId(name,password);return {id,name,email,password,admin,authorized:admin?true:!blocked,blocked,_firebaseKey:u._firebaseKey||''};}
 function isRemovedUser(u){return REMOVED_USER_NAMES.includes(String(u?.name||'').trim().toUpperCase());}
@@ -2847,11 +2847,16 @@ window.addEventListener('DOMContentLoaded',async()=>{
 
   const savedUserId=currentUserId;
   const savedBridgeToken=localStorage.getItem(BRIDGE_SESSION_KEY)||'';
-  let matched=null;
-  if(savedBridgeToken){try{matched=(await bridgeRequest('session',{},savedBridgeToken)).user||null;}catch{matched=null;}}
-  const sessionValid=localStorage.getItem(AUTH_KEY)==='yes' && !!savedUserId && !!matched && String(matched.id)===String(savedUserId) && matched.authorized===true && matched.blocked===false;
+  let matched=null,sessionCheckUnavailable=false;
+  if(savedBridgeToken){
+    try{const checked=await bridgeRequest('session',{},savedBridgeToken);matched=checked?.user||null;if(!matched)sessionCheckUnavailable=true;}
+    catch(error){if(error?.status!==401)sessionCheckUnavailable=true;}
+  }
+  const savedSessionUsable=localStorage.getItem(AUTH_KEY)==='yes'&&!!savedUserId&&!!savedBridgeToken&&!!currentUser;
+  const sessionValid=savedSessionUsable&&((!!matched&&String(matched.id)===String(savedUserId)&&matched.authorized===true&&matched.blocked===false)||sessionCheckUnavailable);
   if(sessionValid){
-    currentUser=matched.name;currentUserId=matched.id;expenses=loadLocalExpenses();renderExpenses();
+    if(matched){currentUser=matched.name;currentUserId=matched.id;}
+    expenses=loadLocalExpenses();renderExpenses();
     try{if(window.AndroidReminder&&typeof window.AndroidReminder.setNotesEndpoint==='function'){window.AndroidReminder.setNotesEndpoint(FIREBASE_DB_URL+'/notes/'+firebaseUserKey(currentUserId)+'.json');}}catch(e){}
     localStorage.setItem(SESSION_USER_KEY,currentUser);
     localStorage.setItem(SESSION_USER_ID_KEY,currentUserId);
@@ -2891,6 +2896,11 @@ window.addEventListener('DOMContentLoaded',async()=>{
     if(currentUser===ADMIN_USER){await renderAdminMessages();await updateMessagesNavDot();}
     else if(currentUser){await loadAndRenderUserChat();await updateMessagesNavDot();}
   },3000);
+  setInterval(()=>{
+    if(currentUser&&currentUserId&&localStorage.getItem(BRIDGE_SESSION_KEY)){
+      bridgeRequest('session').catch(error=>console.warn('Session refresh deferred:',error));
+    }
+  },6*60*60*1000);
 });
 
 let jobs=[];
