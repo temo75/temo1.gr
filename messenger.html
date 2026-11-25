@@ -220,7 +220,7 @@ $('modalCancel').onclick=closeModal;$('modalOk').onclick=async()=>{if(modalActio
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function showStatus(t){$('status').textContent=t}
 let people=[],contacts=[],requests=[],directTarget=null,directPoll=null,selectedPerson=null;
-function personRow(u){const yes=contacts.some(c=>c.id===u.id);return '<div class="personRow"><button class="personName" data-profile="'+esc(u.id)+'"><svg class="personIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4.2"/><path d="M3.5 21c.5-4.5 3.8-7 8.5-7s8 2.5 8.5 7"/></svg><span>'+esc(u.name)+'</span></button><span class="personActions">'+(yes?'<button data-chat="'+esc(u.id)+'" title="ჩატის გახსნა" aria-label="ჩატის გახსნა">💬</button><button disabled>✓</button>':'<button data-add="'+esc(u.id)+'">＋ დამატება</button>')+'</span></div>'}
+function personRow(u){const yes=contacts.some(c=>c.id===u.id);const testSwitch=String(u.name||'').trim().toLowerCase()==='test'?'<button type="button" data-switch-test title="ტესტის ჩატზე გადასვლა" aria-label="ტესტის ჩატზე გადასვლა">⇄</button>':'';return '<div class="personRow"><button class="personName" data-profile="'+esc(u.id)+'"><svg class="personIcon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="7.5" r="4.2"/><path d="M3.5 21c.5-4.5 3.8-7 8.5-7s8.5 2.5 8.5 7"/></svg><span>'+esc(u.name)+'</span></button><span class="personActions">'+(yes?'<button data-chat="'+esc(u.id)+'" title="ჩატის გახსნა" aria-label="ჩატის გახსნა">💬</button><button disabled>✓</button>':'<button data-add="'+esc(u.id)+'">＋ დამატება</button>')+testSwitch+'</span></div>'}
 async function loadPeople(){
  [people,contacts,requests]=await Promise.all([call('users'),call('contacts'),call('requests')]);
  $('contacts').innerHTML=contacts.length?contacts.map(personRow).join(''):'<div class="muted">კონტაქტები ჯერ არ არის</div>';
@@ -229,6 +229,7 @@ async function loadPeople(){
  document.querySelectorAll('[data-profile]').forEach(b=>b.onclick=()=>openDirect(b.dataset.profile));
  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=async()=>{try{await call('requestFriend',{targetId:b.dataset.add});showStatus('მოთხოვნა გაგზავნილია');await loadPeople()}catch(e){showStatus(e.message)}});
  document.querySelectorAll('[data-chat]').forEach(b=>b.onclick=()=>openDirect(b.dataset.chat));
+ document.querySelectorAll('[data-switch-test]').forEach(b=>b.onclick=()=>{location.href='./messenger-test-20261121.html'});
  document.querySelectorAll('[data-video]').forEach(b=>b.onclick=()=>showStatus('ვიდეოზარი ჯერ არ არის ჩართული'));
  document.querySelectorAll('[data-remove]').forEach(b=>b.onclick=()=>showModal('კონტაქტის წაშლა','ნამდვილად გინდა კონტაქტის წაშლა?',async()=>{await call('removeFriend',{targetId:b.dataset.remove});await loadPeople()}));
  document.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{await call('respondFriend',{targetId:b.dataset.accept,decision:'accept'});await loadPeople()});
