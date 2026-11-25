@@ -91,8 +91,7 @@ self.addEventListener('push', event => {
         try {
           const url = new URL(client.url);
           return url.origin === self.location.origin &&
-            /\/messenger\.html$/i.test(url.pathname) &&
-            (client.focused === true || client.visibilityState === 'visible');
+            /\/messenger\.html$/i.test(url.pathname);
         } catch (_) {
           return false;
         }
