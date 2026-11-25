@@ -85,6 +85,20 @@ self.addEventListener('push', event => {
   };
 
   event.waitUntil((async () => {
+    if (String(data.tag || '').startsWith('temo-chat-')) {
+      const openClients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+      const messengerIsVisible = openClients.some(client => {
+        try {
+          const url = new URL(client.url);
+          return url.origin === self.location.origin &&
+            /\/messenger\.html$/.test(url.pathname) &&
+            client.visibilityState === 'visible';
+        } catch (_) {
+          return false;
+        }
+      });
+      if (messengerIsVisible) return;
+    }
     await self.registration.showNotification(title, options);
   })());
 });
