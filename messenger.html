@@ -300,14 +300,22 @@ async function loadPeople(){
  document.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{await call('respondFriend',{targetId:b.dataset.accept,decision:'accept'});await loadPeople()});
  document.querySelectorAll('[data-reject]').forEach(b=>b.onclick=async()=>{await call('respondFriend',{targetId:b.dataset.reject,decision:'reject'});await loadPeople()});
 }
+async let profileHistoryOpen=false;
+function closeProfilePanel(){
+ const panel=$('profilePanel');if(!panel||panel.hidden)return;
+ panel.classList.remove('chat-open');panel.classList.remove('profileSlideIn');panel.classList.add('profileSlideOut');
+ panel.addEventListener('animationend',()=>{panel.hidden=true;panel.classList.remove('profileSlideOut');selectedPerson=null;if(directPoll)clearInterval(directPoll);directPoll=null},{once:true});
+}
+window.addEventListener('popstate',()=>{if(profileHistoryOpen){profileHistoryOpen=false;closeProfilePanel()}});
 async function openProfile(id){
  selectedPerson=people.find(x=>x.id===id)||contacts.find(x=>x.id===id);if(!selectedPerson)return;
  const yes=contacts.some(x=>x.id===id);
  $('profileName').textContent=selectedPerson.name;
  $('profileMore').hidden=!yes;$('profileMoreMenu').hidden=true;$('profileChatBox').hidden=true;$('profilePanel').classList.remove('chat-open');
+ if(!profileHistoryOpen){history.pushState({...history.state,__temoMessengerProfile:true},'',location.href);profileHistoryOpen=true}
  $('profilePanel').hidden=false;$('profilePanel').classList.remove('profileSlideOut','profileSlideIn');void $('profilePanel').offsetWidth;$('profilePanel').classList.add('profileSlideIn');$('profilePanel').scrollTop=0;
 }
-$('backUsers').onclick=()=>{const panel=$('profilePanel');panel.classList.remove('chat-open');panel.classList.remove('profileSlideIn');panel.classList.add('profileSlideOut');panel.addEventListener('animationend',()=>{panel.hidden=true;panel.classList.remove('profileSlideOut');selectedPerson=null;if(directPoll)clearInterval(directPoll)},{once:true})};
+$('backUsers').onclick=()=>{if(profileHistoryOpen)history.back();else closeProfilePanel()};
 $('profileMore').onclick=()=>{$('profileMoreMenu').hidden=!$('profileMoreMenu').hidden};
 document.addEventListener('click',e=>{if(!e.target.closest('.profileCallActions'))$('profileMoreMenu').hidden=true});
 
@@ -493,8 +501,8 @@ if(location.origin==='https://temo1.gr'){
 }
 
 
-$('profileRemove').onclick=()=>{if(!selectedPerson)return;showModal('კონტაქტის წაშლა','ნამდვილად გინდა კონტაქტიდან წაშლა?',async()=>{await call('removeFriend',{targetId:selectedPerson.id});await loadPeople();$('profilePanel').hidden=true})};
-$('profileBlock').onclick=async()=>{if(!selectedPerson)return;try{await call('block',{targetId:selectedPerson.id});showStatus('მომხმარებელი დაიბლოკა');$('profilePanel').hidden=true}catch(e){showStatus(e.message)}};
+$('profileRemove').onclick=()=>{if(!selectedPerson)return;showModal('კონტაქტის წაშლა','ნამდვილად გინდა კონტაქტიდან წაშლა?',async()=>{await call('removeFriend',{targetId:selectedPerson.id});await loadPeople();if(profileHistoryOpen)history.back();else closeProfilePanel()})};
+$('profileBlock').onclick=async()=>{if(!selectedPerson)return;try{await call('block',{targetId:selectedPerson.id});showStatus('მომხმარებელი დაიბლოკა');if(profileHistoryOpen)history.back();else closeProfilePanel()}catch(e){showStatus(e.message)}};
 async function openDirect(id){await openProfile(id);if(contacts.some(x=>x.id===id)){directTarget=id;$('profilePanel').classList.add('chat-open');$('profileChatBox').hidden=false;await loadDirect();if(directPoll)clearInterval(directPoll);directPoll=setInterval(()=>loadDirect().catch(()=>{}),3000)}}
 function syncKeyboardViewport(){
  const panel=$('profilePanel'),vv=window.visualViewport;
