@@ -424,7 +424,7 @@ function startCallPolling(){
   if(!activeCall||!pc)return;
   try{
    const c=await call('callGet',{callId:activeCall.id});
-   if(c.status==='ended'){showStatus('ზარი დასრულდა');await stopVideo(false);return}
+   if(c.status==='ended'){showStatus('ზარი დასრულდა');setTimeout(()=>{if($('status').textContent==='ზარი დასრულდა')showStatus('')},1500);await stopVideo(false);return}
    if(callSide==='caller'&&c.answer&&!remoteReady){await pc.setRemoteDescription(c.answer);remoteReady=true}
    await syncCandidates(c,callSide==='caller'?'callee':'caller');
   }catch(e){console.warn('Call sync',e)}
