@@ -351,6 +351,7 @@ async function stopVideo(end=true){
  if(localStream){localStream.getTracks().forEach(t=>t.stop());localStream=null}
  remoteVideo.srcObject=null;localVideo.srcObject=null;activeCall=null;callSide='';seenCandidates.clear();remoteReady=false;
  videoBox.classList.remove('show');$('videoAccept').hidden=true;
+ const callNotice=$('status').textContent;if(/ზარი დასრულდა|მეორე მხარის ვიდეო|ვიდეოკავშირის პრობლემა|ICE:/.test(callNotice))showStatus('');
  startIncomingPolling();
 }
 async function sendOffer(){
