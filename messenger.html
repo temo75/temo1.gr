@@ -300,7 +300,7 @@ async function loadPeople(){
  document.querySelectorAll('[data-accept]').forEach(b=>b.onclick=async()=>{await call('respondFriend',{targetId:b.dataset.accept,decision:'accept'});await loadPeople()});
  document.querySelectorAll('[data-reject]').forEach(b=>b.onclick=async()=>{await call('respondFriend',{targetId:b.dataset.reject,decision:'reject'});await loadPeople()});
 }
-async let profileHistoryOpen=false;
+let profileHistoryOpen=false;
 function closeProfilePanel(){
  const panel=$('profilePanel');if(!panel||panel.hidden)return;
  panel.classList.remove('chat-open');panel.classList.remove('profileSlideIn');panel.classList.add('profileSlideOut');
