@@ -115,6 +115,13 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 #remoteVideo{width:100%;max-height:58vh;background:#000;border-radius:12px;object-fit:cover}
 #localVideo{position:absolute;right:12px;bottom:12px;width:28%;max-width:170px;aspect-ratio:3/4;object-fit:cover;background:#17242b;border:2px solid #2999df;border-radius:12px}
 #videoStage{position:relative}.videoControls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:12px}
+/* Keep the message composer pinned to the bottom of the chat viewport */
+#profilePanel.chat-open{display:flex;flex-direction:column;overflow:hidden;padding-bottom:calc(8px + env(safe-area-inset-bottom))}
+#profilePanel.chat-open .profileHead{flex:0 0 auto}
+#profilePanel.chat-open #profileChatBox{display:flex;flex:1 1 auto;flex-direction:column;min-height:0;height:auto;margin-top:8px;padding-bottom:0}
+#profilePanel.chat-open #profileChatBox .messages{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto}
+#profilePanel.chat-open #profileChatBox .sendRow{flex:0 0 auto;margin:0;padding-bottom:4px}
+
 </style>
 <div id="videoCall"><div class="videoBox"><h2 id="videoTitle">ვიდეოზარი</h2><div id="videoStage"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay muted playsinline></video></div><div class="videoControls"><button id="videoMute">🎙️</button><button id="videoCamera">📷</button><button class="danger" id="videoHangup">☎️ გათიშვა</button><button id="videoAccept" class="primary" hidden>პასუხი</button></div></div></div>
 <script>
