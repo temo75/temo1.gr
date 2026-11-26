@@ -128,6 +128,21 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 #profilePanel.chat-open #profileChatBox .messages{flex:1 1 auto;min-height:0;max-height:none;overflow-y:auto}
 #profilePanel.chat-open #profileChatBox .sendRow{flex:0 0 auto;margin:0;padding-bottom:4px}
 
+/* Full-width translucent composer dock at the very bottom */
+#profilePanel.chat-open{padding:18px 0 0!important}
+#profilePanel.chat-open .profileHead{margin-left:14px;margin-right:14px}
+#profilePanel.chat-open #profileChatBox{margin-left:0!important;margin-right:0!important}
+#profilePanel.chat-open #profileChatBox .messages{padding-left:14px;padding-right:14px}
+#profilePanel.chat-open #profileChatBox .sendRow{
+ width:100%;box-sizing:border-box;align-self:stretch;
+ margin:0!important;padding:9px 12px calc(9px + env(safe-area-inset-bottom))!important;
+ border-radius:22px 22px 0 0;
+ background:rgba(5,9,12,.78);
+ -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);
+ border:1px solid rgba(80,190,225,.16);border-bottom:0;
+}
+
+
 </style>
 <div id="videoCall"><div class="videoBox"><h2 id="videoTitle">ვიდეოზარი</h2><div id="videoStage"><video id="remoteVideo" autoplay playsinline></video><video id="localVideo" autoplay muted playsinline></video></div><div class="videoControls"><button id="videoMute">🎙️</button><button id="videoCamera">📷</button><button class="danger" id="videoHangup">☎️ გათიშვა</button><button id="videoAccept" class="primary" hidden>პასუხი</button></div></div></div>
 <script>
