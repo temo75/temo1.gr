@@ -339,7 +339,7 @@ function makePeer(){
  localStream.getTracks().forEach(t=>pc.addTrack(t,localStream));
  pc.ontrack=e=>{if(e.streams&&e.streams[0])remoteVideo.srcObject=e.streams[0];else{if(!remoteVideo.srcObject)remoteVideo.srcObject=new MediaStream();remoteVideo.srcObject.addTrack(e.track)}remoteVideo.play().catch(()=>{});showStatus('მეორე მხარის ვიდეო მიღებულია')};
  pc.onicecandidate=e=>{if(e.candidate&&activeCall)call('callSet',{callId:activeCall.id,field:'candidate',value:e.candidate.toJSON()}).catch(()=>{})};
- pc.oniceconnectionstatechange=()=>{if(pc){console.log('ICE state:',pc.iceConnectionState);showStatus('ICE: '+pc.iceConnectionState)}};
+ pc.oniceconnectionstatechange=()=>{if(pc){const state=pc.iceConnectionState;console.log('ICE state:',state);if(['failed','disconnected'].includes(state))showStatus('ვიდეოკავშირის პრობლემა: '+state);else if($('status').textContent.startsWith('ICE:'))showStatus('')}};
  pc.onconnectionstatechange=()=>{if(pc){console.log('Peer state:',pc.connectionState);if(['failed','disconnected'].includes(pc.connectionState))showStatus('ვიდეოკავშირის პრობლემა: '+pc.connectionState)}};
 }
 async function stopVideo(end=true){
