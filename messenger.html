@@ -60,7 +60,13 @@ h2{font-size:16px;margin:0 0 12px}.createRow{display:flex;gap:7px;margin-bottom:
 .themePreview.imagePreview span{display:none!important}
 </style>
 <style id="messenger-composer-style">
-.sendRow{position:relative;display:flex;align-items:center;gap:5px;padding:7px 0 4px;background:#05090c}
+.sendRow{position:relative;display:flex;align-items:center;gap:5px;padding:7px 0 4px;background:#05090c} 
+.sendRow #cameraPick,.sendRow #photoPick,.sendRow #voiceRecord{transition:flex-basis .55s ease,width .55s ease,min-width .55s ease,opacity .45s ease,transform .55s ease,padding .55s ease,margin .55s ease}
+.sendRow textarea{transition:flex-basis .55s ease,width .55s ease,min-width .55s ease}
+.sendRow.composer-compact{gap:0}
+.sendRow.composer-compact #cameraPick,.sendRow.composer-compact #photoPick,.sendRow.composer-compact #voiceRecord{flex:0 0 0;width:0;min-width:0;padding-left:0;padding-right:0;margin:0;opacity:0;transform:translateX(-30px);overflow:hidden;pointer-events:none}
+.sendRow.composer-compact textarea{flex:1 1 auto;min-width:0}
+
 .sendRow .composerRound{flex:0 0 34px;width:34px;min-width:34px;height:42px;min-height:42px;padding:0;border:0;border-radius:50%;background:transparent;color:#d8e3e8;font-size:25px;display:grid;place-items:center;box-shadow:none}
 .sendRow #cameraPick,.sendRow #photoPick,.sendRow #voiceRecord{flex:0 0 39px;width:39px;min-width:39px;height:42px;min-height:42px;padding:0;border-radius:10px;display:grid;place-items:center}
 .sendRow #cameraPick,.sendRow #photoPick{background:transparent;border:0;box-shadow:none}
@@ -176,7 +182,7 @@ let voiceRecorder=null,voiceChunks=[],pendingVoice=null,voiceStartedAt=0,voiceDu
 const photoButton=$('photoPick'),photoInput=$('photoInput'),cameraButton=$('cameraPick'),cameraInput=$('cameraInput');const attachMenuButton=$('attachMenuButton'),attachMenu=$('attachMenu'),emojiButton=$('emojiButton'),emojiPicker=$('emojiPicker');
 const emojiChoices=['😀','😂','😍','🥰','😘','😉','😊','😎','😭','😢','😡','👍','❤️','🔥','👏','🙏','🎉','🤔'];
 emojiPicker.innerHTML=emojiChoices.map(e=>'<button type="button">'+e+'</button>').join('');
-attachMenuButton.onclick=()=>{attachMenu.hidden=!attachMenu.hidden;emojiPicker.hidden=true};
+attachMenuButton.onclick=()=>{const row=attachMenuButton.closest('.sendRow');if(row)row.classList.remove('composer-compact');attachMenu.hidden=!attachMenu.hidden;emojiPicker.hidden=true};
 $('attachCamera').onclick=()=>{attachMenu.hidden=true;cameraInput.click()};
 $('attachGallery').onclick=()=>{attachMenu.hidden=true;photoInput.click()};
 emojiButton.onclick=()=>{emojiPicker.hidden=!emojiPicker.hidden;attachMenu.hidden=true};
@@ -326,8 +332,9 @@ async function openProfile(id){
 $('profileMore').onclick=()=>{$('profileMoreMenu').hidden=!$('profileMoreMenu').hidden};
 document.addEventListener('click',e=>{if(!e.target.closest('.profileCallActions'))$('profileMoreMenu').hidden=true});
 
-$('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!directTarget)return;try{const sent=await call('sendDirect',{targetId:directTarget,text:t});$('directText').value='';$('directText').style.height='';await loadDirect();try{const messageId=String(sent.message?.id||sent.messageId||sent.id||('msg-'+Date.now()+'-'+Math.random().toString(36).slice(2)));const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId,message:t,senderName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Chat push delivery:',pr.status,pd)}catch(e){console.warn('Chat push failed',e)}}catch(e){showStatus(e.message)}};
-$('directText').addEventListener('input',()=>{const el=$('directText');el.style.height='auto';el.style.height=Math.min(el.scrollHeight,window.innerHeight*.30)+'px'});
+$('directSend').onclick=async()=>{const t=$('directText').value.trim();if(!t||!directTarget)return;try{const sent=await call('sendDirect',{targetId:directTarget,text:t});$('directText').value='';$('directText').style.height='';$('directText').closest('.sendRow')?.classList.remove('composer-compact');await loadDirect();try{const messageId=String(sent.message?.id||sent.messageId||sent.id||('msg-'+Date.now()+'-'+Math.random().toString(36).slice(2)));const pr=await fetch('https://temo-ai.temo75elia.workers.dev',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'push-direct',userId:uid,targetId:directTarget,sessionToken:getToken(),messageId,message:t,senderName:user})});const pd=await pr.json().catch(()=>({}));if(!pr.ok||!pd.ok||Number(pd.sent||0)<1)console.warn('Chat push delivery:',pr.status,pd)}catch(e){console.warn('Chat push failed',e)}}catch(e){showStatus(e.message)}};
+$('directText').addEventListener('focus',()=>{$('directText').closest('.sendRow')?.classList.add('composer-compact')});
+$('directText').addEventListener('input',()=>{const el=$('directText');el.style.height='auto';el.style.height=Math.min(el.scrollHeight,window.innerHeight*.30)+'px';if(document.activeElement===el)el.closest('.sendRow')?.classList.add('composer-compact')});
 $('profileVideo').onclick=beginVideo;
 let activeCall=null,pc=null,localStream=null,callPoll=null,callPushTimer=null,callPushBusy=false,incomingPoll=null,incomingCheckBusy=false,callSide='',seenCandidates=new Set(),remoteReady=false;
 let ringAudio=null,ringOscillator=null,ringGain=null,ringTimer=null,ringPulse=false;
