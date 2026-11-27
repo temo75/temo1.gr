@@ -358,7 +358,7 @@ function closeProfilePanel(){
  panel.classList.remove('chat-open');panel.classList.remove('profileSlideIn');panel.classList.add('profileSlideOut');
  panel.addEventListener('animationend',()=>{panel.hidden=true;panel.classList.remove('profileSlideOut');selectedPerson=null;if(directPoll)clearInterval(directPoll);directPoll=null},{once:true});
 }
-window.addEventListener('popstate',()=>{if(profileHistoryOpen){profileHistoryOpen=false;closeProfilePanel()}});
+window.addEventListener('popstate',()=>{if(document.querySelector('.photoLightbox'))return;if(profileHistoryOpen){profileHistoryOpen=false;closeProfilePanel()}});
 async function openProfile(id){
  selectedPerson=people.find(x=>x.id===id)||contacts.find(x=>x.id===id);if(!selectedPerson)return;
  const yes=contacts.some(x=>x.id===id);
